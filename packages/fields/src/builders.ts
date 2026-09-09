@@ -1,11 +1,6 @@
 import { z } from "zod";
 import { fieldUiFromOptions, isFieldUi, withFieldUi } from "./meta";
-import type {
-	FieldMeta,
-	FieldUi,
-	FieldUiOptions,
-	I18nOptions,
-} from "./types";
+import type { FieldMeta, FieldUi, FieldUiOptions, I18nOptions } from "./types";
 
 type Shape = Record<string, z.ZodType>;
 

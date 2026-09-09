@@ -53,7 +53,7 @@ On-disk entries under `content-sandbox/` are **YAML** (`.yaml`; `.yml` accepted 
 curl -sS -X PUT \
   http://127.0.0.1:4321/_cms/api/collections/posts/new-post \
   -H 'content-type: application/json' \
-  -d '{"id":"new-post","collection":"posts","data":{"title":"Fresh","draft":false,"body":"yaml v1","author":"ada"}}'
+  -d '{"id":"new-post","collection":"posts","data":{"title":"Fresh","draft":false,"body":"yaml v1","summary":{"en":"Fresh"},"author":"ada"}}'
 
 # 400 — Zod validation failure
 curl -sS -o /tmp/cms-400.json -w "%{http_code}\n" -X PUT \

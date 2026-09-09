@@ -50,7 +50,7 @@ export type I18nOptions = FieldUiOptions & {
 export type FieldUiRegistryEntry = FieldUi & {
 	/** Hint for sjsf foundational widget keys (textWidget, checkboxWidget, …). */
 	sjsfWidget?: string;
-	/** Reserved / open-thread — form may show unsupported UI. */
+	/** Reserved / open-thread — form may show unsupported UI until implemented. */
 	stub?: boolean;
 	/**
 	 * Optional default component binding for this widget.
