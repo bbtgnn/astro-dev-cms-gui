@@ -45,14 +45,14 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 
 ## Not yet specified
 
-- **Next: implement rich `image`** (Answer locked — [14](issues/14-rich-image-field.md); research [14-image-resize-modules](research/14-image-resize-modules.md)).
+- **Next: open thread — end-user form UI composition** — [form UI composition](issues/15-form-ui-composition.md) (grill → implement).
 - **Deferred — MD/MDX file serialization**: frontmatter + body / `contentField` / multi-segment — after P0–P6 (or when markdown collections are in destination).
 - Exact `pathTemplate` micro-syntax (minimal `{base}/{id}.{ext}` OK at implement time).
 - Exact GitHub URL / path-install syntax for `@cms/*` (boundary locked: install root = `@cms/routes`).
 - **Deferred — Decap collection locale layouts / Kirby `translate: false`** (not in field-local i18n slice).
 - ~~**Open thread — `blocksLayout`**~~ — resolved: see [blocksLayout field](issues/13-blocks-layout-field.md).
 - ~~**Open thread — rich `image`**~~ — Answer locked: see [rich image field](issues/14-rich-image-field.md); research [14-image-resize-modules](research/14-image-resize-modules.md).
-- **Open thread — end-user form UI composition** (after rich `image` implement).
+- **Open thread — end-user form UI composition** — [15-form-ui-composition](issues/15-form-ui-composition.md) (grill in progress).
 - **Open thread — shell commands / non-FS writers** (after form composition).
 - **Open thread — schema builder UI** (last).
 - **Collection vs singleton/file** — `kind: 'singleton'` reserved; not in v1.
