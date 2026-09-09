@@ -13,23 +13,25 @@ bun run dev
 
 `/_cms` is served by `src/middleware.ts` (Astro ignores `_`-prefixed pages).
 
+Collections come from a live Vite import of `src/content.config.ts` (P2 discovery) — no `fakeCatalog` on the happy path.
+
 ## Tracer endpoints
 
 | Path | Purpose |
 |------|---------|
 | `/` | Shell home |
-| `/cms` | Track B shell list UI (`createFetchClient`) |
+| `/cms` | Shell loop UI (`createFetchClient` + discovered schemas) |
 | `/_cms/ok` | Pass 0 heartbeat (via `createCmsIntegration`) |
-| `/_cms/api/collections` | Pass 1 list |
-| `/_cms/api/collections/posts` | Pass 1 entries |
-| `/_cms/api/collections/posts/hello` | Pass 1 get |
-| `PUT /_cms/api/collections/posts/new-post` | Pass 2 upsert (allowlisted) |
-| `DELETE /_cms/api/collections/posts/new-post` | Track D delete (204) |
-| `PUT` invalid posts body | Track D Zod fail → 400 |
-| `PUT /_cms/api/collections/posts/blocked` | Track D allowlist deny → 403 |
-| `/form-spike` | Pass 3 / Track A: Zod → JSON Schema → `@cms/form` sjsf (`client:only`) |
+| `/_cms/api/collections` | List discovered collections |
+| `/_cms/api/collections/posts` | FS-scan entries under `content-sandbox/posts` |
+| `/_cms/api/collections/posts/hello` | Get YAML entry |
+| `PUT /_cms/api/collections/posts/new-post` | Upsert (allowlisted) |
+| `DELETE /_cms/api/collections/posts/new-post` | Delete (204) |
+| `PUT` invalid posts body | Zod fail → 400 |
+| `PUT /_cms/api/collections/posts/blocked` | Allowlist deny → 403 |
+| `/form-spike` | Zod → JSON Schema → `@cms/form` sjsf (`client:only`) |
 
-`src/middleware.ts` mounts `/_cms` via `createCmsIntegration({ writeMode, isDev, mount })` from `@cms/routes` (Track C).
+`src/middleware.ts` mounts `/_cms` via `createCmsIntegration({ writeMode, isDev, mount })` from `@cms/routes`.
 
 ## Allowlist check
 
@@ -41,7 +43,15 @@ Writes only under `content-sandbox/` prefixes in `allowPaths`.
 
 ## Track D curl smoke (with `bun run dev` running)
 
+On-disk entries under `content-sandbox/` are **YAML** (`.yaml`; `.yml` accepted on read). Paths resolve from loader/`config({ base })` discovery.
+
 ```bash
+# round-trip upsert → posts/new-post.yaml
+curl -sS -X PUT \
+  http://127.0.0.1:4321/_cms/api/collections/posts/new-post \
+  -H 'content-type: application/json' \
+  -d '{"id":"new-post","collection":"posts","data":{"title":"Fresh","draft":false,"body":"yaml v1"}}'
+
 # 400 — Zod validation failure
 curl -sS -o /tmp/cms-400.json -w "%{http_code}\n" -X PUT \
   http://127.0.0.1:4321/_cms/api/collections/posts/new-post \

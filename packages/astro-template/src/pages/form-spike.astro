@@ -1,12 +1,13 @@
 ---
 /**
- * PROTOTYPE / SPIKE — Pass 3: Zod → JSON Schema → @cms/form (sjsf basic theme)
+ * Form spike — builders + FieldUi → JSON Schema / uiSchema → @cms/form.
+ * Pass serializable schemas: live Zod meta does not survive Astro island props.
  */
-import { prototypePostsSchema, toJsonSchema } from "@cms/fields";
+import { prototypePostsSchema, toFormSchemas } from "@cms/fields";
 import PlaceholderChrome from "../../../components/src/PlaceholderChrome.svelte";
 import CmsForm from "../../../form/src/CmsForm.svelte";
 
-const schema = toJsonSchema(prototypePostsSchema);
+const { schema, uiSchema } = toFormSchemas(prototypePostsSchema);
 const value = {
 	title: "Hello tracer",
 	draft: true,
@@ -28,6 +29,7 @@ const value = {
 			client:only="svelte"
 			title="Posts form spike"
 			schema={schema}
+			uiSchema={uiSchema}
 			value={value}
 		/>
 	</body>

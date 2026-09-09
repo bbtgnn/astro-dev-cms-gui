@@ -1,0 +1,50 @@
+import type { BuiltInWidget, FieldUiRegistryEntry } from "./types";
+
+const defaults: Record<BuiltInWidget, FieldUiRegistryEntry> = {
+	text: { widget: "text", sjsfWidget: "textWidget" },
+	string: { widget: "string", sjsfWidget: "textWidget" },
+	number: { widget: "number", sjsfWidget: "numberWidget" },
+	boolean: { widget: "boolean", sjsfWidget: "checkboxWidget" },
+	select: { widget: "select", sjsfWidget: "selectWidget" },
+	enum: { widget: "enum", sjsfWidget: "selectWidget" },
+	date: { widget: "date", sjsfWidget: "textWidget" },
+	datetime: { widget: "datetime", sjsfWidget: "textWidget" },
+	object: { widget: "object" },
+	array: { widget: "array" },
+	markdown: { widget: "markdown", sjsfWidget: "textWidget", stub: true },
+	reference: { widget: "reference", sjsfWidget: "selectWidget", stub: true },
+	image: { widget: "image", sjsfWidget: "textWidget", stub: true },
+	i18n: { widget: "i18n", sjsfWidget: "textWidget", stub: true },
+	blocksLayout: {
+		widget: "blocksLayout",
+		sjsfWidget: "textWidget",
+		stub: true,
+	},
+};
+
+/** Mutable FieldUi registry — widget id → default descriptor / component binding. */
+export const fieldUiRegistry: Record<string, FieldUiRegistryEntry> = {
+	...defaults,
+};
+
+export function getFieldUiDefault(
+	widget: string,
+): FieldUiRegistryEntry | undefined {
+	return fieldUiRegistry[widget];
+}
+
+/**
+ * Register or override a widget entry.
+ * `component` may be a Svelte component; typed unknown to keep this package Svelte-free.
+ */
+export function registerFieldUi(
+	widget: string,
+	entry: Partial<FieldUiRegistryEntry>,
+): void {
+	const prev = fieldUiRegistry[widget];
+	fieldUiRegistry[widget] = {
+		...prev,
+		...entry,
+		widget: entry.widget ?? prev?.widget ?? widget,
+	};
+}

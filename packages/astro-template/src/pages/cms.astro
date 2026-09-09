@@ -1,18 +1,30 @@
 ---
 /**
- * PROTOTYPE / SPIKE — Track B shell list UI (createFetchClient)
+ * PROTOTYPE / SPIKE — P4 authoring shell loop (collections → entries → editor).
+ * UI lives at /cms; JSON API remains middleware-mounted at /_cms.
+ * Schemas come from live content.config discovery (P2).
  */
+import { discoverCollections, toJsonSchema } from "@cms/routes";
+import PlaceholderChrome from "../../../components/src/PlaceholderChrome.svelte";
 import ShellList from "../components/ShellList.svelte";
+import { collections } from "../content.config";
+
+const discovered = discoverCollections(collections);
+const schemas = Object.fromEntries(
+	discovered.map((c) => [c.name, toJsonSchema(c.schema)]),
+);
 ---
 
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
-		<title>Shell list (prototype)</title>
+		<title>CMS shell (prototype)</title>
 	</head>
 	<body>
 		<p><a href="/">← home</a></p>
-		<ShellList client:load />
+		<PlaceholderChrome label="@cms/components" />
+		<!-- client:only — sjsf templates break under Astro/Vite SSR -->
+		<ShellList client:only="svelte" schemas={schemas} />
 	</body>
 </html>

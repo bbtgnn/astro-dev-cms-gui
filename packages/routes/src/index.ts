@@ -1,8 +1,53 @@
 /**
- * PROTOTYPE / SPIKE — @cms/routes
- * Consumer install root. Dispatcher + Track C middleware / integration seam.
+ * @cms/routes — consumer install root.
+ * Dispatcher + middleware / integration seam + light fields barrel + discovery.
  */
 
+/** Discovery + write-mode helpers (implemented in @cms/crud). */
+export type {
+	CollectionSummary,
+	DiscoverCollectionsOptions,
+	DiscoveredCollection,
+	LoaderPathHint,
+} from "@cms/crud";
+export {
+	CMS_LOADER_HINT,
+	discoverCollections,
+	resolveCollectionSchema,
+	scanYamlEntryIds,
+	withLoaderPathHint,
+} from "@cms/crud";
+/** Light re-export of authoring builders / FieldUi (implemented in @cms/fields). */
+export {
+	array,
+	blocksLayout,
+	boolean,
+	type CollectionConfig,
+	config,
+	date,
+	datetime,
+	enumeration,
+	type FieldMeta,
+	type FieldUi,
+	field,
+	fieldUiRegistry,
+	i18n,
+	image,
+	markdown,
+	number,
+	object,
+	type PrototypePostsInput,
+	prototypePostsSchema,
+	reference,
+	registerFieldUi,
+	select,
+	string,
+	text,
+	toFormSchemas,
+	toJsonSchema,
+	toUiSchema,
+	z,
+} from "@cms/fields";
 export { cmsDevOnlyGuard } from "./dev-guard";
 export {
 	type CmsDispatcherOptions,

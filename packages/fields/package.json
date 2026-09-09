@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "PROTOTYPE — Zod builders + FieldUi registry (stubs)",
+	"description": "Zod builders, FieldUi registry, Zod→JSON Schema / uiSchema helpers",
 	"exports": {
 		".": "./src/index.ts"
 	},

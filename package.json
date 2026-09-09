@@ -17,6 +17,7 @@
 			"svelte": "^5.38.0",
 			"svelte-check": "^4.3.1",
 			"zod": "^4.1.5",
+			"yaml": "^2.8.0",
 			"@sjsf/ajv8-validator": "^3.8.1",
 			"@sjsf/basic-theme": "^3.8.1",
 			"@sjsf/form": "^3.8.1",

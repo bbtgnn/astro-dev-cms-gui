@@ -1,11 +1,25 @@
-<!-- PROTOTYPE / SPIKE — Track B: can shell UI list via createFetchClient? -->
+<!-- PROTOTYPE / SPIKE — P4 shell loop: collections → entries → editor -->
 <script lang="ts">
-// Browser-safe subpath — package root re-exports Node FS writers.
-import { type ContentEntry, createFetchClient } from "@cms/crud/fetch-client";
+import {
+	type ContentEntry,
+	createFetchClient,
+	isCmsFetchError,
+} from "@cms/crud/fetch-client";
 import { onMount } from "svelte";
+import ShellEditor from "./ShellEditor.svelte";
+
+let {
+	schemas = {},
+}: {
+	/** collection name → JSON Schema (from Astro / @cms/fields) */
+	schemas?: Record<string, Record<string, unknown>>;
+} = $props();
 
 const client = createFetchClient("/_cms");
 
+type View = "collections" | "entries" | "editor" | "create";
+
+let view = $state<View>("collections");
 let loading = $state(false);
 let error = $state<string | null>(null);
 
@@ -14,6 +28,11 @@ let entries = $state.raw<{ id: string }[]>([]);
 let selectedCollection = $state<string | null>(null);
 let selectedEntryId = $state<string | null>(null);
 let entry = $state.raw<ContentEntry | null>(null);
+
+function errMsg(e: unknown): string {
+	if (isCmsFetchError(e)) return e.message;
+	return e instanceof Error ? e.message : String(e);
+}
 
 async function loadCollections() {
 	loading = true;
@@ -24,8 +43,9 @@ async function loadCollections() {
 		entry = null;
 		selectedCollection = null;
 		selectedEntryId = null;
+		view = "collections";
 	} catch (e) {
-		error = e instanceof Error ? e.message : String(e);
+		error = errMsg(e);
 	} finally {
 		loading = false;
 	}
@@ -39,28 +59,77 @@ async function selectCollection(name: string) {
 	entry = null;
 	try {
 		entries = await client.listEntries(name);
+		view = "entries";
 	} catch (e) {
-		error = e instanceof Error ? e.message : String(e);
+		error = errMsg(e);
 		entries = [];
 	} finally {
 		loading = false;
 	}
 }
 
-async function selectEntry(id: string) {
+async function openEntry(id: string) {
 	if (!selectedCollection) return;
 	loading = true;
 	error = null;
 	selectedEntryId = id;
 	try {
 		entry = await client.getEntry(selectedCollection, id);
+		view = "editor";
 	} catch (e) {
-		error = e instanceof Error ? e.message : String(e);
+		error = errMsg(e);
 		entry = null;
 	} finally {
 		loading = false;
 	}
 }
+
+function startCreate() {
+	if (!selectedCollection) return;
+	selectedEntryId = null;
+	entry = null;
+	view = "create";
+	error = null;
+}
+
+async function refreshEntries() {
+	if (!selectedCollection) return;
+	entries = await client.listEntries(selectedCollection);
+}
+
+async function onSaved(saved: ContentEntry) {
+	selectedEntryId = saved.id;
+	entry = saved;
+	view = "editor";
+	await refreshEntries();
+}
+
+async function onDeleted() {
+	entry = null;
+	selectedEntryId = null;
+	view = "entries";
+	await refreshEntries();
+}
+
+function backToEntries() {
+	entry = null;
+	selectedEntryId = null;
+	view = "entries";
+	error = null;
+}
+
+function backToCollections() {
+	selectedCollection = null;
+	selectedEntryId = null;
+	entry = null;
+	entries = [];
+	view = "collections";
+	error = null;
+}
+
+const activeSchema = $derived(
+	selectedCollection ? (schemas[selectedCollection] ?? null) : null,
+);
 
 onMount(() => {
 	void loadCollections();
@@ -69,82 +138,90 @@ onMount(() => {
 
 <main>
 	<p>
-		<strong>PROTOTYPE / SPIKE</strong> — Track B shell list via
-		<code>createFetchClient</code>
+		<strong>PROTOTYPE / SPIKE</strong> — P4 shell loop via
+		<code>@cms/crud/fetch-client</code>
 	</p>
 
 	<p>
 		status:
 		{#if loading}loading{:else}idle{/if}
+		· view: {view}
 		{#if error}
 			— error: {error}
 		{/if}
 	</p>
 
-	<section>
-		<h2>Collections</h2>
+	<nav>
 		<button type="button" onclick={() => void loadCollections()}
-			>reload collections</button
+			>collections</button
 		>
-		<ul>
-			{#each collections as c (c.name)}
-				<li>
-					<button
-						type="button"
-						onclick={() => void selectCollection(c.name)}
-						aria-pressed={selectedCollection === c.name}
-					>
-						{c.name}
-					</button>
-				</li>
-			{:else}
-				<li>(none)</li>
-			{/each}
-		</ul>
-	</section>
-
-	<section>
-		<h2>Entries {selectedCollection ? `in ${selectedCollection}` : ""}</h2>
-		<ul>
-			{#each entries as e (e.id)}
-				<li>
-					<button
-						type="button"
-						onclick={() => void selectEntry(e.id)}
-						aria-pressed={selectedEntryId === e.id}
-					>
-						{e.id}
-					</button>
-				</li>
-			{:else}
-				<li>{selectedCollection ? "(none)" : "(pick a collection)"}</li>
-			{/each}
-		</ul>
-	</section>
-
-	<section>
-		<h2>Entry JSON</h2>
-		{#if entry}
-			<pre>{JSON.stringify(entry, null, 2)}</pre>
-		{:else}
-			<p>(pick an entry)</p>
+		{#if selectedCollection}
+			{@const collectionName = selectedCollection}
+			<button type="button" onclick={() => void selectCollection(collectionName)}
+				>{collectionName}</button
+			>
 		{/if}
-	</section>
+		{#if view === "editor" && selectedEntryId}
+			<span>/ {selectedEntryId}</span>
+		{/if}
+		{#if view === "create"}
+			<span>/ (create)</span>
+		{/if}
+	</nav>
 
-	<details>
-		<summary>raw state dump</summary>
-		<pre>{JSON.stringify(
-			{
-				loading,
-				error,
-				selectedCollection,
-				selectedEntryId,
-				collections,
-				entries,
-				entry,
-			},
-			null,
-			2,
-		)}</pre>
-	</details>
+	{#if view === "collections"}
+		<section>
+			<h2>Collections</h2>
+			<ul>
+				{#each collections as c (c.name)}
+					<li>
+						<button type="button" onclick={() => void selectCollection(c.name)}>
+							{c.name}
+						</button>
+					</li>
+				{:else}
+					<li>(none)</li>
+				{/each}
+			</ul>
+		</section>
+	{:else if view === "entries"}
+		<section>
+			<h2>Entries in {selectedCollection}</h2>
+			<p>
+				<button type="button" onclick={backToCollections}>← collections</button>
+				<button type="button" onclick={startCreate}>create entry</button>
+			</p>
+			<ul>
+				{#each entries as e (e.id)}
+					<li>
+						<button type="button" onclick={() => void openEntry(e.id)}>
+							{e.id}
+						</button>
+					</li>
+				{:else}
+					<li>(none)</li>
+				{/each}
+			</ul>
+		</section>
+	{:else if view === "editor" && selectedCollection && entry}
+		<ShellEditor
+			collection={selectedCollection}
+			entryId={entry.id}
+			schema={activeSchema}
+			value={entry.data}
+			onSaved={(saved) => void onSaved(saved)}
+			onDeleted={() => void onDeleted()}
+			onCancel={backToEntries}
+		/>
+	{:else if view === "create" && selectedCollection}
+		<ShellEditor
+			collection={selectedCollection}
+			entryId="new-post"
+			schema={activeSchema}
+			value={{}}
+			creating={true}
+			onSaved={(saved) => void onSaved(saved)}
+			onCancel={backToEntries}
+		/>
+	{/if}
 </main>

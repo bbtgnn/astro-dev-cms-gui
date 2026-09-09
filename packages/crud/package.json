@@ -10,6 +10,7 @@
 	},
 	"dependencies": {
 		"@cms/fields": "workspace:*",
+		"yaml": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {

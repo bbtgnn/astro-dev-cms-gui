@@ -7,6 +7,36 @@ import type { ContentEntry } from "./types";
 
 export type { ContentEntry };
 
+/** Thrown when the CMS JSON API returns a non-OK status. */
+export class CmsFetchError extends Error {
+	readonly status: number;
+	readonly code?: string;
+	readonly issues?: unknown;
+	readonly bodyText: string;
+
+	constructor(
+		status: number,
+		statusText: string,
+		bodyText: string,
+		parsed?: { error?: string; code?: string; issues?: unknown },
+	) {
+		super(
+			parsed?.error
+				? `${status} ${statusText}: ${parsed.error}`
+				: `${status} ${statusText}: ${bodyText}`,
+		);
+		this.name = "CmsFetchError";
+		this.status = status;
+		this.code = parsed?.code;
+		this.issues = parsed?.issues;
+		this.bodyText = bodyText;
+	}
+}
+
+export function isCmsFetchError(err: unknown): err is CmsFetchError {
+	return err instanceof CmsFetchError;
+}
+
 export function createFetchClient(base = "/_cms") {
 	const root = base.replace(/\/+$/, "");
 
@@ -20,8 +50,20 @@ export function createFetchClient(base = "/_cms") {
 			},
 		});
 		if (!res.ok) {
-			const body = await res.text();
-			throw new Error(`${res.status} ${res.statusText}: ${body}`);
+			const bodyText = await res.text();
+			let parsed:
+				| { error?: string; code?: string; issues?: unknown }
+				| undefined;
+			try {
+				parsed = JSON.parse(bodyText) as {
+					error?: string;
+					code?: string;
+					issues?: unknown;
+				};
+			} catch {
+				parsed = undefined;
+			}
+			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
 		}
 		return res;
 	}
@@ -35,18 +77,30 @@ export function createFetchClient(base = "/_cms") {
 	return {
 		listCollections: () => json<{ name: string }[]>("/api/collections"),
 		listEntries: (collection: string) =>
-			json<{ id: string }[]>(`/api/collections/${collection}`),
+			json<{ id: string }[]>(
+				`/api/collections/${encodeURIComponent(collection)}`,
+			),
 		getEntry: (collection: string, id: string) =>
-			json<ContentEntry>(`/api/collections/${collection}/${id}`),
+			json<ContentEntry>(
+				`/api/collections/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,
+			),
 		upsertEntry: (entry: ContentEntry) =>
-			json<ContentEntry>(`/api/collections/${entry.collection}/${entry.id}`, {
-				method: "PUT",
-				body: JSON.stringify(entry),
-			}),
+			json<ContentEntry>(
+				`/api/collections/${encodeURIComponent(entry.collection)}/${encodeURIComponent(entry.id)}`,
+				{
+					method: "PUT",
+					body: JSON.stringify({
+						id: entry.id,
+						collection: entry.collection,
+						data: entry.data,
+					}),
+				},
+			),
 		deleteEntry: async (collection: string, id: string) => {
-			await request(`/api/collections/${collection}/${id}`, {
-				method: "DELETE",
-			});
+			await request(
+				`/api/collections/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,
+				{ method: "DELETE" },
+			);
 		},
 	};
 }

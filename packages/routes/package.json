@@ -9,6 +9,7 @@
 	},
 	"dependencies": {
 		"@cms/crud": "workspace:*",
+		"@cms/fields": "workspace:*",
 		"@cms/form": "workspace:*",
 		"@cms/components": "workspace:*"
 	},

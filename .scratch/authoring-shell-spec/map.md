@@ -16,7 +16,7 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - **Write-back (locked):** `/_cms/[...path]` dispatcher; `{ id, collection, data }` payloads; `createWriteMode({ root, allowPaths, writer })` with FS writers in v1; dev-only by default. See [Write-back contract (files-only v1)](issues/05-write-back-contract.md).
 - **Post-spec frontier (ordered):**
   1. ~~Multi-markdown~~ / ~~glob paths~~ (10–11 resolved; YAML v1)
-  2. **Implement [spec.md](spec.md) P0–P6** — parallel worktrees (2026-09-09): A=P1 YAML+paths, B=P3 fields+form, C=P4 shell; then **serial P2** discovery
+  2. **Implement [spec.md](spec.md) P0–P6** — A/B/C applied onto main (P1 YAML/paths, P3 fields/form, P4 shell). **P2 discovery landed:** live `src/content.config.ts` → `discoverCollections` → write-mode FS scan (no `fakeCatalog` happy path). Remaining: P5 widgets polish / P6 self-host proof as needed
   3. Open thread — `i18n` field
   4. Open thread — `blocksLayout` field
   5. Open thread — rich `image` field
@@ -42,7 +42,7 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 
 ## Not yet specified
 
-- **Next: implement [spec.md](spec.md) P0–P6** (YAML collections for self-host).
+- **Next: implement [spec.md](spec.md) P5–P6** (P0–P4 + P2 discovery on main working tree; YAML collections for self-host).
 - **Deferred — MD/MDX file serialization**: frontmatter + body / `contentField` / multi-segment — after P0–P6 (or when markdown collections are in destination).
 - Exact `pathTemplate` micro-syntax (minimal `{base}/{id}.{ext}` OK at implement time).
 - Exact GitHub URL / path-install syntax for `@cms/*` (boundary locked: install root = `@cms/routes`).

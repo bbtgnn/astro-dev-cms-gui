@@ -4,7 +4,13 @@
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createWriteMode, memoryWriter } from "../../crud/src/index";
+import { z } from "zod";
+import {
+	createWriteMode,
+	type DiscoveredCollection,
+	memoryWriter,
+	parseEntryFile,
+} from "../../crud/src/index";
 
 const root = path.resolve(
 	path.dirname(fileURLToPath(import.meta.url)),
@@ -33,14 +39,26 @@ async function expectReject(
 	}
 }
 
+const postsSchema = z.object({
+	title: z.string(),
+});
+
+const postsCollection: DiscoveredCollection = {
+	name: "posts",
+	label: "Posts",
+	schema: postsSchema,
+	base: "posts",
+	config: { label: "Posts", base: "posts" },
+};
+
 const wm = createWriteMode({
 	root,
 	allowPaths: ["posts"],
 	writer: memoryWriter(),
 	pathMap: {
 		posts: {
-			ok: "posts/ok.json",
-			evil: "../evil.json",
+			ok: "posts/ok.yaml",
+			evil: "../evil.yaml",
 		},
 		secrets: {
 			env: "../../.env",
@@ -64,12 +82,23 @@ await expectReject("path outside allowlist roots", () =>
 	}),
 );
 
+await expectReject(
+	"unsafe nested id",
+	() =>
+		wm.upsertEntry({
+			id: "../escape",
+			collection: "posts",
+			data: { title: "nope" },
+		}),
+	400,
+);
+
 const writer = memoryWriter();
 const okMode = createWriteMode({
 	root,
 	allowPaths: ["posts"],
 	writer,
-	pathMap: { posts: { ok: "posts/ok.json" } },
+	collections: [postsCollection],
 });
 
 await okMode.upsertEntry({
@@ -78,13 +107,57 @@ await okMode.upsertEntry({
 	data: { title: "yes" },
 });
 
-const written = writer.store.get(path.join(root, "posts/ok.json"));
+const written = writer.store.get(path.join(root, "posts/ok.yaml"));
 if (!written) {
-	console.error("FAIL allowed write did not land in memory writer");
+	console.error("FAIL discovery upsert did not land in memory writer");
 	failed = true;
 } else {
-	console.log("ok  allowlisted upsert wrote", written.trim());
+	try {
+		const data = parseEntryFile(written);
+		if (data.title !== "yes") {
+			console.error("FAIL YAML round-trip title mismatch", data);
+			failed = true;
+		} else {
+			console.log("ok  discovery upsert wrote YAML", written.trim());
+		}
+	} catch (err) {
+		console.error("FAIL written body is not YAML", err);
+		failed = true;
+	}
 }
+
+const listed = await okMode.listEntries("posts");
+if (!listed.some((e) => e.id === "ok")) {
+	console.error("FAIL FS scan listEntries missing ok", listed);
+	failed = true;
+} else {
+	console.log("ok  FS scan listEntries includes ok");
+}
+
+const colls = await okMode.listCollections();
+if (!colls.some((c) => c.name === "posts" && c.label === "Posts")) {
+	console.error("FAIL listCollections missing posts label", colls);
+	failed = true;
+} else {
+	console.log("ok  listCollections returns discovered posts");
+}
+
+const collideWriter = memoryWriter({
+	[path.join(root, "posts/both.yaml")]: "title: a\n",
+	[path.join(root, "posts/both.yml")]: "title: b\n",
+});
+const collideMode = createWriteMode({
+	root,
+	allowPaths: ["posts"],
+	writer: collideWriter,
+	collections: [postsCollection],
+});
+
+await expectReject(
+	"yaml+yml collision",
+	() => collideMode.getEntry("posts", "both"),
+	409,
+);
 
 if (failed) {
 	process.exit(1);

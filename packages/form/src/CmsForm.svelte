@@ -1,64 +1,102 @@
-<!-- PROTOTYPE / SPIKE — minimal @sjsf/form + basic-theme wrap; no FieldUi registry -->
+<!-- @cms/form — sjsf wrap; resolves FieldUi + meta.ui Component overrides -->
 <script lang="ts">
+import {
+	stripUiFromJsonSchema,
+	toFormSchemas,
+	toUiSchema,
+	type UiSchemaNode,
+} from "@cms/fields";
 import { createFormValidator } from "@sjsf/ajv8-validator";
 import { theme } from "@sjsf/basic-theme";
-import { BasicForm, createForm, type Schema } from "@sjsf/form";
+import {
+	BasicForm,
+	createForm,
+	type Schema,
+	type UiSchemaRoot,
+} from "@sjsf/form";
 import { createFormIdBuilder } from "@sjsf/form/id-builders/modern";
 import { createFormMerger } from "@sjsf/form/mergers/modern";
 import { resolver } from "@sjsf/form/resolvers/basic";
 import { translation } from "@sjsf/form/translations/en";
 import { untrack } from "svelte";
+import type { z } from "zod";
 import "@sjsf/basic-theme/css/basic.css";
+
+function isZodSchema(value: unknown): value is z.ZodType {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"_zod" in value &&
+		typeof (value as { parse?: unknown }).parse === "function"
+	);
+}
 
 let {
 	schema = null,
+	uiSchema: uiSchemaProp = undefined,
 	value = {},
 	title = "@cms/form",
 	onSubmit,
 }: {
-	schema?: Record<string, unknown> | null;
+	/** JSON Schema (preferred across Astro islands) or live Zod when same-bundle. */
+	schema?: z.ZodType | Record<string, unknown> | null;
+	/**
+	 * sjsf uiSchema from FieldUi. Prefer precomputing with `toUiSchema` /
+	 * `toFormSchemas` in the Astro page so labels survive `client:only` props
+	 * (live Zod `.meta()` / Component refs do not serialize across islands).
+	 */
+	uiSchema?: UiSchemaNode;
 	value?: Record<string, unknown>;
 	title?: string;
 	onSubmit?: (data: Record<string, unknown>) => void;
 } = $props();
 
 let lastSubmit = $state<Record<string, unknown> | null>(null);
-
-// Spike: bind live form value via sjsf Bind API (avoid getValueSnapshot —
-// Vite/Astro resolves @sjsf/form to main.js which does not export it).
 let liveValue = $state<Record<string, unknown>>({});
 
-// Spike: create once from initial props (schema/value do not hot-swap).
 const form = untrack(() => {
 	liveValue = { ...value };
-	return schema
-		? createForm({
-				theme,
-				schema: schema as Schema,
-				resolver,
-				translation,
-				merger: createFormMerger,
-				validator: createFormValidator,
-				idBuilder: createFormIdBuilder,
-				initialValue: value,
-				value: [
-					() => liveValue,
-					(v) => {
-						liveValue = v as Record<string, unknown>;
-					},
-				],
-				onSubmit: (data) => {
-					const record = data as Record<string, unknown>;
-					lastSubmit = record;
-					onSubmit?.(record);
-				},
-			})
-		: null;
+	if (schema == null) return null;
+
+	let jsonSchema: Record<string, unknown>;
+	let uiSchema: UiSchemaNode;
+
+	if (isZodSchema(schema)) {
+		const derived = toFormSchemas(schema);
+		jsonSchema = stripUiFromJsonSchema(derived.schema);
+		uiSchema = uiSchemaProp ?? derived.uiSchema;
+	} else {
+		jsonSchema = stripUiFromJsonSchema(schema);
+		uiSchema = uiSchemaProp ?? toUiSchema(schema);
+	}
+
+	return createForm({
+		theme,
+		schema: jsonSchema as Schema,
+		uiSchema: uiSchema as UiSchemaRoot,
+		resolver,
+		translation,
+		merger: createFormMerger,
+		validator: createFormValidator,
+		idBuilder: createFormIdBuilder,
+		initialValue: value,
+		value: [
+			() => liveValue,
+			(v) => {
+				liveValue = v as Record<string, unknown>;
+			},
+		],
+		onSubmit: (data) => {
+			const record = data as Record<string, unknown>;
+			lastSubmit = record;
+			onSubmit?.(record);
+		},
+	});
 });
 </script>
 
 <section>
-	<p><small>PROTOTYPE / SPIKE — sjsf basic theme</small></p>
+	<p><small>@cms/form — FieldUi → sjsf uiSchema</small></p>
 	<h2>{title}</h2>
 	{#if form === null}
 		<p>form shell — no schema</p>

@@ -40,6 +40,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@cms/fields": "workspace:*",
+        "yaml": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -66,6 +67,7 @@
         "@sjsf/basic-theme": "catalog:",
         "@sjsf/form": "catalog:",
         "ajv": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "svelte": "catalog:",
@@ -82,6 +84,7 @@
       "dependencies": {
         "@cms/components": "workspace:*",
         "@cms/crud": "workspace:*",
+        "@cms/fields": "workspace:*",
         "@cms/form": "workspace:*",
       },
       "devDependencies": {
@@ -99,6 +102,7 @@
     "svelte": "^5.38.0",
     "svelte-check": "^4.3.1",
     "typescript": "^5.9.0",
+    "yaml": "^2.8.0",
     "zod": "^4.1.5",
   },
   "packages": {
@@ -865,6 +869,8 @@
     "wrap-ansi": ["wrap-ansi@9.0.2", "", { "dependencies": { "ansi-styles": "^6.2.1", "string-width": "^7.0.0", "strip-ansi": "^7.1.0" } }, "sha512-42AtmgqjV+X1VpdOfyTGOYRi0/zsoLqtXQckTmqTeybT+BDIbM/Guxo7x3pE2vtpr1ok6xRqM9OpBe+Jyoqyww=="],
 
     "xxhash-wasm": ["xxhash-wasm@1.1.0", "", {}, "sha512-147y/6YNh+tlp6nd/2pWq38i9h6mz/EuQ6njIrmW8D1BS5nCqs0P6DG+m6zTGnNz5I+uhZ0SHxBs9BsPrwcKDA=="],
+
+    "yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
 
     "yargs-parser": ["yargs-parser@21.1.1", "", {}, "sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw=="],
 
