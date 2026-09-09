@@ -4,4 +4,7 @@ body: |
   Pass 1 fake entry.
 
   Markdown body for P5 textarea UX.
+summary:
+  en: Hello in English
+  it: Ciao in italiano
 author: ada

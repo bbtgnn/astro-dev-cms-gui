@@ -22,7 +22,8 @@ const defaults: Record<BuiltInWidget, FieldUiRegistryEntry> = {
 	/** Minimum text until live listEntries select (still stub). */
 	reference: { widget: "reference", sjsfWidget: "textWidget", stub: true },
 	image: { widget: "image", sjsfWidget: "textWidget", stub: true },
-	i18n: { widget: "i18n", sjsfWidget: "textWidget", stub: true },
+	/** Object of locale keys; inner FieldUi propagates via toUiSchema. */
+	i18n: { widget: "i18n", stub: false },
 	blocksLayout: {
 		widget: "blocksLayout",
 		sjsfWidget: "textWidget",

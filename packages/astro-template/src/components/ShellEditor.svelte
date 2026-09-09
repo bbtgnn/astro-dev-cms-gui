@@ -102,6 +102,7 @@ async function saveInvalid() {
 		draft: false,
 		body: "intentionally invalid title type",
 		author: "ada",
+		summary: { en: "x" },
 	} as unknown as Record<string, unknown>);
 }
 </script>

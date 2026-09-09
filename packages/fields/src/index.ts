@@ -47,6 +47,10 @@ export {
 	getFieldUiDefault,
 	registerFieldUi,
 } from "./registry";
+export {
+	type ResolveLocaleOptions,
+	resolveLocale,
+} from "./resolve-locale";
 export type {
 	BuiltInWidget,
 	CollectionConfig,
@@ -54,6 +58,7 @@ export type {
 	FieldUi,
 	FieldUiOptions,
 	FieldUiRegistryEntry,
+	I18nOptions,
 } from "./types";
 
 /**

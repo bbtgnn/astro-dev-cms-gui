@@ -11,19 +11,19 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - Domain: Astro content collections; server-light authoring; Kirby/PagesCMS/Payload as reference points only.
 - Skills every session should consult: `grilling`, `domain-modeling`; `research` / `prototype` when ticket type says so.
 - Tracker: local markdown under `.scratch/authoring-shell-spec/`.
-- **Execution override**: buildable [spec.md](spec.md) exists. **P0–P6 landed** on main; next = open threads.
+- **Execution override**: buildable [spec.md](spec.md) exists. **P0–P6 landed** on main; open threads in progress.
 - **Package map (locked):** `fields → components → form → crud → routes → astro-template`. See [Monorepo package boundaries for @cms/*](issues/04-monorepo-package-boundaries.md).
 - **Write-back (locked):** `/_cms/[...path]` dispatcher; `{ id, collection, data }` payloads; `createWriteMode({ root, allowPaths, writer })` with FS writers in v1; dev-only by default. See [Write-back contract (files-only v1)](issues/05-write-back-contract.md).
 - **Post-spec frontier (ordered):**
   1. ~~Multi-markdown~~ / ~~glob paths~~ (10–11 resolved; YAML v1)
   2. ~~Implement [spec.md](spec.md) P0–P6~~ — self-host proof: `bun run dev` on `@cms/astro-template`; portable smoke `bun run check` + `check:allowlist` + `lint`
-  3. **Open thread — `i18n` field** (next)
-  4. Open thread — `blocksLayout` field
+  3. ~~Open thread — `i18n` field~~ — [i18n field](issues/12-i18n-field.md): field-local `{ [default]: T } & Partial<others>`; `resolveLocale`; minimum object UI
+  4. **Open thread — `blocksLayout` field** (next)
   5. Open thread — rich `image` field
   6. Open thread — end-user form UI composition
   7. Open thread — shell commands / non-FS writers
   8. Open thread — schema builder UI
-  - Deferred fog: MD/MDX file serialization; pathTemplate micro-syntax
+  - Deferred fog: MD/MDX file serialization; pathTemplate micro-syntax; Decap collection locale layouts / Kirby `translate: false`
 - Refer to tickets and this map **by title**, with links.
 
 ## Decisions so far
@@ -39,15 +39,16 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - [Draft the buildable authoring-shell spec](issues/09-draft-buildable-spec.md): Assembled [spec.md](spec.md) (Framing→…→Phased MVP P0–P6); open threads seams-only
 - [Multi-markdown serialization](issues/10-multi-markdown-serialization.md): v1 = YAML file ↔ full `data`; MD/MDX body/frontmatter write-back deferred; markdown widget = YAML strings OK
 - [Glob and entry path conventions](issues/11-glob-path-conventions.md): id = relpath sans ext; nested `/`; prefer `.yaml`; glob base introspection + config override; list = Content Layer || FS scan; yaml+yml collision errors
+- [i18n field](issues/12-i18n-field.md): field-local `{ [defaultLocale]: T } & Partial<others>`; builder `i18n(inner, { locales, defaultLocale, fallbacks? })`; `resolveLocale`; persist raw map; minimum object UI
 
 ## Not yet specified
 
-- **Next: open threads** — start with `i18n` (P0–P6 closed; YAML self-host proven via `@cms/astro-template`).
+- **Next: open thread — `blocksLayout`** (after `i18n`).
 - **Deferred — MD/MDX file serialization**: frontmatter + body / `contentField` / multi-segment — after P0–P6 (or when markdown collections are in destination).
 - Exact `pathTemplate` micro-syntax (minimal `{base}/{id}.{ext}` OK at implement time).
 - Exact GitHub URL / path-install syntax for `@cms/*` (boundary locked: install root = `@cms/routes`).
-- **Open thread — `i18n`** (next): locale alternatives; deep UI unspecified.
-- **Open thread — `blocksLayout`** (after `i18n`): block body + available-blocks; deep contract unspecified.
+- **Deferred — Decap collection locale layouts / Kirby `translate: false`** (not in field-local i18n slice).
+- **Open thread — `blocksLayout`** (next): block body + available-blocks; deep contract unspecified.
 - **Open thread — rich `image`** (after `blocksLayout`): wasm webp + srcsets; stub exists in v1.
 - **Open thread — end-user form UI composition** (after rich `image`).
 - **Open thread — shell commands / non-FS writers** (after form composition).

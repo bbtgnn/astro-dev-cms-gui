@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { fieldUiFromOptions, isFieldUi, withFieldUi } from "./meta";
-import type { FieldMeta, FieldUi, FieldUiOptions } from "./types";
+import type {
+	FieldMeta,
+	FieldUi,
+	FieldUiOptions,
+	I18nOptions,
+} from "./types";
 
 type Shape = Record<string, z.ZodType>;
 
@@ -108,9 +113,33 @@ export function image(opts?: FieldUiOptions) {
 	return attach(z.string(), "image", opts);
 }
 
-/** Reserved open-thread stub. */
-export function i18n(opts?: FieldUiOptions) {
-	return attach(z.record(z.string(), z.string()), "i18n", opts);
+/**
+ * Field-local locale map: `{ [defaultLocale]: T } & Partial<Record<others, T>>`.
+ * Unknown keys rejected. Fallbacks are resolve-only (see `resolveLocale`).
+ */
+export function i18n<T extends z.ZodType>(inner: T, opts: I18nOptions) {
+	const { locales, defaultLocale, fallbacks, label, options } = opts;
+	if (!locales.includes(defaultLocale)) {
+		throw new Error(
+			`i18n: defaultLocale "${defaultLocale}" must be listed in locales`,
+		);
+	}
+
+	const shape: Record<string, z.ZodType> = {};
+	for (const locale of locales) {
+		shape[locale] =
+			locale === defaultLocale ? inner : (inner.optional() as z.ZodType);
+	}
+
+	return attach(z.object(shape).strict(), "i18n", {
+		label,
+		options: {
+			locales: [...locales],
+			defaultLocale,
+			...(fallbacks ? { fallbacks } : {}),
+			...options,
+		},
+	});
 }
 
 /** Reserved open-thread stub (Kirby-like blocks). */

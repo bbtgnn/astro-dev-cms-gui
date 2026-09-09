@@ -7,6 +7,7 @@ import {
 	adaptReference,
 	boolean,
 	config,
+	i18n,
 	markdown,
 	object,
 	text,
@@ -52,6 +53,12 @@ const posts = defineCollection({
 				title: text({ label: "Title" }),
 				draft: boolean({ label: "Draft", default: false }),
 				body: markdown({ label: "Body" }),
+				summary: i18n(text({ label: "Summary" }), {
+					label: "Summary",
+					locales: ["en", "it"],
+					defaultLocale: "en",
+					fallbacks: { it: "en" },
+				}),
 				author: adaptReference(astroReference("authors"), {
 					label: "Author",
 					collection: "authors",

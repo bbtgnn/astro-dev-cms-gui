@@ -192,7 +192,7 @@ Informed by: [Write-back contract (files-only v1)](issues/05-write-back-contract
 Named unresolved — seams only, no deep contracts:
 
 1. **Shell commands / non-FS writers** — `runCommand`, `githubRepoWriter()`, etc. on the writer/write-mode seam; v1 = FS writers only.  
-2. **Custom fields** — `i18n`, rich `image` (wasm webp + srcsets), `blocksLayout` (Kirby-like blocks + available-blocks list). Reserved widgets/stubs; deep behavior unspecified.  
+2. **Custom fields** — rich `image` (wasm webp + srcsets), `blocksLayout` (Kirby-like blocks + available-blocks list). Reserved widgets/stubs; deep behavior unspecified. **`i18n` resolved:** field-local locale map — see [i18n field](issues/12-i18n-field.md).  
 3. **End-user form UI composition** — chrome/slots beyond field-level `.meta({ ui: Component })` + sjsf theme/`ui:components`; exact API unspecified.  
 4. **Schema builder UI** — author field schemas / collection defs via shell UI; v1 remains code-defined schemas → forms.
 
@@ -216,7 +216,7 @@ Suggested build order (closed route only):
 | **P5 — Content widgets** | `markdown` (YAML strings), `reference`, `image` stub; sample **YAML** collections in `@cms/astro-template` |
 | **P6 — Self-host proof** | Template runnable via `bun run dev`; Node/Bun portable smoke on packages |
 
-Open threads (§6) are **after** P6 unless a stub is needed for compilation (reserved widget ids).
+Open threads (§6) are **after** P6 unless a stub is needed for compilation (reserved widget ids). `i18n` is implemented per [i18n field](issues/12-i18n-field.md).
 
 Informed by: [Buildable spec outline](issues/06-buildable-spec-outline.md), locked tickets 03–08.
 
@@ -235,3 +235,6 @@ Informed by: [Buildable spec outline](issues/06-buildable-spec-outline.md), lock
 | 07 | [Field schema model](issues/07-field-schema-model.md) |
 | 08 | [Collection and schema discovery](issues/08-collection-discovery.md) |
 | 09 | [Draft the buildable authoring-shell spec](issues/09-draft-buildable-spec.md) |
+| 10 | [Multi-markdown serialization](issues/10-multi-markdown-serialization.md) |
+| 11 | [Glob and entry path conventions](issues/11-glob-path-conventions.md) |
+| 12 | [i18n field](issues/12-i18n-field.md) |

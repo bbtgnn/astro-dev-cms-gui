@@ -37,6 +37,16 @@ export type FieldUiOptions = {
 	options?: Record<string, unknown>;
 };
 
+/** Options for `i18n(inner, opts)` — field-local locale map. */
+export type I18nOptions = FieldUiOptions & {
+	/** Configured locale keys (must include `defaultLocale`). */
+	locales: readonly [string, ...string[]];
+	/** Required key when the map object is present. */
+	defaultLocale: string;
+	/** Optional locale → fallback locale (resolve-only; not written to disk). */
+	fallbacks?: Partial<Record<string, string>>;
+};
+
 export type FieldUiRegistryEntry = FieldUi & {
 	/** Hint for sjsf foundational widget keys (textWidget, checkboxWidget, …). */
 	sjsfWidget?: string;
