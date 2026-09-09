@@ -1,6 +1,6 @@
 # PROTOTYPE @cms/astro-template
 
-Bun dogfood host for tracer bullets. Not a shipping product.
+Bun **self-host** Astro app for the authoring shell (spec P6). Not a shipping product.
 
 ## Run
 
@@ -11,20 +11,23 @@ bun install
 bun run dev
 ```
 
-`/_cms` is served by `src/middleware.ts` (Astro ignores `_`-prefixed pages).
+Happy path: `http://127.0.0.1:4321/cms` (shell) and `/_cms` (JSON API via `src/middleware.ts` — Astro ignores `_`-prefixed pages).
 
-Collections come from a live Vite import of `src/content.config.ts` (P2 discovery) — no `fakeCatalog` on the happy path.
+Collections come from a live Vite import of `src/content.config.ts` (P2 discovery) — sample YAML under `content-sandbox/` (`posts`, `authors`).
+
+Portable package smoke (from root): `bun run check && bun run check:allowlist && bun run lint`.
 
 ## Tracer endpoints
 
 | Path | Purpose |
 |------|---------|
 | `/` | Shell home |
-| `/cms` | Shell loop UI (`createFetchClient` + discovered schemas) |
+| `/cms` | Shell loop UI (`createFetchClient` + discovered schemas / uiSchema) |
 | `/_cms/ok` | Pass 0 heartbeat (via `createCmsIntegration`) |
-| `/_cms/api/collections` | List discovered collections |
+| `/_cms/api/collections` | List discovered collections (`authors`, `posts`) |
 | `/_cms/api/collections/posts` | FS-scan entries under `content-sandbox/posts` |
-| `/_cms/api/collections/posts/hello` | Get YAML entry |
+| `/_cms/api/collections/authors` | FS-scan entries under `content-sandbox/authors` |
+| `/_cms/api/collections/posts/hello` | Get YAML entry (includes `author` string id) |
 | `PUT /_cms/api/collections/posts/new-post` | Upsert (allowlisted) |
 | `DELETE /_cms/api/collections/posts/new-post` | Delete (204) |
 | `PUT` invalid posts body | Zod fail → 400 |
@@ -50,7 +53,7 @@ On-disk entries under `content-sandbox/` are **YAML** (`.yaml`; `.yml` accepted 
 curl -sS -X PUT \
   http://127.0.0.1:4321/_cms/api/collections/posts/new-post \
   -H 'content-type: application/json' \
-  -d '{"id":"new-post","collection":"posts","data":{"title":"Fresh","draft":false,"body":"yaml v1"}}'
+  -d '{"id":"new-post","collection":"posts","data":{"title":"Fresh","draft":false,"body":"yaml v1","author":"ada"}}'
 
 # 400 — Zod validation failure
 curl -sS -o /tmp/cms-400.json -w "%{http_code}\n" -X PUT \

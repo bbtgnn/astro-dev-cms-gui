@@ -11,13 +11,13 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - Domain: Astro content collections; server-light authoring; Kirby/PagesCMS/Payload as reference points only.
 - Skills every session should consult: `grilling`, `domain-modeling`; `research` / `prototype` when ticket type says so.
 - Tracker: local markdown under `.scratch/authoring-shell-spec/`.
-- **Execution override**: buildable [spec.md](spec.md) exists. Implement P0–P6 next; then open threads.
+- **Execution override**: buildable [spec.md](spec.md) exists. **P0–P6 landed** on main; next = open threads.
 - **Package map (locked):** `fields → components → form → crud → routes → astro-template`. See [Monorepo package boundaries for @cms/*](issues/04-monorepo-package-boundaries.md).
 - **Write-back (locked):** `/_cms/[...path]` dispatcher; `{ id, collection, data }` payloads; `createWriteMode({ root, allowPaths, writer })` with FS writers in v1; dev-only by default. See [Write-back contract (files-only v1)](issues/05-write-back-contract.md).
 - **Post-spec frontier (ordered):**
   1. ~~Multi-markdown~~ / ~~glob paths~~ (10–11 resolved; YAML v1)
-  2. **Implement [spec.md](spec.md) P0–P6** — A/B/C + P2 discovery on main. **P5 content widgets landed:** markdown textarea (stub cleared), `adaptReference` / `adaptImage` in `@cms/routes`, sample `authors` + posts `author` YAML (no image sample). Remaining: **P6 self-host proof**
-  3. Open thread — `i18n` field
+  2. ~~Implement [spec.md](spec.md) P0–P6~~ — self-host proof: `bun run dev` on `@cms/astro-template`; portable smoke `bun run check` + `check:allowlist` + `lint`
+  3. **Open thread — `i18n` field** (next)
   4. Open thread — `blocksLayout` field
   5. Open thread — rich `image` field
   6. Open thread — end-user form UI composition
@@ -42,11 +42,11 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 
 ## Not yet specified
 
-- **Next: implement [spec.md](spec.md) P6** (P0–P5 on main; YAML collections for self-host).
+- **Next: open threads** — start with `i18n` (P0–P6 closed; YAML self-host proven via `@cms/astro-template`).
 - **Deferred — MD/MDX file serialization**: frontmatter + body / `contentField` / multi-segment — after P0–P6 (or when markdown collections are in destination).
 - Exact `pathTemplate` micro-syntax (minimal `{base}/{id}.{ext}` OK at implement time).
 - Exact GitHub URL / path-install syntax for `@cms/*` (boundary locked: install root = `@cms/routes`).
-- **Open thread — `i18n`** (after P0–P6): locale alternatives; deep UI unspecified.
+- **Open thread — `i18n`** (next): locale alternatives; deep UI unspecified.
 - **Open thread — `blocksLayout`** (after `i18n`): block body + available-blocks; deep contract unspecified.
 - **Open thread — rich `image`** (after `blocksLayout`): wasm webp + srcsets; stub exists in v1.
 - **Open thread — end-user form UI composition** (after rich `image`).
