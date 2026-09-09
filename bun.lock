@@ -23,6 +23,7 @@
         "astro": "catalog:",
         "svelte": "catalog:",
         "typescript": "catalog:",
+        "yaml": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {

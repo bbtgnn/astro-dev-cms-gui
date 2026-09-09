@@ -15,6 +15,7 @@ import {
 } from "@cms/routes";
 import { glob } from "astro/loaders";
 import type { z as AstroZod } from "astro/zod";
+import { postsBlocksField } from "./cms/post-blocks";
 
 /** Zod 4 builders → Astro `defineCollection` (still typed against astro/zod). */
 function asAstroSchema<T>(schema: T): AstroZod.ZodTypeAny {
@@ -59,6 +60,7 @@ const posts = defineCollection({
 					defaultLocale: "en",
 					fallbacks: { it: "en" },
 				}),
+				blocks: postsBlocksField,
 				author: adaptReference(astroReference("authors"), {
 					label: "Author",
 					collection: "authors",

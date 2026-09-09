@@ -3,6 +3,8 @@
  * Direct `meta.ui` Component bindings are typed loosely; `@cms/fields` stays Svelte-free.
  */
 
+import type { z } from "zod";
+
 export type FieldUi = {
 	widget: string;
 	label?: string;
@@ -45,6 +47,29 @@ export type I18nOptions = FieldUiOptions & {
 	defaultLocale: string;
 	/** Optional locale → fallback locale (resolve-only; not written to disk). */
 	fallbacks?: Partial<Record<string, string>>;
+};
+
+/**
+ * One available block type for `blocksLayout`.
+ * `component` is opaque (Astro/Svelte/etc.) — `@cms/fields` stays framework-free.
+ * Hosts must keep this map for `resolveBlock` (not serialized into uiSchema).
+ */
+export type BlockDefinition<TSchema extends z.ZodType = z.ZodType> = {
+	schema: TSchema;
+	/** Site render binding — not written into serializable FieldUi options. */
+	component?: unknown;
+	label?: string;
+};
+
+/** Options for `blocksLayout({ blocks, … })`. */
+export type BlocksLayoutOptions<
+	TBlocks extends Record<string, BlockDefinition> = Record<
+		string,
+		BlockDefinition
+	>,
+> = FieldUiOptions & {
+	/** Required; at least one entry. */
+	blocks: TBlocks;
 };
 
 export type FieldUiRegistryEntry = FieldUi & {

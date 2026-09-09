@@ -1,0 +1,59 @@
+---
+/**
+ * PROTOTYPE — host render of posts/hello blocks via resolveBlock + postBlocks map.
+ * Reads YAML directly (same sandbox file as the CMS) so the demo does not depend on
+ * Astro Content Layer ingest of the posts schema.
+ */
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { resolveBlock } from "@cms/routes";
+import type { AstroComponentFactory } from "astro/runtime/server/index.js";
+import { parse } from "yaml";
+import { postBlocks } from "../cms/post-blocks-render";
+
+type HelloDoc = {
+	title?: string;
+	blocks?: Array<{ type: string; content: unknown }>;
+};
+
+const yamlPath = join(
+	dirname(fileURLToPath(import.meta.url)),
+	"../../content-sandbox/posts/hello.yaml",
+);
+const doc = parse(readFileSync(yamlPath, "utf8")) as HelloDoc;
+const blocks = Array.isArray(doc.blocks) ? doc.blocks : [];
+
+const rendered = blocks.map((block) => {
+	const resolved = resolveBlock(block, postBlocks);
+	return {
+		type: block.type,
+		Comp: resolved?.component as AstroComponentFactory | undefined,
+		props: (resolved?.props ?? {}) as Record<string, unknown>,
+	};
+});
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>blocks render — {doc.title ?? "hello"}</title>
+	</head>
+	<body>
+		<p><a href="/">← home</a></p>
+		<h1>{doc.title}</h1>
+		{
+			rendered.map((row) => {
+				const Comp = row.Comp;
+				return Comp ? (
+					<Comp {...row.props} />
+				) : (
+					<p>
+						<small>unknown block: {row.type}</small>
+					</p>
+				);
+			})
+		}
+	</body>
+</html>

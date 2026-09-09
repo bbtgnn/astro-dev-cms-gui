@@ -16,6 +16,9 @@
 		</li>
 		<li><a href="/form-spike">/form-spike</a> — CmsForm spike</li>
 		<li>
+			<a href="/blocks-demo">/blocks-demo</a> — resolveBlock render (hero/cta)
+		</li>
+		<li>
 			Track D: <code>PUT</code> invalid → 400; <code>posts/blocked</code> → 403;
 			<code>DELETE</code> → 204
 		</li>

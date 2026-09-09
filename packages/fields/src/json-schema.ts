@@ -19,6 +19,8 @@ export type UiSchemaNode = {
 	};
 	"ui:components"?: Record<string, unknown>;
 	items?: UiSchemaNode;
+	oneOf?: UiSchemaNode[];
+	anyOf?: UiSchemaNode[];
 	[key: string]: unknown;
 };
 
@@ -104,7 +106,29 @@ function walkJsonSchema(
 		if (items) out.items = items;
 	}
 
+	walkCombination("oneOf", node, zodNode, out);
+	walkCombination("anyOf", node, zodNode, out);
+
 	return Object.keys(out).length > 0 ? out : undefined;
+}
+
+function walkCombination(
+	key: "oneOf" | "anyOf",
+	node: Record<string, unknown>,
+	zodNode: z.ZodType | undefined,
+	out: UiSchemaNode,
+): void {
+	const branches = node[key];
+	if (!Array.isArray(branches) || branches.length === 0) return;
+
+	const options = getUnionOptions(zodNode);
+	const mapped = branches.map((branch, i) => {
+		if (!branch || typeof branch !== "object") return undefined;
+		return walkJsonSchema(branch as Record<string, unknown>, options?.[i]);
+	});
+	if (mapped.some((m) => m && Object.keys(m).length > 0)) {
+		out[key] = mapped.map((m) => m ?? {});
+	}
 }
 
 type ZodObjectLike = z.ZodType & {
@@ -122,7 +146,9 @@ function unwrap(schema: z.ZodType | undefined): z.ZodType | undefined {
 	let current = schema as ZodObjectLike | undefined;
 	for (let i = 0; i < 12 && current; i++) {
 		const type = current._zod?.def?.type;
-		if (type === "object" || type === "array") return current;
+		if (type === "object" || type === "array" || type === "union") {
+			return current;
+		}
 		if (current.shape) return current;
 		const inner = current._zod?.def?.innerType;
 		if (!inner) return current;
@@ -146,6 +172,19 @@ function getArrayItem(schema: z.ZodType | undefined): z.ZodType | undefined {
 		| { type?: string; element?: z.ZodType; items?: z.ZodType }
 		| undefined;
 	return def?.element ?? def?.items;
+}
+
+function getUnionOptions(
+	schema: z.ZodType | undefined,
+): z.ZodType[] | undefined {
+	const unwrapped = unwrap(schema) as ZodObjectLike | undefined;
+	const def = unwrapped?._zod?.def as
+		| { type?: string; options?: z.ZodType[] }
+		| undefined;
+	if (def?.type === "union" && Array.isArray(def.options)) {
+		return def.options;
+	}
+	return undefined;
 }
 
 /**

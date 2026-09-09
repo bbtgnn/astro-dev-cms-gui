@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { fieldUiFromOptions, isFieldUi, withFieldUi } from "./meta";
-import type { FieldMeta, FieldUi, FieldUiOptions, I18nOptions } from "./types";
+import type {
+	BlockDefinition,
+	BlocksLayoutOptions,
+	FieldMeta,
+	FieldUi,
+	FieldUiOptions,
+	I18nOptions,
+} from "./types";
 
 type Shape = Record<string, z.ZodType>;
 
@@ -137,11 +144,49 @@ export function i18n<T extends z.ZodType>(inner: T, opts: I18nOptions) {
 	});
 }
 
-/** Reserved open-thread stub (Kirby-like blocks). */
-export function blocksLayout(opts?: FieldUiOptions) {
-	return attach(
-		z.array(z.record(z.string(), z.unknown())),
-		"blocksLayout",
-		opts,
+/**
+ * Ordered polymorphic sections: `{ type, content }[]`.
+ * Serializable ui options carry `blockTypes` / `blockLabels` only —
+ * keep the live `blocks` map for `resolveBlock` (components do not cross islands).
+ */
+export function blocksLayout<TBlocks extends Record<string, BlockDefinition>>(
+	opts: BlocksLayoutOptions<TBlocks>,
+) {
+	const entries = Object.entries(opts.blocks);
+	if (entries.length < 1) {
+		throw new Error("blocksLayout: blocks requires at least one entry");
+	}
+
+	const blockSchemas = entries.map(([id, def]) =>
+		z.object({
+			type: z.literal(id),
+			content: def.schema,
+		}),
 	);
+
+	const [firstBlock, secondBlock, ...restBlocks] = blockSchemas;
+	if (!firstBlock) {
+		throw new Error("blocksLayout: blocks requires at least one entry");
+	}
+
+	const itemSchema =
+		secondBlock === undefined
+			? firstBlock
+			: z.discriminatedUnion("type", [firstBlock, secondBlock, ...restBlocks]);
+
+	const blockTypes = entries.map(([id]) => id);
+	const blockLabels: Record<string, string> = {};
+	for (const [id, def] of entries) {
+		if (def.label) blockLabels[id] = def.label;
+	}
+
+	const { label, options } = opts;
+	return attach(z.array(itemSchema), "blocksLayout", {
+		label,
+		options: {
+			blockTypes,
+			...(Object.keys(blockLabels).length > 0 ? { blockLabels } : {}),
+			...options,
+		},
+	});
 }

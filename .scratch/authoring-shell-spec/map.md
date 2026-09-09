@@ -18,7 +18,7 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
   1. ~~Multi-markdown~~ / ~~glob paths~~ (10–11 resolved; YAML v1)
   2. ~~Implement [spec.md](spec.md) P0–P6~~ — self-host proof: `bun run dev` on `@cms/astro-template`; portable smoke `bun run check` + `check:allowlist` + `lint`
   3. ~~Open thread — `i18n` field~~ — [i18n field](issues/12-i18n-field.md): field-local `{ [default]: T } & Partial<others>`; `resolveLocale`; locale switcher UI (`I18nField` in `@cms/form`)
-  4. **Open thread — `blocksLayout` field** (next)
+  4. ~~Open thread — `blocksLayout` field~~ — [blocksLayout field](issues/13-blocks-layout-field.md): `{ type, content }[]`; builder `blocks` map + render `component`; `resolveBlock`
   5. Open thread — rich `image` field
   6. Open thread — end-user form UI composition
   7. Open thread — shell commands / non-FS writers
@@ -40,16 +40,17 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - [Multi-markdown serialization](issues/10-multi-markdown-serialization.md): v1 = YAML file ↔ full `data`; MD/MDX body/frontmatter write-back deferred; markdown widget = YAML strings OK
 - [Glob and entry path conventions](issues/11-glob-path-conventions.md): id = relpath sans ext; nested `/`; prefer `.yaml`; glob base introspection + config override; list = Content Layer || FS scan; yaml+yml collision errors
 - [i18n field](issues/12-i18n-field.md): field-local `{ [defaultLocale]: T } & Partial<others>`; builder `i18n(inner, { locales, defaultLocale, fallbacks? })`; `resolveLocale`; persist raw map; locale switcher UI (one active locale)
+- [blocksLayout field](issues/13-blocks-layout-field.md): `{ type, content }[]`; builder `blocks` map with `schema` + render `component`; `resolveBlock`; min list+form UI (no Editor.js runtime)
 
 ## Not yet specified
 
-- **Next: open thread — `blocksLayout`** (after `i18n`).
+- **Next: open thread — rich `image`** (after `blocksLayout`).
 - **Deferred — MD/MDX file serialization**: frontmatter + body / `contentField` / multi-segment — after P0–P6 (or when markdown collections are in destination).
 - Exact `pathTemplate` micro-syntax (minimal `{base}/{id}.{ext}` OK at implement time).
 - Exact GitHub URL / path-install syntax for `@cms/*` (boundary locked: install root = `@cms/routes`).
 - **Deferred — Decap collection locale layouts / Kirby `translate: false`** (not in field-local i18n slice).
-- **Open thread — `blocksLayout`** (next): block body + available-blocks; deep contract unspecified.
-- **Open thread — rich `image`** (after `blocksLayout`): wasm webp + srcsets; stub exists in v1.
+- ~~**Open thread — `blocksLayout`**~~ — resolved: see [blocksLayout field](issues/13-blocks-layout-field.md).
+- **Open thread — rich `image`** (next): wasm webp + srcsets; stub exists in v1.
 - **Open thread — end-user form UI composition** (after rich `image`).
 - **Open thread — shell commands / non-FS writers** (after form composition).
 - **Open thread — schema builder UI** (last).

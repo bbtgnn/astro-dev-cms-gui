@@ -20,6 +20,9 @@ export {
 /** Light re-export of authoring builders / FieldUi (implemented in @cms/fields). */
 export {
 	array,
+	type BlockDefinition,
+	type BlocksLayoutItem,
+	type BlocksLayoutOptions,
 	blocksLayout,
 	boolean,
 	type CollectionConfig,
@@ -39,9 +42,11 @@ export {
 	object,
 	type PrototypePostsInput,
 	prototypePostsSchema,
+	type ResolvedBlock,
 	type ResolveLocaleOptions,
 	reference,
 	registerFieldUi,
+	resolveBlock,
 	resolveLocale,
 	select,
 	string,

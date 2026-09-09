@@ -30,10 +30,13 @@ const defaults: Record<BuiltInWidget, FieldUiRegistryEntry> = {
 		component: "i18nField",
 		stub: false,
 	},
+	/** Polymorphic `{ type, content }[]`; form uses BlocksLayoutField. */
 	blocksLayout: {
 		widget: "blocksLayout",
-		sjsfWidget: "textWidget",
-		stub: true,
+		sjsfWidget: "arrayField",
+		/** String key → @cms/form BlocksLayoutField. */
+		component: "blocksLayoutField",
+		stub: false,
 	},
 };
 

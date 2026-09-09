@@ -48,10 +48,17 @@ export {
 	registerFieldUi,
 } from "./registry";
 export {
+	type BlocksLayoutItem,
+	type ResolvedBlock,
+	resolveBlock,
+} from "./resolve-block";
+export {
 	type ResolveLocaleOptions,
 	resolveLocale,
 } from "./resolve-locale";
 export type {
+	BlockDefinition,
+	BlocksLayoutOptions,
 	BuiltInWidget,
 	CollectionConfig,
 	FieldMeta,
