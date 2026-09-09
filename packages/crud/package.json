@@ -10,6 +10,12 @@
 	},
 	"dependencies": {
 		"@cms/fields": "workspace:*",
-		"zod": "^4.1.5"
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"typescript": "catalog:"
+	},
+	"scripts": {
+		"check": "tsc -p ."
 	}
 }

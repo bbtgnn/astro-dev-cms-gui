@@ -15,15 +15,16 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - **Package map (locked):** `fields → components → form → crud → routes → astro-template`. See [Monorepo package boundaries for @cms/*](issues/04-monorepo-package-boundaries.md).
 - **Write-back (locked):** `/_cms/[...path]` dispatcher; `{ id, collection, data }` payloads; `createWriteMode({ root, allowPaths, writer })` with FS writers in v1; dev-only by default. See [Write-back contract (files-only v1)](issues/05-write-back-contract.md).
 - **Post-spec frontier (ordered):**
-  1. [Multi-markdown serialization](issues/10-multi-markdown-serialization.md) ← grilling now
-  2. [Glob and entry path conventions](issues/11-glob-path-conventions.md)
-  3. Implement [spec.md](spec.md) P0–P6
+  1. ~~[Multi-markdown serialization](issues/10-multi-markdown-serialization.md)~~ → YAML-only v1
+  2. ~~[Glob and entry path conventions](issues/11-glob-path-conventions.md)~~ → resolved
+  3. **Implement [spec.md](spec.md) P0–P6** ← next (YAML collections)
   4. Open thread — `i18n` field
   5. Open thread — `blocksLayout` field
   6. Open thread — rich `image` field
   7. Open thread — end-user form UI composition
   8. Open thread — shell commands / non-FS writers
   9. Open thread — schema builder UI
+  - Deferred fog: MD/MDX file serialization; pathTemplate micro-syntax
 - Refer to tickets and this map **by title**, with links.
 
 ## Decisions so far
@@ -37,11 +38,14 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - [Field schema model](issues/07-field-schema-model.md): Builders return Zod+FieldUi (`.meta`); FieldUi `{ widget, label?, options? }` (no id); end-user `meta({ ui: Component })`; input→sjsf; v1 scalars/object/array/markdown/reference + image stub; open-thread reserved widgets; live Zod needed for discovery
 - [Collection and schema discovery](issues/08-collection-discovery.md): Live `content.config` import; root `config()` meta (no cms.config); loader path map + optional pathTemplate; build-time FS collections only; listCollections via routes/write-mode; consumer imports only `@cms/routes`
 - [Draft the buildable authoring-shell spec](issues/09-draft-buildable-spec.md): Assembled [spec.md](spec.md) (Framing→…→Phased MVP P0–P6); open threads seams-only
+- [Multi-markdown serialization](issues/10-multi-markdown-serialization.md): v1 = YAML file ↔ full `data`; MD/MDX body/frontmatter write-back deferred; markdown widget = YAML strings OK
+- [Glob and entry path conventions](issues/11-glob-path-conventions.md): id = relpath sans ext; nested `/`; prefer `.yaml`; glob base introspection + config override; list = Content Layer || FS scan; yaml+yml collision errors
 
 ## Not yet specified
 
-- **Frontier — [Multi-markdown serialization](issues/10-multi-markdown-serialization.md)** (claimed): frontmatter + body/segments ↔ `data`.
-- **Frontier — [Glob and entry path conventions](issues/11-glob-path-conventions.md)**: tighten path map.
+- **Next: implement [spec.md](spec.md) P0–P6** (YAML collections for self-host).
+- **Deferred — MD/MDX file serialization**: frontmatter + body / `contentField` / multi-segment — after P0–P6 (or when markdown collections are in destination).
+- Exact `pathTemplate` micro-syntax (minimal `{base}/{id}.{ext}` OK at implement time).
 - Exact GitHub URL / path-install syntax for `@cms/*` (boundary locked: install root = `@cms/routes`).
 - **Open thread — `i18n`** (after P0–P6): locale alternatives; deep UI unspecified.
 - **Open thread — `blocksLayout`** (after `i18n`): block body + available-blocks; deep contract unspecified.

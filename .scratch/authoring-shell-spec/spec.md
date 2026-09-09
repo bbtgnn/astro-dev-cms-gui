@@ -125,15 +125,17 @@ Informed by: [Astro schema load and UI metadata](issues/01-astro-schema-load-and
 
 **Schema resolution (match Astro):** collection `schema` → else loader `schema`/`createSchema()` → resolve function schemas with `SchemaContext` (`image` stub OK) → else not editable.
 
-**Path mapping:** server-side `(collection, id)` → path from loader introspection (glob base + id/slug); optional root `config` overrides. Clients never send FS paths.
+**Path mapping (YAML v1):** server-side only. `id` = path relative to loader base without extension (nested `/` → subdirs). Prefer `.yaml` on create; accept `.yml` on read; `config({ extension?, base?, pathTemplate? })` overrides. Introspect `glob({ base, pattern })`. List = Content Layer index when available, else FS scan. Both `.yaml` and `.yml` for same id → error. Refuse `..` / escape outside `allowPaths`. Clients never send FS paths. Details: [Glob and entry path conventions](issues/11-glob-path-conventions.md).
 
-**Markdown:** fields in `data` with `widget: 'markdown'`. Multi-markdown on-disk serialization still **unspecified** (do not invent layout here).
+**Markdown:** fields in `data` may use `widget: 'markdown'` (persist as YAML strings in v1). Classic MD/MDX file write-back is **deferred** — see [Multi-markdown serialization](issues/10-multi-markdown-serialization.md).
+
+**v1 on-disk:** YAML entry files ↔ full `data` object (no frontmatter/body split).
 
 **API (server / write-mode):** `listCollections()` → `{ name, label?, schema, config?, loaderHint? }[]`. Re-import on config change when practical (Vite HMR / digest).
 
-**Template:** sample `content.config` uses builders/`config` from `@cms/routes`; FS write-mode injection; no parallel CMS config file.
+**Template:** sample `content.config` uses builders/`config` from `@cms/routes`; YAML collections for self-host; FS write-mode injection; no parallel CMS config file.
 
-Informed by: [Astro schema load and UI metadata](issues/01-astro-schema-load-and-ui-metadata.md), [Collection and schema discovery](issues/08-collection-discovery.md), [Field schema model](issues/07-field-schema-model.md).
+Informed by: [Astro schema load and UI metadata](issues/01-astro-schema-load-and-ui-metadata.md), [Collection and schema discovery](issues/08-collection-discovery.md), [Field schema model](issues/07-field-schema-model.md), [Multi-markdown serialization](issues/10-multi-markdown-serialization.md), [Glob and entry path conventions](issues/11-glob-path-conventions.md).
 
 ---
 
@@ -194,7 +196,7 @@ Named unresolved — seams only, no deep contracts:
 3. **End-user form UI composition** — chrome/slots beyond field-level `.meta({ ui: Component })` + sjsf theme/`ui:components`; exact API unspecified.  
 4. **Schema builder UI** — author field schemas / collection defs via shell UI; v1 remains code-defined schemas → forms.
 
-Also still unspecified (not invented here): multi-markdown file serialization; exact glob→path edge cases; GitHub install URL syntax (boundary: install root = `@cms/routes`).
+Also still unspecified (not invented here): exact glob→path edge cases (ticket 11); GitHub install URL syntax; deferred MD/MDX file serialization; singleton v1.
 
 Informed by: map Notes / Not yet specified; [Buildable spec outline](issues/06-buildable-spec-outline.md).
 
@@ -211,7 +213,7 @@ Suggested build order (closed route only):
 | **P2 — Discovery** | Live `content.config` import; schema resolution; `listCollections` / path map from loaders; root `config()` |
 | **P3 — Fields + form** | Builders + FieldUi; Zod→JSON Schema + sjsf form shell; core scalars/object/array; `meta.ui` Component override |
 | **P4 — Shell loop** | Collection list → entry list → editor; create / upsert / delete; validation errors in UI |
-| **P5 — Content widgets** | `markdown`, `reference`, `image` stub; sample collections in `@cms/astro-template` |
+| **P5 — Content widgets** | `markdown` (YAML strings), `reference`, `image` stub; sample **YAML** collections in `@cms/astro-template` |
 | **P6 — Self-host proof** | Template runnable via `bun run dev`; Node/Bun portable smoke on packages |
 
 Open threads (§6) are **after** P6 unless a stub is needed for compilation (reserved widget ids).

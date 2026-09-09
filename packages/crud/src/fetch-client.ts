@@ -3,7 +3,7 @@
  * Browser-safe: import from `@cms/crud/fetch-client` (not package root —
  * root re-exports Node FS writers).
  */
-import type { ContentEntry } from "./types.ts";
+import type { ContentEntry } from "./types";
 
 export type { ContentEntry };
 

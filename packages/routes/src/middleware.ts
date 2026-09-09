@@ -18,7 +18,7 @@
 import {
 	type CmsDispatcherOptions,
 	createCmsDispatcher,
-} from "./dispatcher.ts";
+} from "./dispatcher";
 
 /** Minimal Astro middleware context shape (avoid importing astro:middleware here). */
 export type CmsMiddlewareContext = {

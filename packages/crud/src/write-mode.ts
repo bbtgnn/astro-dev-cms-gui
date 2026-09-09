@@ -7,7 +7,7 @@ import type {
 	ContentEntry,
 	CreateWriteModeOptions,
 	WriteMode,
-} from "./types.ts";
+} from "./types";
 
 function normalizeFs(p: string): string {
 	return path.resolve(p).replace(/\\/g, "/");

@@ -3,7 +3,7 @@
  */
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { Writer } from "./types.ts";
+import type { Writer } from "./types";
 
 export function nodeFsWriter(): Writer {
 	return {

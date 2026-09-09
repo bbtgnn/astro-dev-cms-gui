@@ -11,5 +11,11 @@
 		"@cms/crud": "workspace:*",
 		"@cms/form": "workspace:*",
 		"@cms/components": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "catalog:"
+	},
+	"scripts": {
+		"check": "tsc -p ."
 	}
 }

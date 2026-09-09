@@ -4,7 +4,7 @@
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createWriteMode, memoryWriter } from "../../crud/src/index.ts";
+import { createWriteMode, memoryWriter } from "../../crud/src/index";
 
 const root = path.resolve(
 	path.dirname(fileURLToPath(import.meta.url)),

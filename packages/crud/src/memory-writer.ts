@@ -1,7 +1,7 @@
 /**
  * PROTOTYPE / SPIKE — in-memory writer for tests / Pass 1 without disk.
  */
-import type { Writer } from "./types.ts";
+import type { Writer } from "./types";
 
 export function memoryWriter(
 	initial: Record<string, string> = {},

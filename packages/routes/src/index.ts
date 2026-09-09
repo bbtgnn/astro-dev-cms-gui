@@ -3,11 +3,11 @@
  * Consumer install root. Dispatcher + Track C middleware / integration seam.
  */
 
-export { cmsDevOnlyGuard } from "./dev-guard.ts";
+export { cmsDevOnlyGuard } from "./dev-guard";
 export {
 	type CmsDispatcherOptions,
 	createCmsDispatcher,
-} from "./dispatcher.ts";
+} from "./dispatcher";
 export {
 	type CmsIntegration,
 	type CmsMiddlewareContext,
@@ -15,4 +15,4 @@ export {
 	type CmsMiddlewareNext,
 	createCmsIntegration,
 	createCmsMiddleware,
-} from "./middleware.ts";
+} from "./middleware";

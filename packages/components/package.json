@@ -7,5 +7,13 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./shadcn": "./src/shadcn/index.ts"
+	},
+	"devDependencies": {
+		"svelte": "catalog:",
+		"svelte-check": "catalog:",
+		"typescript": "catalog:"
+	},
+	"scripts": {
+		"check": "svelte-check --tsconfig ./tsconfig.json"
 	}
 }

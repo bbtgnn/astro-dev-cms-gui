@@ -31,5 +31,7 @@
 		"editor.defaultFormatter": "biomejs.biome"
 	},
 	"eslint.enable": false,
-	"prettier.enable": false
+	"prettier.enable": false,
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"typescript.enablePromptUseWorkspaceTsdk": true
 }

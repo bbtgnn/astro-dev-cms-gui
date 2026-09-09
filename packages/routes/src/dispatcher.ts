@@ -2,7 +2,7 @@
  * PROTOTYPE / SPIKE — single /_cms/[...path] JSON dispatcher.
  */
 import type { ContentEntry, WriteMode } from "@cms/crud";
-import { cmsDevOnlyGuard } from "./dev-guard.ts";
+import { cmsDevOnlyGuard } from "./dev-guard";
 
 export type CmsDispatcherOptions = {
 	writeMode: WriteMode;

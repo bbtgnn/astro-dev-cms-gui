@@ -2,6 +2,8 @@
 	"extends": "astro/tsconfigs/strict",
 	"compilerOptions": {
 		"baseUrl": ".",
+		"ignoreDeprecations": "6.0",
+		"customConditions": ["svelte"],
 		"paths": {
 			"@cms/fields": ["../fields/src/index.ts"],
 			"@cms/components": ["../components/src/index.ts"],
