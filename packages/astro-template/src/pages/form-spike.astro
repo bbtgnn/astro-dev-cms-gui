@@ -4,8 +4,8 @@
  * Pass serializable schemas: live Zod meta does not survive Astro island props.
  */
 import { prototypePostsSchema, toFormSchemas } from "@cms/fields";
-import PlaceholderChrome from "../../../components/src/PlaceholderChrome.svelte";
-import CmsForm from "../../../form/src/CmsForm.svelte";
+import { PlaceholderChrome } from "@cms/components";
+import { CmsForm } from "@cms/form";
 
 const { schema, uiSchema } = toFormSchemas(prototypePostsSchema);
 const value = {

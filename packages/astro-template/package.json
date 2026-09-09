@@ -22,5 +22,8 @@
 		"svelte": "catalog:",
 		"typescript": "catalog:",
 		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@astrojs/check": "^0.9.10"
 	}
 }

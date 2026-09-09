@@ -10,7 +10,7 @@ import {
 	type DiscoveredCollection,
 	memoryWriter,
 	parseEntryFile,
-} from "../../crud/src/index";
+} from "@cms/crud";
 
 const root = path.resolve(
 	path.dirname(fileURLToPath(import.meta.url)),
