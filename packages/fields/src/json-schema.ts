@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-	isFieldUi,
-	isUiComponent,
-	readFieldMeta,
-	resolveFieldUi,
-} from "./meta";
+import { isFieldUi, readFieldMeta, resolveFieldUi } from "./meta";
 import { getFieldUiDefault } from "./registry";
 import type { FieldUi } from "./types";
 
@@ -183,7 +178,14 @@ export function toFormSchemas(schema: z.ZodType): {
 	};
 }
 
-/** Strip non-JSON `ui` blobs that may contain component refs before Ajv. */
+/**
+ * Make Zod→JSON Schema safe for `@sjsf/ajv8-validator` / Ajv 8.
+ *
+ * Zod 4 emits `$schema: draft/2020-12`; Ajv throws
+ * `no schema with key or ref "…/draft/2020-12/schema"` (sjsf surfaces
+ * "Something went wrong during validation"). FieldUi / collection `config`
+ * belong in uiSchema / discovery — strip them from the Ajv document.
+ */
 export function stripUiFromJsonSchema(
 	schema: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -192,12 +194,9 @@ export function stripUiFromJsonSchema(
 	const walk = (node: unknown): void => {
 		if (!node || typeof node !== "object") return;
 		const rec = node as Record<string, unknown>;
-		if ("ui" in rec) {
-			const ui = rec.ui;
-			if (isUiComponent(ui) && !isFieldUi(ui)) {
-				delete rec.ui;
-			}
-		}
+		delete rec.$schema;
+		delete rec.ui;
+		delete rec.config;
 		for (const value of Object.values(rec)) {
 			if (Array.isArray(value)) value.forEach(walk);
 			else walk(value);
