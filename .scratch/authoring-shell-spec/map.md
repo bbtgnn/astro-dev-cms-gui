@@ -11,19 +11,18 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - Domain: Astro content collections; server-light authoring; Kirby/PagesCMS/Payload as reference points only.
 - Skills every session should consult: `grilling`, `domain-modeling`; `research` / `prototype` when ticket type says so.
 - Tracker: local markdown under `.scratch/authoring-shell-spec/`.
-- **Execution override**: buildable [spec.md](spec.md) exists. **Next:** grill implement-blocking fog (10→11), then implement spec P0–P6; then open threads in order below.
+- **Execution override**: buildable [spec.md](spec.md) exists. Implement P0–P6 next; then open threads.
 - **Package map (locked):** `fields → components → form → crud → routes → astro-template`. See [Monorepo package boundaries for @cms/*](issues/04-monorepo-package-boundaries.md).
 - **Write-back (locked):** `/_cms/[...path]` dispatcher; `{ id, collection, data }` payloads; `createWriteMode({ root, allowPaths, writer })` with FS writers in v1; dev-only by default. See [Write-back contract (files-only v1)](issues/05-write-back-contract.md).
 - **Post-spec frontier (ordered):**
-  1. ~~[Multi-markdown serialization](issues/10-multi-markdown-serialization.md)~~ → YAML-only v1
-  2. ~~[Glob and entry path conventions](issues/11-glob-path-conventions.md)~~ → resolved
-  3. **Implement [spec.md](spec.md) P0–P6** ← next (YAML collections)
-  4. Open thread — `i18n` field
-  5. Open thread — `blocksLayout` field
-  6. Open thread — rich `image` field
-  7. Open thread — end-user form UI composition
-  8. Open thread — shell commands / non-FS writers
-  9. Open thread — schema builder UI
+  1. ~~Multi-markdown~~ / ~~glob paths~~ (10–11 resolved; YAML v1)
+  2. **Implement [spec.md](spec.md) P0–P6** — parallel worktrees (2026-09-09): A=P1 YAML+paths, B=P3 fields+form, C=P4 shell; then **serial P2** discovery
+  3. Open thread — `i18n` field
+  4. Open thread — `blocksLayout` field
+  5. Open thread — rich `image` field
+  6. Open thread — end-user form UI composition
+  7. Open thread — shell commands / non-FS writers
+  8. Open thread — schema builder UI
   - Deferred fog: MD/MDX file serialization; pathTemplate micro-syntax
 - Refer to tickets and this map **by title**, with links.
 

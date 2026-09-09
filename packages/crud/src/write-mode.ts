@@ -3,11 +3,7 @@
  */
 import path from "node:path";
 import { z } from "zod";
-import type {
-	ContentEntry,
-	CreateWriteModeOptions,
-	WriteMode,
-} from "./types";
+import type { ContentEntry, CreateWriteModeOptions, WriteMode } from "./types";
 
 function normalizeFs(p: string): string {
 	return path.resolve(p).replace(/\\/g, "/");

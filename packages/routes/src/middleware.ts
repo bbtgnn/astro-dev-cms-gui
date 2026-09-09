@@ -15,10 +15,7 @@
  * Astro ignores `src/pages/_…`, so `/_cms` stays middleware-mounted.
  * Full `addMiddleware` Astro integration entrypoint is deferred.
  */
-import {
-	type CmsDispatcherOptions,
-	createCmsDispatcher,
-} from "./dispatcher";
+import { type CmsDispatcherOptions, createCmsDispatcher } from "./dispatcher";
 
 /** Minimal Astro middleware context shape (avoid importing astro:middleware here). */
 export type CmsMiddlewareContext = {
