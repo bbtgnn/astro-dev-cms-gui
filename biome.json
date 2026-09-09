@@ -9,6 +9,9 @@
 		"ignoreUnknown": true,
 		"includes": ["**", "!**/dist", "!**/.astro", "!**/node_modules"]
 	},
+	"html": {
+		"experimentalFullSupportEnabled": true
+	},
 	"formatter": {
 		"enabled": true,
 		"indentStyle": "tab"
