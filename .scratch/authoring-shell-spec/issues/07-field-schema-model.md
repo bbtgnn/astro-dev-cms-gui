@@ -1,7 +1,7 @@
 # Field schema model
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: 01
 
 ## Question

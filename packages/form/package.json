@@ -1,0 +1,17 @@
+{
+  "name": "@cms/form",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PROTOTYPE — form shell wrap (sjsf later)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@cms/components": "workspace:*",
+    "@cms/fields": "workspace:*"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  }
+}

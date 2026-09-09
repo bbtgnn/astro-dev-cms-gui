@@ -1,0 +1,24 @@
+{
+  "name": "@cms/astro-template",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PROTOTYPE — Deno-first dogfood Astro host",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/svelte": "^7.1.0",
+    "@cms/components": "workspace:*",
+    "@cms/crud": "workspace:*",
+    "@cms/fields": "workspace:*",
+    "@cms/form": "workspace:*",
+    "@cms/routes": "workspace:*",
+    "astro": "^5.13.0",
+    "svelte": "^5.38.0",
+    "typescript": "^5.9.0",
+    "zod": "^4.1.5"
+  }
+}

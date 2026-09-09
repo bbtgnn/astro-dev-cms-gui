@@ -1,0 +1,13 @@
+{
+  "name": "@cms/fields",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PROTOTYPE — Zod builders + FieldUi registry (stubs)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "zod": "^4.1.5"
+  }
+}

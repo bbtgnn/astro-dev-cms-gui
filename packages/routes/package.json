@@ -1,0 +1,15 @@
+{
+  "name": "@cms/routes",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PROTOTYPE — /_cms dispatcher + dev integration sockets",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@cms/crud": "workspace:*",
+    "@cms/form": "workspace:*",
+    "@cms/components": "workspace:*"
+  }
+}

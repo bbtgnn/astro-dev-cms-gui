@@ -1,0 +1,13 @@
+{
+  "name": "astro-dev-cms",
+  "private": true,
+  "description": "PROTOTYPE monorepo — authoring shell tracer bullets",
+  "workspaces": [
+    "packages/fields",
+    "packages/components",
+    "packages/form",
+    "packages/crud",
+    "packages/routes",
+    "packages/astro-template"
+  ]
+}

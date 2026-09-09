@@ -1,0 +1,28 @@
+---
+/**
+ * PROTOTYPE / SPIKE — Pass 3: Zod → JSON Schema → form shell stub
+ */
+import { prototypePostsSchema, toJsonSchema } from "@cms/fields";
+import CmsForm from "../../../form/src/CmsForm.svelte";
+import PlaceholderChrome from "../../../components/src/PlaceholderChrome.svelte";
+
+const schema = toJsonSchema(prototypePostsSchema);
+const value = {
+  title: "Hello tracer",
+  draft: true,
+  body: "Pass 3 form spike value.",
+};
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Form spike (prototype)</title>
+  </head>
+  <body>
+    <p><a href="/">← home</a></p>
+    <PlaceholderChrome label="@cms/components" />
+    <CmsForm client:load title="Posts form spike" schema={schema} value={value} />
+  </body>
+</html>

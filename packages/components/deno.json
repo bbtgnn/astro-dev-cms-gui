@@ -1,0 +1,7 @@
+{
+  "name": "@cms/components",
+  "exports": {
+    ".": "./src/index.ts",
+    "./shadcn": "./src/shadcn/index.ts"
+  }
+}

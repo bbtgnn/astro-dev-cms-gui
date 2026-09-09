@@ -1,5 +1,10 @@
 # dependencies
 node_modules/
+deno.lock
+
+# prototype sandbox writes
+packages/astro-template/content-sandbox/posts/*.json
+!packages/astro-template/content-sandbox/posts/.gitkeep
 
 # build / cache
 dist/

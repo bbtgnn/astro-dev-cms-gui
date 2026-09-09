@@ -1,0 +1,14 @@
+{
+  "name": "@cms/crud",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PROTOTYPE — write mode + writers (no UI)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@cms/fields": "workspace:*",
+    "zod": "^4.1.5"
+  }
+}
