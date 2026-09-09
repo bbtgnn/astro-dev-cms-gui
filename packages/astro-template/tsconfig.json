@@ -2,7 +2,6 @@
 	"extends": "astro/tsconfigs/strict",
 	"compilerOptions": {
 		"baseUrl": ".",
-		"ignoreDeprecations": "6.0",
 		"customConditions": ["svelte"],
 		"paths": {
 			"@cms/fields": ["../fields/src/index.ts"],
@@ -14,11 +13,6 @@
 			"@cms/routes": ["../routes/src/index.ts"]
 		}
 	},
-	"include": [
-		".astro/types.d.ts",
-		"**/*",
-		"../components/src/**/*",
-		"../form/src/**/*"
-	],
+	"include": [".astro/types.d.ts", "**/*"],
 	"exclude": ["dist"]
 }

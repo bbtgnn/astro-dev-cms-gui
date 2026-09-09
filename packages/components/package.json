@@ -9,7 +9,6 @@
 		"./shadcn": "./src/shadcn/index.ts"
 	},
 	"devDependencies": {
-		"@astrojs/svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
 		"typescript": "catalog:"

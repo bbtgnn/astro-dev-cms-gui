@@ -33,7 +33,6 @@
       "name": "@cms/components",
       "version": "0.0.0",
       "devDependencies": {
-        "@astrojs/svelte": "catalog:",
         "svelte": "catalog:",
         "svelte-check": "catalog:",
         "typescript": "catalog:",
@@ -74,7 +73,6 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@astrojs/svelte": "catalog:",
         "svelte": "catalog:",
         "svelte-check": "catalog:",
         "typescript": "catalog:",

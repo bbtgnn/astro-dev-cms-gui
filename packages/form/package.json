@@ -20,7 +20,6 @@
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
-		"@astrojs/svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
 		"typescript": "catalog:"
