@@ -1,4 +1,0 @@
-{
-  "name": "@cms/form",
-  "exports": "./src/index.ts"
-}

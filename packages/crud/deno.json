@@ -1,4 +1,0 @@
-{
-  "name": "@cms/crud",
-  "exports": "./src/index.ts"
-}

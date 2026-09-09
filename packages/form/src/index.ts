@@ -1,5 +1,5 @@
 /**
  * PROTOTYPE / SPIKE — @cms/form
- * Pass 0/3: form shell socket. Real sjsf wrap lands when the spike graduates.
+ * Minimal wrap of @sjsf/form + @sjsf/basic-theme (no FieldUi registry).
  */
 export { default as CmsForm } from "./CmsForm.svelte";

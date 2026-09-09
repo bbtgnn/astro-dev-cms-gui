@@ -13,7 +13,7 @@ Proving the authoring shell by running it on a real local Astro project (especia
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (and can be pulled in from GitHub without a polished registry release).
+How the authoring shell is hooked into an Astro project so it runs during local development (and can be pulled in from GitHub without a polished registry release). Consumer code imports the public API from `@cms/routes` only (re-exports builders/`config`/integration).
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
 
 **Shell UI**:
@@ -21,8 +21,16 @@ The Svelte interface rendered inside the Astro-hosted authoring shell.
 _Avoid_: admin SPA, CMS frontend
 
 **Field schema**:
-The per-field definition that pairs a validation/type schema with UI metadata used to generate editors.
+The per-field definition that pairs a validation/type schema with UI metadata used to generate editors. In this product, usually a Zod schema with FieldUi on `.meta()` (builders return Zod for Astro).
 _Avoid_: Astro schema alone, Zod schema alone, form config
+
+**FieldUi**:
+UI metadata on a field: a `widget` key (and optional label/options), and/or a direct editor `ui` binding such as a Svelte component on Zod `.meta()`.
+_Avoid_: form config, widget map alone
+
+**Field registry**:
+The map from `widget` identity to default validation helpers and UI used to generate editors; field-level `meta.ui` can override.
+_Avoid_: widget map (Decap-only sense), component library
 
 **Write-back**:
 The path by which edits from the authoring shell land in project files (or a local store that later syncs to files).
@@ -35,10 +43,6 @@ _Avoid_: page, document, post (unless collection-specific)
 **Collection**:
 An Astro content collection whose entries the shell can list and edit.
 _Avoid_: content type, model (Payload sense)
-
-**Field registry**:
-The map from field/widget identity to validation schema and UI metadata used to generate editors.
-_Avoid_: widget map (Decap-only sense), component library
 
 **Form shell**:
 The Svelte UI that turns a field schema (or derived JSON Schema) into an editable form for one content entry.

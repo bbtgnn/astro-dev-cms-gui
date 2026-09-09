@@ -1,6 +1,8 @@
 # dependencies
 node_modules/
-deno.lock
+
+# local git worktrees
+.worktrees/
 
 # prototype sandbox writes
 packages/astro-template/content-sandbox/posts/*.json

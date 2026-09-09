@@ -4,17 +4,26 @@ Label: `wayfinder:map`
 
 ## Destination
 
-A **buildable product/spec** for a **self-host-validated authoring shell**: Astro host + Svelte **shell UI**, monorepo packages (`@cms/fields`, `@cms/components`, `@cms/form`, `@cms/crud`, `@cms/routes`, `@cms/astro-template`), **field schemas** drive generated editors, **write-back** to content files, installable from GitHub (usable, not a polished registry product). Validate first-party via `@cms/astro-template`, preferably on Deno. Spec covers both markdown-ish and data **collections**. No always-on CMS server.
+A **buildable product/spec** for a **self-host-validated authoring shell**: Astro host + Svelte **shell UI**, monorepo packages (`@cms/fields`, `@cms/components`, `@cms/form`, `@cms/crud`, `@cms/routes`, `@cms/astro-template`), **field schemas** drive generated editors, **write-back** to content files, installable from GitHub (usable, not a polished registry product). Validate first-party via `@cms/astro-template` on **Bun**. Spec covers both markdown-ish and data **collections**. No always-on CMS server.
 
 ## Notes
 
 - Domain: Astro content collections; server-light authoring; Kirby/PagesCMS/Payload as reference points only.
 - Skills every session should consult: `grilling`, `domain-modeling`; `research` / `prototype` when ticket type says so.
 - Tracker: local markdown under `.scratch/authoring-shell-spec/`.
-- **Execution override**: writing the buildable spec *is* the destination; assemble it only after the decision tickets that feed it are resolved.
+- **Execution override**: buildable [spec.md](spec.md) exists. **Next:** grill implement-blocking fog (10→11), then implement spec P0–P6; then open threads in order below.
 - **Package map (locked):** `fields → components → form → crud → routes → astro-template`. See [Monorepo package boundaries for @cms/*](issues/04-monorepo-package-boundaries.md).
 - **Write-back (locked):** `/_cms/[...path]` dispatcher; `{ id, collection, data }` payloads; `createWriteMode({ root, allowPaths, writer })` with FS writers in v1; dev-only by default. See [Write-back contract (files-only v1)](issues/05-write-back-contract.md).
-- Open threads (not on the closed route): custom fields (`i18n`, `image`, `blocksLayout`); shell commands / non-FS **writers**; end-user form UI composition; **schema builder UI**.
+- **Post-spec frontier (ordered):**
+  1. [Multi-markdown serialization](issues/10-multi-markdown-serialization.md) ← grilling now
+  2. [Glob and entry path conventions](issues/11-glob-path-conventions.md)
+  3. Implement [spec.md](spec.md) P0–P6
+  4. Open thread — `i18n` field
+  5. Open thread — `blocksLayout` field
+  6. Open thread — rich `image` field
+  7. Open thread — end-user form UI composition
+  8. Open thread — shell commands / non-FS writers
+  9. Open thread — schema builder UI
 - Refer to tickets and this map **by title**, with links.
 
 ## Decisions so far
@@ -25,24 +34,25 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - [Monorepo package boundaries for @cms/*](issues/04-monorepo-package-boundaries.md): Locked `fields→components→form→crud→routes→template`; sjsf wrap; shadcn under components; injectable write mode; Deno-first + per-package package.json; consumer install = `@cms/routes`
 - [Write-back contract (files-only v1)](issues/05-write-back-contract.md): `/_cms/[...path]`; `{ id, collection, data }` (multi-markdown in `data`); `createWriteMode({ writer })`; FS writers v1; validate-before-write; path map server-side; dev-only default
 - [Buildable spec outline](issues/06-buildable-spec-outline.md): Spec TOC Framing→Loop→Architecture→Content model→Shell surface→Open threads→Phased MVP; implementer-first; inline Answers + provenance; §1.2 self-host validation (not “dogfood”); §2 beats include CRUD + validation failure; §6 seams-only list; §7 stub until 07/08
+- [Field schema model](issues/07-field-schema-model.md): Builders return Zod+FieldUi (`.meta`); FieldUi `{ widget, label?, options? }` (no id); end-user `meta({ ui: Component })`; input→sjsf; v1 scalars/object/array/markdown/reference + image stub; open-thread reserved widgets; live Zod needed for discovery
+- [Collection and schema discovery](issues/08-collection-discovery.md): Live `content.config` import; root `config()` meta (no cms.config); loader path map + optional pathTemplate; build-time FS collections only; listCollections via routes/write-mode; consumer imports only `@cms/routes`
+- [Draft the buildable authoring-shell spec](issues/09-draft-buildable-spec.md): Assembled [spec.md](spec.md) (Framing→…→Phased MVP P0–P6); open threads seams-only
 
 ## Not yet specified
 
-- **Open thread — shell commands / non-FS writers**: `runCommand`, `githubRepoWriter()`, etc. on the writer/write-mode seam; v1 ships FS writers only.
-- **Open thread — `i18n` field**: `z.custom.i18n`-style wrapper; locale alternatives (Kirby-like); deep UI/behavior unspecified.
-- **Open thread — `image` field**: wasm webp + srcsets for Astro; deep UI/behavior unspecified.
-- **Open thread — `blocksLayout` field**: block-based body (Kirby-like) + available-blocks list; later addition, deep contract unspecified.
-- **Open thread — end-user form UI composition**: override/replace form widgets and chrome without forking `@cms/form`; exact slots API beyond sjsf theme/`ui:components` + FieldUi.
-- **Open thread — schema builder UI**: field schemas (and/or collection defs) can also be authored via the shell UI, not only in code; deep product/UX unspecified—v1 remains code-defined schemas driving forms.
-- Cheap **prototype** of a generated form from mock field schemas — graduate if field-schema grilling needs a concrete artifact to react to.
+- **Frontier — [Multi-markdown serialization](issues/10-multi-markdown-serialization.md)** (claimed): frontmatter + body/segments ↔ `data`.
+- **Frontier — [Glob and entry path conventions](issues/11-glob-path-conventions.md)**: tighten path map.
 - Exact GitHub URL / path-install syntax for `@cms/*` (boundary locked: install root = `@cms/routes`).
-- Implementation phasing (markdown vs data collections first) once the buildable spec exists.
-- **Multi-markdown serialization**: how multiple markdown fields in `data` map into one on-disk file (frontmatter + segments)—fold into field-schema / discovery.
-- **Collection vs singleton/file** modeling—fold into collection discovery when that ticket runs.
-- **Astro helpers as widgets**: `reference()` and `image()` need shell conventions—fold into field-schema model.
-- **Edit the Zod input shape** (already required on write); transforms/coerce edge cases—fold into field-schema.
-- **No `defineCollection({ ui })` extension**: Astro’s content-config parser strips unknown siblings—discovery must not rely on them.
-- **`(collection, id)` → path** mapping rules using loader roots—fold into collection discovery.
+- **Open thread — `i18n`** (after P0–P6): locale alternatives; deep UI unspecified.
+- **Open thread — `blocksLayout`** (after `i18n`): block body + available-blocks; deep contract unspecified.
+- **Open thread — rich `image`** (after `blocksLayout`): wasm webp + srcsets; stub exists in v1.
+- **Open thread — end-user form UI composition** (after rich `image`).
+- **Open thread — shell commands / non-FS writers** (after form composition).
+- **Open thread — schema builder UI** (last).
+- **Collection vs singleton/file** — `kind: 'singleton'` reserved; not in v1.
+- Root `.meta(config(...))` replaces `defineCollection({ ui })` (locked in discovery).
+
+Destination artifact: [spec.md](spec.md) (ticket 09 resolved).
 
 ## Out of scope
 

@@ -1,17 +1,21 @@
 {
-  "name": "@cms/form",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "description": "PROTOTYPE — form shell wrap (sjsf later)",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "dependencies": {
-    "@cms/components": "workspace:*",
-    "@cms/fields": "workspace:*"
-  },
-  "peerDependencies": {
-    "svelte": "^5.0.0"
-  }
+	"name": "@cms/form",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "PROTOTYPE — form shell wrap around svelte-jsonschema-form",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@cms/components": "workspace:*",
+		"@cms/fields": "workspace:*",
+		"@sjsf/ajv8-validator": "^3.8.1",
+		"@sjsf/basic-theme": "^3.8.1",
+		"@sjsf/form": "^3.8.1",
+		"ajv": "^8.17.1"
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	}
 }

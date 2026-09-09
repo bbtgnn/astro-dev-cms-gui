@@ -1,9 +1,0 @@
-{
-  "name": "@cms/astro-template",
-  "exports": "./package.json",
-  "tasks": {
-    "dev": "deno run -A npm:astro dev --host 127.0.0.1 --port 4321",
-    "build": "deno run -A npm:astro build",
-    "check:allowlist": "deno run -A ./scripts/check-allowlist.ts"
-  }
-}

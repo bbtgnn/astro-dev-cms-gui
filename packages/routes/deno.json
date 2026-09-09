@@ -1,4 +1,0 @@
-{
-  "name": "@cms/routes",
-  "exports": "./src/index.ts"
-}

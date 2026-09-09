@@ -1,6 +1,18 @@
 /**
  * PROTOTYPE / SPIKE — @cms/routes
- * Consumer install root. Pass 0–2: HTTP dispatcher for /_cms/[...path].
+ * Consumer install root. Dispatcher + Track C middleware / integration seam.
  */
-export { createCmsDispatcher, type CmsDispatcherOptions } from "./dispatcher.ts";
+
 export { cmsDevOnlyGuard } from "./dev-guard.ts";
+export {
+	type CmsDispatcherOptions,
+	createCmsDispatcher,
+} from "./dispatcher.ts";
+export {
+	type CmsIntegration,
+	type CmsMiddlewareContext,
+	type CmsMiddlewareHandler,
+	type CmsMiddlewareNext,
+	createCmsIntegration,
+	createCmsMiddleware,
+} from "./middleware.ts";

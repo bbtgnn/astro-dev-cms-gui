@@ -1,24 +1,25 @@
 {
-  "name": "@cms/astro-template",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "description": "PROTOTYPE — Deno-first dogfood Astro host",
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview"
-  },
-  "dependencies": {
-    "@astrojs/svelte": "^7.1.0",
-    "@cms/components": "workspace:*",
-    "@cms/crud": "workspace:*",
-    "@cms/fields": "workspace:*",
-    "@cms/form": "workspace:*",
-    "@cms/routes": "workspace:*",
-    "astro": "^5.13.0",
-    "svelte": "^5.38.0",
-    "typescript": "^5.9.0",
-    "zod": "^4.1.5"
-  }
+	"name": "@cms/astro-template",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "PROTOTYPE — Bun dogfood Astro host",
+	"scripts": {
+		"dev": "astro dev --host 127.0.0.1 --port 4321",
+		"build": "astro build",
+		"preview": "astro preview",
+		"check:allowlist": "bun run ./scripts/check-allowlist.ts"
+	},
+	"dependencies": {
+		"@astrojs/svelte": "^7.1.0",
+		"@cms/components": "workspace:*",
+		"@cms/crud": "workspace:*",
+		"@cms/fields": "workspace:*",
+		"@cms/form": "workspace:*",
+		"@cms/routes": "workspace:*",
+		"astro": "^5.13.0",
+		"svelte": "^5.38.0",
+		"typescript": "^5.9.0",
+		"zod": "^4.1.5"
+	}
 }

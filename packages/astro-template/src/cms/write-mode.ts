@@ -14,47 +14,48 @@ export const contentRoot = path.resolve(here, "../../content-sandbox");
 export const allowPaths = ["posts", "data"];
 
 export const fakeCatalog = {
-  posts: [
-    {
-      id: "hello",
-      collection: "posts",
-      data: {
-        title: "Hello tracer",
-        draft: true,
-        body: "Pass 1 fake entry.",
-      },
-    },
-  ],
-  authors: [
-    {
-      id: "ada",
-      collection: "authors",
-      data: { name: "Ada" },
-    },
-  ],
+	posts: [
+		{
+			id: "hello",
+			collection: "posts",
+			data: {
+				title: "Hello tracer",
+				draft: true,
+				body: "Pass 1 fake entry.",
+			},
+		},
+	],
+	authors: [
+		{
+			id: "ada",
+			collection: "authors",
+			data: { name: "Ada" },
+		},
+	],
 };
 
 /** Stub (collection, id) → path relative to contentRoot. */
 export const pathMap: Record<string, Record<string, string>> = {
-  posts: {
-    hello: "posts/hello.json",
-    "new-post": "posts/new-post.json",
-  },
-  // deliberately NOT mapping authors/* so upsert without map 404s
+	posts: {
+		hello: "posts/hello.json",
+		"new-post": "posts/new-post.json",
+		// Track D: mapped but outside allowPaths → HTTP 403
+		blocked: "../blocked.json",
+	},
+	// deliberately NOT mapping authors/* so upsert without map 404s
 };
 
 export function createTemplateWriteMode(opts?: { useMemory?: boolean }) {
-  // Astro/Vite endpoint runs in Node-compat; nodeFsWriter works under Deno too.
-  const writer = opts?.useMemory ? memoryWriter() : nodeFsWriter();
+	const writer = opts?.useMemory ? memoryWriter() : nodeFsWriter();
 
-  return createWriteMode({
-    root: contentRoot,
-    allowPaths,
-    writer,
-    pathMap,
-    fakeCatalog,
-    schemas: {
-      posts: prototypePostsSchema,
-    },
-  });
+	return createWriteMode({
+		root: contentRoot,
+		allowPaths,
+		writer,
+		pathMap,
+		fakeCatalog,
+		schemas: {
+			posts: prototypePostsSchema,
+		},
+	});
 }
