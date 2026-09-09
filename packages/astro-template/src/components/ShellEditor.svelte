@@ -143,6 +143,8 @@ async function saveInvalid() {
 				{schema}
 				{uiSchema}
 				{value}
+				{collection}
+				entryId={creating ? idDraft.trim() : entryId}
 				onSubmit={(data) => void save(data)}
 			/>
 		{/key}

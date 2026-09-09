@@ -1,0 +1,40 @@
+---
+/**
+ * Host CmsImage — srcset from authored folder convention (cover.webp = max width).
+ */
+import {
+	contentAssetPath,
+	formatSrcset,
+	resolveImageSrcsetItems,
+} from "@cms/routes";
+
+type Props = {
+	/** YAML-relative canonical path, e.g. `./hello/cover/cover.webp`. */
+	src: string;
+	/** Collection content base (allowlisted folder under content-sandbox). */
+	base?: string;
+	alt?: string;
+	widths?: number[];
+	sizes?: string;
+	/** Asset URL prefix (dev CMS asset route). */
+	assetBase?: string;
+};
+
+const {
+	src,
+	base = "posts",
+	alt = "",
+	widths,
+	sizes = "100vw",
+	assetBase = "/_cms/api/assets",
+} = Astro.props as Props;
+
+const items = resolveImageSrcsetItems(src, widths);
+const urlFor = (file: string) =>
+	`${assetBase.replace(/\/+$/, "")}/${contentAssetPath(base, src, file)}`;
+const srcset = formatSrcset(items, (file) => urlFor(file));
+const canonicalFile = items.find((i) => i.file === "cover.webp")?.file ?? "cover.webp";
+const imgSrc = urlFor(canonicalFile);
+---
+
+<img src={imgSrc} srcset={srcset} sizes={sizes} alt={alt} loading="lazy" />

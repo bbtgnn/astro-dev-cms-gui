@@ -1,0 +1,118 @@
+/**
+ * Portable check: sharp convert + memoryWriter image assets allowlist.
+ */
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { createWriteMode, memoryWriter } from "@cms/crud";
+import { z } from "zod";
+import {
+	contentAssetPath,
+	resolveImageSrcsetItems,
+} from "../../fields/src/resolve-image.ts";
+import { processImageToWebpSizes } from "../../routes/src/process-image.ts";
+
+const root = path.join(
+	path.dirname(fileURLToPath(import.meta.url)),
+	"../content-sandbox-image-check",
+);
+
+const postsSchema = z.object({
+	title: z.string(),
+});
+
+const writer = memoryWriter();
+const wm = createWriteMode({
+	root,
+	allowPaths: ["posts"],
+	writer,
+	collections: [
+		{
+			name: "posts",
+			base: "posts",
+			schema: postsSchema,
+			config: { base: "posts", extension: "yaml" },
+		},
+	],
+	pathMap: {
+		posts: { hello: "posts/hello.yaml" },
+	},
+});
+
+await wm.upsertEntry({
+	id: "hello",
+	collection: "posts",
+	data: { title: "img check" },
+});
+
+/** Minimal 1×1 PNG (red). */
+const png = Uint8Array.from(
+	atob(
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+	),
+	(c) => c.charCodeAt(0),
+);
+
+const processed = await processImageToWebpSizes(png, {
+	widths: [480, 960, 1600],
+	quality: 80,
+});
+
+if (processed.files.length !== 3) {
+	throw new Error(`expected 3 files, got ${processed.files.length}`);
+}
+const names = processed.files.map((f) => f.relativeToFolder).sort();
+if (
+	JSON.stringify(names) !==
+	JSON.stringify(["480.webp", "960.webp", "cover.webp"])
+) {
+	throw new Error(`unexpected names: ${names.join(",")}`);
+}
+
+const written = await wm.writeImageAssets({
+	collection: "posts",
+	id: "hello",
+	name: "cover",
+	widths: processed.widths,
+	files: processed.files.map((f) => ({
+		relativeToFolder: f.relativeToFolder,
+		bytes: f.bytes,
+	})),
+});
+
+if (written.path !== "./hello/cover/cover.webp") {
+	throw new Error(`unexpected yaml path: ${written.path}`);
+}
+
+let found480 = false;
+for (const [k, v] of writer.store.entries()) {
+	if (
+		k.replace(/\\/g, "/").endsWith("posts/hello/cover/480.webp") &&
+		v instanceof Uint8Array
+	) {
+		found480 = true;
+		break;
+	}
+}
+if (!found480) {
+	throw new Error("480.webp not in memory store");
+}
+
+const items = resolveImageSrcsetItems(written.path, [480, 960, 1600]);
+const asset = contentAssetPath("posts", written.path, "960.webp");
+if (asset !== "posts/hello/cover/960.webp") {
+	throw new Error(`bad asset path: ${asset}`);
+}
+if (items[2]?.file !== "cover.webp" || items[2]?.width !== 1600) {
+	throw new Error(`bad srcset canonical: ${JSON.stringify(items)}`);
+}
+
+let denied = false;
+try {
+	await wm.readAsset("../etc/passwd");
+} catch (e) {
+	denied = (e as { status?: number }).status === 400;
+}
+if (!denied) throw new Error("expected unsafe asset 400");
+
+console.log("ok  image convert + writeImageAssets + srcset helpers");
+console.log("ok  items", items.map((i) => `${i.file}@${i.width}`).join(", "));

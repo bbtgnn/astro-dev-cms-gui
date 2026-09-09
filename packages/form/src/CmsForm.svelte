@@ -17,12 +17,13 @@ import { createFormIdBuilder } from "@sjsf/form/id-builders/modern";
 import { createFormMerger } from "@sjsf/form/mergers/modern";
 import { resolver } from "@sjsf/form/resolvers/basic";
 import { translation } from "@sjsf/form/translations/en";
-import { untrack } from "svelte";
+import { setContext, untrack } from "svelte";
 import type { z } from "zod";
 import "@sjsf/basic-theme/css/basic.css";
 // Registers textareaWidget for markdown multi-line fields (P5).
 import "@sjsf/basic-theme/extra-widgets/textarea-include";
 import { theme } from "./cms-theme";
+import type { CmsEntryContext } from "./ImageField.svelte";
 
 function isZodSchema(value: unknown): value is z.ZodType {
 	return (
@@ -38,6 +39,8 @@ let {
 	uiSchema: uiSchemaProp = undefined,
 	value = {},
 	title = "@cms/form",
+	collection = "",
+	entryId = "",
 	onSubmit,
 }: {
 	/** JSON Schema (preferred across Astro islands) or live Zod when same-bundle. */
@@ -50,8 +53,23 @@ let {
 	uiSchema?: UiSchemaNode;
 	value?: Record<string, unknown>;
 	title?: string;
+	/** Entry context for image upload (and similar). */
+	collection?: string;
+	entryId?: string;
 	onSubmit?: (data: Record<string, unknown>) => void;
 } = $props();
+
+const entryBox: CmsEntryContext = $state({
+	collection: "",
+	id: "",
+});
+
+$effect(() => {
+	entryBox.collection = collection;
+	entryBox.id = entryId;
+});
+
+setContext("cms.entry", entryBox);
 
 let lastSubmit = $state<Record<string, unknown> | null>(null);
 let liveValue = $state<Record<string, unknown>>({});

@@ -7,6 +7,7 @@ import type {
 	FieldUi,
 	FieldUiOptions,
 	I18nOptions,
+	ImageOptions,
 } from "./types";
 
 type Shape = Record<string, z.ZodType>;
@@ -110,9 +111,18 @@ export function reference(collection: string, opts?: FieldUiOptions) {
 	});
 }
 
-/** Image stub — rich wasm/srcset is an open thread. */
-export function image(opts?: FieldUiOptions) {
-	return attach(z.string(), "image", opts);
+/** Image path string — authoring convert+sizes via `/_cms` + host CmsImage. */
+export function image(opts?: ImageOptions) {
+	const { widths, quality, folder, label, options } = opts ?? {};
+	return attach(z.string(), "image", {
+		label,
+		options: {
+			...(widths ? { widths } : {}),
+			...(quality != null ? { quality } : {}),
+			...(folder ? { folder } : {}),
+			...options,
+		},
+	});
 }
 
 /**

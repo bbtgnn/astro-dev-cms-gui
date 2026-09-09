@@ -102,5 +102,49 @@ export function createFetchClient(base = "/_cms") {
 				{ method: "DELETE" },
 			);
 		},
+		uploadImage: async (input: {
+			file: Blob;
+			collection: string;
+			id: string;
+			name?: string;
+			widths?: number[];
+			quality?: number;
+			filename?: string;
+		}) => {
+			const body = new FormData();
+			body.append("file", input.file, input.filename ?? "upload.bin");
+			body.append("collection", input.collection);
+			body.append("id", input.id);
+			if (input.name) body.append("name", input.name);
+			if (input.widths) body.append("widths", JSON.stringify(input.widths));
+			if (input.quality != null) body.append("quality", String(input.quality));
+
+			const res = await fetch(`${root}/api/images`, {
+				method: "POST",
+				headers: { accept: "application/json" },
+				body,
+			});
+			if (!res.ok) {
+				const bodyText = await res.text();
+				let parsed:
+					| { error?: string; code?: string; issues?: unknown }
+					| undefined;
+				try {
+					parsed = JSON.parse(bodyText) as {
+						error?: string;
+						code?: string;
+						issues?: unknown;
+					};
+				} catch {
+					parsed = undefined;
+				}
+				throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
+			}
+			return (await res.json()) as {
+				path: string;
+				files: string[];
+				widths: number[];
+			};
+		},
 	};
 }

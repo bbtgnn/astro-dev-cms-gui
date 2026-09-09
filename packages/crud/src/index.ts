@@ -38,7 +38,10 @@ export type {
 	CollectionSummary,
 	ContentEntry,
 	CreateWriteModeOptions,
+	ReadAssetResult,
+	WriteImageAssetsInput,
 	WriteMode,
 	Writer,
+	WrittenImageAssets,
 } from "./types";
 export { createWriteMode } from "./write-mode";

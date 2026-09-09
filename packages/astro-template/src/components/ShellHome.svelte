@@ -19,6 +19,9 @@
 			<a href="/blocks-demo">/blocks-demo</a> — resolveBlock render (hero/cta)
 		</li>
 		<li>
+			<a href="/image-demo">/image-demo</a> — CmsImage srcset (cover folder)
+		</li>
+		<li>
 			Track D: <code>PUT</code> invalid → 400; <code>posts/blocked</code> → 403;
 			<code>DELETE</code> → 204
 		</li>

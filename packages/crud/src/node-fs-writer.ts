@@ -14,6 +14,14 @@ export function nodeFsWriter(): Writer {
 			await mkdir(dirname(path), { recursive: true });
 			await writeFile(path, contents, "utf8");
 		},
+		async readBytes(path: string) {
+			const buf = await readFile(path);
+			return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+		},
+		async writeBytes(path: string, contents: Uint8Array) {
+			await mkdir(dirname(path), { recursive: true });
+			await writeFile(path, contents);
+		},
 		async remove(path: string) {
 			await unlink(path);
 		},

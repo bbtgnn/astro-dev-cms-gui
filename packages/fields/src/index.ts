@@ -53,6 +53,14 @@ export {
 	resolveBlock,
 } from "./resolve-block";
 export {
+	contentAssetPath,
+	DEFAULT_IMAGE_SRCSET_WIDTHS,
+	formatSrcset,
+	type ImageSrcsetItem,
+	imageFolderFromCanonical,
+	resolveImageSrcsetItems,
+} from "./resolve-image";
+export {
 	type ResolveLocaleOptions,
 	resolveLocale,
 } from "./resolve-locale";
@@ -66,6 +74,7 @@ export type {
 	FieldUiOptions,
 	FieldUiRegistryEntry,
 	I18nOptions,
+	ImageOptions,
 } from "./types";
 
 /**

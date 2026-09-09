@@ -15,7 +15,14 @@ import {
 	resolveYamlEntryPath,
 	writerExists,
 } from "./path-resolve";
-import type { ContentEntry, CreateWriteModeOptions, WriteMode } from "./types";
+import type {
+	ContentEntry,
+	CreateWriteModeOptions,
+	ReadAssetResult,
+	WriteImageAssetsInput,
+	WriteMode,
+	WrittenImageAssets,
+} from "./types";
 
 function normalizeFs(p: string): string {
 	return path.resolve(p).replace(/\\/g, "/");
@@ -243,5 +250,101 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 				);
 			}
 		},
+
+		async writeImageAssets(
+			input: WriteImageAssetsInput,
+		): Promise<WrittenImageAssets> {
+			assertSafeEntryId(input.id);
+			const folderName = sanitizeAssetFolderName(input.name ?? "cover");
+			const entryPath = await resolvePath(input.collection, input.id, true);
+			assertAllowed(entryPath);
+
+			const discovered = byName.get(input.collection);
+			const baseRel =
+				discovered?.config?.base ?? discovered?.base ?? input.collection;
+			const folderRel = path.posix.join(baseRel, input.id, folderName);
+			const folderAbs = joinRoot(root, folderRel);
+			assertAllowed(folderAbs);
+
+			const entryDir = path.dirname(entryPath);
+			const written: string[] = [];
+
+			for (const file of input.files) {
+				const relName = file.relativeToFolder.replace(/^\/+/, "");
+				if (
+					!relName ||
+					relName.includes("..") ||
+					relName.includes("\\") ||
+					path.isAbsolute(relName)
+				) {
+					throw Object.assign(new Error(`Unsafe asset name: ${relName}`), {
+						status: 400,
+						code: "UNSAFE_ASSET",
+					});
+				}
+				const abs = normalizeFs(path.join(folderAbs, relName));
+				if (!abs.startsWith(`${folderAbs}/`) && abs !== folderAbs) {
+					throw Object.assign(new Error(`Unsafe asset path: ${relName}`), {
+						status: 400,
+						code: "UNSAFE_ASSET",
+					});
+				}
+				assertAllowed(abs);
+				await writer.writeBytes(abs, file.bytes);
+				written.push(path.relative(root, abs).replace(/\\/g, "/"));
+			}
+
+			const canonicalAbs = normalizeFs(path.join(folderAbs, "cover.webp"));
+			const relForYaml = path
+				.relative(entryDir, canonicalAbs)
+				.replace(/\\/g, "/");
+			const yamlPath = relForYaml.startsWith(".")
+				? relForYaml
+				: `./${relForYaml}`;
+
+			return {
+				path: yamlPath,
+				files: written,
+				widths: [...input.widths].sort((a, b) => a - b),
+			};
+		},
+
+		async readAsset(relFromRoot: string): Promise<ReadAssetResult> {
+			const cleaned = relFromRoot.replace(/^\/+/, "").replace(/\\/g, "/");
+			if (
+				!cleaned ||
+				cleaned.includes("..") ||
+				path.isAbsolute(cleaned) ||
+				cleaned.startsWith("/")
+			) {
+				throw Object.assign(new Error(`Unsafe asset path: ${relFromRoot}`), {
+					status: 400,
+					code: "UNSAFE_ASSET",
+				});
+			}
+			const absolutePath = joinRoot(root, cleaned);
+			assertAllowed(absolutePath);
+			const bytes = await writer.readBytes(absolutePath);
+			return { bytes, contentType: contentTypeFor(cleaned) };
+		},
 	};
+}
+
+function sanitizeAssetFolderName(name: string): string {
+	if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+		throw Object.assign(new Error(`Unsafe folder name: ${name}`), {
+			status: 400,
+			code: "UNSAFE_ASSET",
+		});
+	}
+	return name;
+}
+
+function contentTypeFor(rel: string): string {
+	const lower = rel.toLowerCase();
+	if (lower.endsWith(".webp")) return "image/webp";
+	if (lower.endsWith(".png")) return "image/png";
+	if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+	if (lower.endsWith(".gif")) return "image/gif";
+	return "application/octet-stream";
 }

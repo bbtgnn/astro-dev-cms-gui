@@ -3,6 +3,11 @@
  */
 import type { ContentEntry, WriteMode } from "@cms/crud";
 import { cmsDevOnlyGuard } from "./dev-guard";
+import {
+	DEFAULT_IMAGE_WIDTHS,
+	DEFAULT_WEBP_QUALITY,
+	processImageToWebpSizes,
+} from "./process-image";
 
 export type CmsDispatcherOptions = {
 	writeMode: WriteMode;
@@ -26,6 +31,23 @@ function errorResponse(err: unknown): Response {
 		},
 		{ status },
 	);
+}
+
+function parseWidths(raw: FormDataEntryValue | null): number[] | undefined {
+	if (typeof raw !== "string" || !raw.trim()) return undefined;
+	try {
+		const parsed = JSON.parse(raw) as unknown;
+		if (
+			Array.isArray(parsed) &&
+			parsed.every((n) => typeof n === "number" && Number.isFinite(n))
+		) {
+			return parsed;
+		}
+	} catch {
+		const parts = raw.split(",").map((s) => Number(s.trim()));
+		if (parts.every((n) => Number.isFinite(n) && n > 0)) return parts;
+	}
+	return undefined;
 }
 
 /**
@@ -58,6 +80,69 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 			// GET /api/collections
 			if (path === "api/collections" && method === "GET") {
 				return Response.json(await wm.listCollections());
+			}
+
+			// GET /api/assets/<rel-from-content-root>
+			if (path.startsWith("api/assets/") && method === "GET") {
+				const rel = path.slice("api/assets/".length);
+				const asset = await wm.readAsset(decodeURIComponent(rel));
+				return new Response(Buffer.from(asset.bytes), {
+					status: 200,
+					headers: {
+						"content-type": asset.contentType,
+						"cache-control": "no-store",
+					},
+				});
+			}
+
+			// POST /api/images — multipart: file, collection, id, name?, widths?, quality?
+			if (path === "api/images" && method === "POST") {
+				const form = await request.formData();
+				const file = form.get("file");
+				const collection = String(form.get("collection") ?? "");
+				const id = String(form.get("id") ?? "");
+				const name = String(form.get("name") ?? "cover");
+				if (!(file instanceof File)) {
+					return Response.json(
+						{ error: "file is required", code: "MISSING_FILE" },
+						{ status: 400 },
+					);
+				}
+				if (!collection || !id) {
+					return Response.json(
+						{
+							error: "collection and id are required",
+							code: "MISSING_ENTRY",
+						},
+						{ status: 400 },
+					);
+				}
+
+				const buf = new Uint8Array(await file.arrayBuffer());
+				const widths = parseWidths(form.get("widths")) ?? [
+					...DEFAULT_IMAGE_WIDTHS,
+				];
+				const qualityRaw = form.get("quality");
+				const quality =
+					typeof qualityRaw === "string" && qualityRaw.trim()
+						? Number(qualityRaw)
+						: DEFAULT_WEBP_QUALITY;
+
+				const processed = await processImageToWebpSizes(buf, {
+					widths,
+					quality: Number.isFinite(quality) ? quality : DEFAULT_WEBP_QUALITY,
+				});
+				const written = await wm.writeImageAssets({
+					collection,
+					id,
+					name,
+					widths: processed.widths,
+					files: processed.files.map((f) => ({
+						relativeToFolder: f.relativeToFolder,
+						bytes: f.bytes,
+					})),
+				});
+				return Response.json(written);
 			}
 
 			// /api/collections/:collection[/:id]

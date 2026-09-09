@@ -21,7 +21,13 @@ const defaults: Record<BuiltInWidget, FieldUiRegistryEntry> = {
 	},
 	/** Minimum text until live listEntries select (still stub). */
 	reference: { widget: "reference", sjsfWidget: "textWidget", stub: true },
-	image: { widget: "image", sjsfWidget: "textWidget", stub: true },
+	/** Path string; form uses ImageField (upload → sharp sizes API). */
+	image: {
+		widget: "image",
+		sjsfWidget: "textWidget",
+		component: "imageField",
+		stub: false,
+	},
 	/** Object of locale keys; inner FieldUi propagates via toUiSchema. */
 	i18n: {
 		widget: "i18n",

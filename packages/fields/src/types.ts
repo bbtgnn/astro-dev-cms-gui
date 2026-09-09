@@ -49,6 +49,16 @@ export type I18nOptions = FieldUiOptions & {
 	fallbacks?: Partial<Record<string, string>>;
 };
 
+/** Options for rich `image()` — path string + authoring convert defaults. */
+export type ImageOptions = FieldUiOptions & {
+	/** Widths for sharp convert (canonical = max). */
+	widths?: number[];
+	/** WebP quality 1–100. */
+	quality?: number;
+	/** Folder name under `{id}/` (default `cover`). */
+	folder?: string;
+};
+
 /**
  * One available block type for `blocksLayout`.
  * `component` is opaque (Astro/Svelte/etc.) — `@cms/fields` stays framework-free.

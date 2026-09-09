@@ -8,6 +8,7 @@ import {
 	boolean,
 	config,
 	i18n,
+	image,
 	markdown,
 	object,
 	text,
@@ -61,6 +62,7 @@ const posts = defineCollection({
 					fallbacks: { it: "en" },
 				}),
 				blocks: postsBlocksField,
+				cover: image({ label: "Cover" }).optional(),
 				author: adaptReference(astroReference("authors"), {
 					label: "Author",
 					collection: "authors",
