@@ -83,3 +83,4 @@ blocksLayout({
 - 2026-09-09: Proceed locked Answer — `{ type, content }[]`; `resolveBlock`; form widget in `@cms/form`; sample on posts.
 - 2026-09-09: Implemented — builder + `BlocksLayoutField` + posts sample + `/blocks-demo` host render via `resolveBlock`.
 - 2026-09-09: Host note — keep render `component`s out of `content.config` imports (split schema map vs render map); Astro `.astro` in the content config graph breaks the posts collection.
+- 2026-09-09: Browser smoke — list UI OK; nested `content` editors broke for 2+ block types (`discriminatedUnion` → JSON Schema `oneOf`, `contentConfig` read top-level `properties` → `{}`). Fixed in `BlocksLayoutField` via `pickBranchSchema` (mirrors uiSchema branch pick). Re-smoke: hero/cta fields edit + upsert `{ type, content }[]`; `/blocks-demo` renders.

@@ -121,14 +121,33 @@
 		return itemUi;
 	}
 
+	/** Match `oneOf`/`anyOf` item schemas to `blockTypes` index (same as uiSchema). */
+	function pickBranchSchema(
+		itemSchema: Record<string, unknown>,
+		type: string,
+	): Record<string, unknown> {
+		const branches = itemSchema.oneOf ?? itemSchema.anyOf;
+		if (Array.isArray(branches) && type) {
+			const idx = blockTypes.indexOf(type);
+			const branch = idx >= 0 ? branches[idx] : undefined;
+			if (branch && typeof branch === "object" && !Array.isArray(branch)) {
+				return branch as Record<string, unknown>;
+			}
+		}
+		return itemSchema;
+	}
+
 	function contentConfig(index: number, item: unknown) {
 		const itemCfg = arrayCtx.itemConfig(config, item as never, index);
 		const type = itemType(item);
-		const schema = itemCfg.schema as Schema & {
+		const branchSchema = pickBranchSchema(
+			itemCfg.schema as Record<string, unknown>,
+			type,
+		) as Schema & {
 			properties?: Record<string, Schema | boolean>;
 			required?: string[];
 		};
-		const contentDef = schema.properties?.content;
+		const contentDef = branchSchema.properties?.content;
 		const contentSchema: Schema =
 			contentDef && typeof contentDef === "object" ? contentDef : {};
 
@@ -143,8 +162,8 @@
 			title: uiTitleOption(ctx, contentUi) ?? "Content",
 			schema: retrieveSchema(ctx, contentSchema, itemContent(item)),
 			uiSchema: contentUi,
-			required: Array.isArray(schema.required)
-				? schema.required.includes("content")
+			required: Array.isArray(branchSchema.required)
+				? branchSchema.required.includes("content")
 				: true,
 			value: () => itemContent(item),
 		});
