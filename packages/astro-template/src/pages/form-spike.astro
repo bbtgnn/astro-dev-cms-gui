@@ -3,8 +3,9 @@
  * Form spike — builders + FieldUi → JSON Schema / uiSchema → @cms/form.
  * Pass serializable schemas: live Zod meta does not survive Astro island props.
  */
-import { prototypePostsSchema, toFormSchemas } from "@cms/fields";
+
 import { PlaceholderChrome } from "@cms/components";
+import { prototypePostsSchema, toFormSchemas } from "@cms/fields";
 import { CmsForm } from "@cms/form";
 
 const { schema, uiSchema } = toFormSchemas(prototypePostsSchema);

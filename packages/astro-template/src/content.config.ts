@@ -1,9 +1,10 @@
 /**
- * Sample Astro content config — live discovery source for the authoring shell (P2).
- * Builders / `config` / loader path hints come from `@cms/routes` (consumer surface).
+ * Sample Astro content config — live discovery source for the authoring shell (P2/P5).
+ * Builders / `config` / loader path hints / adapt* come from `@cms/routes`.
  */
-import { defineCollection } from "astro:content";
+import { reference as astroReference, defineCollection } from "astro:content";
 import {
+	adaptReference,
 	boolean,
 	config,
 	markdown,
@@ -12,6 +13,30 @@ import {
 	withLoaderPathHint,
 } from "@cms/routes";
 import { glob } from "astro/loaders";
+import type { z as AstroZod } from "astro/zod";
+
+/** Zod 4 builders → Astro `defineCollection` (still typed against astro/zod). */
+function asAstroSchema<T>(schema: T): AstroZod.ZodTypeAny {
+	return schema as unknown as AstroZod.ZodTypeAny;
+}
+
+const authors = defineCollection({
+	loader: withLoaderPathHint(
+		glob({
+			pattern: "**/*.{yaml,yml}",
+			base: "./content-sandbox/authors",
+		}),
+		{ base: "authors", pattern: "**/*.{yaml,yml}" },
+	),
+	schema: asAstroSchema(
+		object(
+			{
+				name: text({ label: "Name" }),
+			},
+			{ label: "Authors" },
+		).meta(config({ label: "Authors", base: "authors" })),
+	),
+});
 
 const posts = defineCollection({
 	loader: withLoaderPathHint(
@@ -21,14 +46,20 @@ const posts = defineCollection({
 		}),
 		{ base: "posts", pattern: "**/*.{yaml,yml}" },
 	),
-	schema: object(
-		{
-			title: text({ label: "Title" }),
-			draft: boolean({ label: "Draft", default: false }),
-			body: markdown({ label: "Body" }),
-		},
-		{ label: "Posts" },
-	).meta(config({ label: "Posts", base: "posts" })),
+	schema: asAstroSchema(
+		object(
+			{
+				title: text({ label: "Title" }),
+				draft: boolean({ label: "Draft", default: false }),
+				body: markdown({ label: "Body" }),
+				author: adaptReference(astroReference("authors"), {
+					label: "Author",
+					collection: "authors",
+				}),
+			},
+			{ label: "Posts" },
+		).meta(config({ label: "Posts", base: "posts" })),
+	),
 });
 
-export const collections = { posts };
+export const collections = { authors, posts };

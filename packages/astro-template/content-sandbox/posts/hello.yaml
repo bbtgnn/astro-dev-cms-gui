@@ -1,3 +1,7 @@
 title: Hello tracer
 draft: true
-body: Pass 1 fake entry.
+body: |
+  Pass 1 fake entry.
+
+  Markdown body for P5 textarea UX.
+author: ada

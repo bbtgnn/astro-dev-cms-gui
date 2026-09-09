@@ -1,17 +1,21 @@
 ---
 /**
- * PROTOTYPE / SPIKE — P4 authoring shell loop (collections → entries → editor).
+ * PROTOTYPE / SPIKE — P4/P5 authoring shell loop (collections → entries → editor).
  * UI lives at /cms; JSON API remains middleware-mounted at /_cms.
- * Schemas come from live content.config discovery (P2).
+ * Schemas come from live content.config discovery (P2); uiSchema carries markdown textarea.
  */
-import { discoverCollections, toJsonSchema } from "@cms/routes";
+
 import { PlaceholderChrome } from "@cms/components";
+import { discoverCollections, toFormSchemas } from "@cms/routes";
 import ShellList from "../components/ShellList.svelte";
 import { collections } from "../content.config";
 
 const discovered = discoverCollections(collections);
 const schemas = Object.fromEntries(
-	discovered.map((c) => [c.name, toJsonSchema(c.schema)]),
+	discovered.map((c) => {
+		const { schema, uiSchema } = toFormSchemas(c.schema);
+		return [c.name, { schema, uiSchema }];
+	}),
 );
 ---
 

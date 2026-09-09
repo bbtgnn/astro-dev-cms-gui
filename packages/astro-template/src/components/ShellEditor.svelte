@@ -5,12 +5,14 @@ import {
 	createFetchClient,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
+import type { UiSchemaNode } from "@cms/fields";
 import { CmsForm } from "@cms/form";
 
 let {
 	collection,
 	entryId,
 	schema = null,
+	uiSchema = undefined,
 	value = {},
 	creating = false,
 	onSaved,
@@ -20,6 +22,7 @@ let {
 	collection: string;
 	entryId: string;
 	schema?: Record<string, unknown> | null;
+	uiSchema?: UiSchemaNode;
 	value?: Record<string, unknown>;
 	creating?: boolean;
 	onSaved?: (entry: ContentEntry) => void;
@@ -98,6 +101,7 @@ async function saveInvalid() {
 		title: 123,
 		draft: false,
 		body: "intentionally invalid title type",
+		author: "ada",
 	} as unknown as Record<string, unknown>);
 }
 </script>
@@ -136,6 +140,7 @@ async function saveInvalid() {
 			<CmsForm
 				title={`${collection} / ${creating ? idDraft || "new" : entryId}`}
 				{schema}
+				{uiSchema}
 				{value}
 				onSubmit={(data) => void save(data)}
 			/>

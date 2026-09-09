@@ -16,7 +16,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const contentRoot = path.resolve(here, "../../content-sandbox");
 
 /** Allowlisted write roots (under content-sandbox only). */
-export const allowPaths = ["posts", "data"];
+export const allowPaths = ["posts", "authors", "data"];
 
 const discovered = discoverCollections(collections);
 

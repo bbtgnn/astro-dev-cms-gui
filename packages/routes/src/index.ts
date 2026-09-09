@@ -48,6 +48,12 @@ export {
 	toUiSchema,
 	z,
 } from "@cms/fields";
+export {
+	type AdaptImageOptions,
+	type AdaptReferenceOptions,
+	adaptImage,
+	adaptReference,
+} from "./adapt";
 export { cmsDevOnlyGuard } from "./dev-guard";
 export {
 	type CmsDispatcherOptions,

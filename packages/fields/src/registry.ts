@@ -11,8 +11,16 @@ const defaults: Record<BuiltInWidget, FieldUiRegistryEntry> = {
 	datetime: { widget: "datetime", sjsfWidget: "textWidget" },
 	object: { widget: "object" },
 	array: { widget: "array" },
-	markdown: { widget: "markdown", sjsfWidget: "textWidget", stub: true },
-	reference: { widget: "reference", sjsfWidget: "selectWidget", stub: true },
+	markdown: {
+		widget: "markdown",
+		sjsfWidget: "textWidget",
+		/** String key → sjsf extra widget (see @sjsf/basic-theme textarea-include). */
+		component: "textareaWidget",
+		options: { textarea: { rows: 10 } },
+		stub: false,
+	},
+	/** Minimum text until live listEntries select (still stub). */
+	reference: { widget: "reference", sjsfWidget: "textWidget", stub: true },
 	image: { widget: "image", sjsfWidget: "textWidget", stub: true },
 	i18n: { widget: "i18n", sjsfWidget: "textWidget", stub: true },
 	blocksLayout: {

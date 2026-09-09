@@ -21,6 +21,8 @@ import { translation } from "@sjsf/form/translations/en";
 import { untrack } from "svelte";
 import type { z } from "zod";
 import "@sjsf/basic-theme/css/basic.css";
+// Registers textareaWidget for markdown multi-line fields (P5).
+import "@sjsf/basic-theme/extra-widgets/textarea-include";
 
 function isZodSchema(value: unknown): value is z.ZodType {
 	return (

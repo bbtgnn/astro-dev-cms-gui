@@ -4,13 +4,13 @@
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { z } from "zod";
 import {
 	createWriteMode,
 	type DiscoveredCollection,
 	memoryWriter,
 	parseEntryFile,
 } from "@cms/crud";
+import { z } from "zod";
 
 const root = path.resolve(
 	path.dirname(fileURLToPath(import.meta.url)),

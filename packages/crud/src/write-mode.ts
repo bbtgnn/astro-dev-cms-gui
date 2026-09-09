@@ -207,10 +207,12 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			assertAllowed(absolutePath);
 			await assertNoYamlExtCollision(exists, absolutePath);
 
+			// Persist Zod **input** (spec §5.2) so transforms like Astro
+			// `reference()` do not rewrite string ids into lookup objects on disk.
 			const next: ContentEntry = {
 				id: entry.id,
 				collection: entry.collection,
-				data: parsed.data as Record<string, unknown>,
+				data: entry.data,
 			};
 
 			// nodeFsWriter mkdir's parents; memoryWriter is path-key only.

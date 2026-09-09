@@ -5,14 +5,20 @@ import {
 	createFetchClient,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
+import type { UiSchemaNode } from "@cms/fields";
 import { onMount } from "svelte";
 import ShellEditor from "./ShellEditor.svelte";
+
+type CollectionFormSchemas = {
+	schema: Record<string, unknown>;
+	uiSchema?: UiSchemaNode;
+};
 
 let {
 	schemas = {},
 }: {
 	/** collection name → JSON Schema (from Astro / @cms/fields) */
-	schemas?: Record<string, Record<string, unknown>>;
+	schemas?: Record<string, CollectionFormSchemas>;
 } = $props();
 
 const client = createFetchClient("/_cms");
@@ -127,7 +133,7 @@ function backToCollections() {
 	error = null;
 }
 
-const activeSchema = $derived(
+const activeSchemas = $derived(
 	selectedCollection ? (schemas[selectedCollection] ?? null) : null,
 );
 
@@ -207,7 +213,8 @@ onMount(() => {
 		<ShellEditor
 			collection={selectedCollection}
 			entryId={entry.id}
-			schema={activeSchema}
+			schema={activeSchemas?.schema ?? null}
+			uiSchema={activeSchemas?.uiSchema}
 			value={entry.data}
 			onSaved={(saved) => void onSaved(saved)}
 			onDeleted={() => void onDeleted()}
@@ -217,7 +224,8 @@ onMount(() => {
 		<ShellEditor
 			collection={selectedCollection}
 			entryId="new-post"
-			schema={activeSchema}
+			schema={activeSchemas?.schema ?? null}
+			uiSchema={activeSchemas?.uiSchema}
 			value={{}}
 			creating={true}
 			onSaved={(saved) => void onSaved(saved)}
