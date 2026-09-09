@@ -47,8 +47,8 @@ i18n(inner, {
 
 ### UI (this slice)
 
-- Minimum: sjsf **object** editor over locale keys; clear registry `stub`.
-- `toUiSchema` walks locale properties and propagates inner FieldUi (e.g. `i18n(markdown())` → textarea per locale).
+- Field-local **locale switcher**: one active locale editor at a time (`@cms/form` `I18nField` via `ui:components.objectField → i18nField`); inactive locales retained in the value map.
+- `toUiSchema` walks locale properties and propagates inner FieldUi (e.g. `i18n(markdown())` → textarea for the active locale).
 - No side-by-side panes / collection language chrome.
 
 ### Sample
@@ -64,3 +64,4 @@ i18n(inner, {
 ## Comments
 
 - 2026-09-09: Locked field-local `Record`-as-object shape with required default; fallbacks resolve-only; minimum object UI.
+- 2026-09-09: Locale switcher UI landed in `@cms/form` (`I18nField` + `cms-theme`); registry maps `i18n` → `objectField`/`i18nField`. Value shape / builder / `resolveLocale` unchanged. Frontier stays on open-thread polish until user advances to `blocksLayout`.

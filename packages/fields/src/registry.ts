@@ -23,7 +23,13 @@ const defaults: Record<BuiltInWidget, FieldUiRegistryEntry> = {
 	reference: { widget: "reference", sjsfWidget: "textWidget", stub: true },
 	image: { widget: "image", sjsfWidget: "textWidget", stub: true },
 	/** Object of locale keys; inner FieldUi propagates via toUiSchema. */
-	i18n: { widget: "i18n", stub: false },
+	i18n: {
+		widget: "i18n",
+		sjsfWidget: "objectField",
+		/** String key → @cms/form I18nField (locale switcher). */
+		component: "i18nField",
+		stub: false,
+	},
 	blocksLayout: {
 		widget: "blocksLayout",
 		sjsfWidget: "textWidget",

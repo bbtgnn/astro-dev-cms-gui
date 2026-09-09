@@ -17,7 +17,7 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - **Post-spec frontier (ordered):**
   1. ~~Multi-markdown~~ / ~~glob paths~~ (10–11 resolved; YAML v1)
   2. ~~Implement [spec.md](spec.md) P0–P6~~ — self-host proof: `bun run dev` on `@cms/astro-template`; portable smoke `bun run check` + `check:allowlist` + `lint`
-  3. ~~Open thread — `i18n` field~~ — [i18n field](issues/12-i18n-field.md): field-local `{ [default]: T } & Partial<others>`; `resolveLocale`; minimum object UI
+  3. ~~Open thread — `i18n` field~~ — [i18n field](issues/12-i18n-field.md): field-local `{ [default]: T } & Partial<others>`; `resolveLocale`; locale switcher UI (`I18nField` in `@cms/form`)
   4. **Open thread — `blocksLayout` field** (next)
   5. Open thread — rich `image` field
   6. Open thread — end-user form UI composition
@@ -39,7 +39,7 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
 - [Draft the buildable authoring-shell spec](issues/09-draft-buildable-spec.md): Assembled [spec.md](spec.md) (Framing→…→Phased MVP P0–P6); open threads seams-only
 - [Multi-markdown serialization](issues/10-multi-markdown-serialization.md): v1 = YAML file ↔ full `data`; MD/MDX body/frontmatter write-back deferred; markdown widget = YAML strings OK
 - [Glob and entry path conventions](issues/11-glob-path-conventions.md): id = relpath sans ext; nested `/`; prefer `.yaml`; glob base introspection + config override; list = Content Layer || FS scan; yaml+yml collision errors
-- [i18n field](issues/12-i18n-field.md): field-local `{ [defaultLocale]: T } & Partial<others>`; builder `i18n(inner, { locales, defaultLocale, fallbacks? })`; `resolveLocale`; persist raw map; minimum object UI
+- [i18n field](issues/12-i18n-field.md): field-local `{ [defaultLocale]: T } & Partial<others>`; builder `i18n(inner, { locales, defaultLocale, fallbacks? })`; `resolveLocale`; persist raw map; locale switcher UI (one active locale)
 
 ## Not yet specified
 

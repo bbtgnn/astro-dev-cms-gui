@@ -7,7 +7,6 @@ import {
 	type UiSchemaNode,
 } from "@cms/fields";
 import { createFormValidator } from "@sjsf/ajv8-validator";
-import { theme } from "@sjsf/basic-theme";
 import {
 	BasicForm,
 	createForm,
@@ -23,6 +22,7 @@ import type { z } from "zod";
 import "@sjsf/basic-theme/css/basic.css";
 // Registers textareaWidget for markdown multi-line fields (P5).
 import "@sjsf/basic-theme/extra-widgets/textarea-include";
+import { theme } from "./cms-theme";
 
 function isZodSchema(value: unknown): value is z.ZodType {
 	return (
