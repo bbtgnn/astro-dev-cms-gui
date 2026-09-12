@@ -1,0 +1,10 @@
+{
+	"name": "prototype-clone-run-electrobun",
+	"private": true,
+	"version": "0.0.1",
+	"description": "PROTOTYPE — Electrobun + embedded Bun clone→install→run→webview + content.config schema eval",
+	"type": "module",
+	"devDependencies": {
+		"@types/bun": "latest"
+	}
+}

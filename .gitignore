@@ -8,6 +8,7 @@ node_modules/
 packages/astro-template/content-sandbox/posts/*.json
 !packages/astro-template/content-sandbox/posts/.gitkeep
 .scratch/prototype-clone-run/WIP-PROTOTYPE-wipe-me/
+.scratch/prototype-clone-run-electrobun/WIP-PROTOTYPE-wipe-me/
 
 # build / cache
 dist/
