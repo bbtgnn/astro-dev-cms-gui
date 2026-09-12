@@ -33,7 +33,8 @@
 		"check:allowlist": "bun run packages/astro-template/scripts/check-allowlist.ts",
 		"check:image": "bun run packages/astro-template/scripts/check-image.ts",
 		"lint": "biome check .",
-		"format": "biome check --write ."
+		"format": "biome check --write .",
+		"prototype:clone-run": "deno desktop --hmr --backend webview -A --no-check --config .scratch/prototype-clone-run/deno.json .scratch/prototype-clone-run/main.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.2.0",
