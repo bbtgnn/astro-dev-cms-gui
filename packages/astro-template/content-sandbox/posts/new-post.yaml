@@ -1,0 +1,11 @@
+title: image post
+body: ciao
+summary:
+  en: nice post
+blocks:
+  - type: hero
+    content:
+      title: asd
+      body: asd
+cover: ./new-post/cover/cover.webp
+author: my man

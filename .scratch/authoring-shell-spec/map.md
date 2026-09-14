@@ -24,6 +24,7 @@ A **buildable product/spec** for a **self-host-validated authoring shell**: Astr
   7. Open thread — shell commands / non-FS writers
   8. Open thread — schema builder UI
   - Deferred fog: MD/MDX file serialization; pathTemplate micro-syntax; Decap collection locale layouts / Kirby `translate: false`
+- Working sketch (2026-09-12): Zod/meta → JSON Schema → sjsf `uiSchema`; `/_cms` dev-only route; preview = site URL — [research/17](research/17-form-pipeline-dev-route-preview.md) (also [16 schema CRUD](research/16-schema-driven-crud-from-json-or-zod.md)).
 - Refer to tickets and this map **by title**, with links.
 
 ## Decisions so far
