@@ -22,7 +22,7 @@ Borrow the good bits from Kirby / Pages / Payload (field registry, blocks, local
 ## What we are not
 
 - Not a production CMS server or SaaS.
-- Not a desktop clone/run shell (that product lives in a separate repo).
+- Not remote git auth, hosted admin, or any desktop packaging story — this monorepo is **`@cms/*` + Astro only**.
 
 ## Self-host the shell (happy path)
 
@@ -46,4 +46,6 @@ Portable smoke: `bun run check && bun run check:allowlist && bun run lint`.
 ## Docs & language
 
 - Domain glossary: [CONTEXT.md](CONTEXT.md)
-- Spec / map (working notes): `.scratch/authoring-shell-spec/`
+- Architecture draft: [docs/spec.md](docs/spec.md)
+- ADRs: [docs/adr/](docs/adr/)
+- Wayfinder map: [GitHub #1](https://github.com/bbtgnn/astro-dev-cms-gui/issues/1)
