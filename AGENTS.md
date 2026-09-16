@@ -8,7 +8,8 @@ first adapter, not the product identity. Not a hosted git CMS control plane.
 ## Before exploring
 
 - **Domain language** — always: [CONTEXT.md](CONTEXT.md). Prefer glossary terms; avoid listed synonyms.
-- **Architecture** — schema projections, virtual config, layouts, persistence: [docs/spec.md](docs/spec.md). Layering: [ADR-0008](docs/adr/0008-backend-agnostic-ui-fs-first-adapter.md), [ADR-0009](docs/adr/0009-conceptual-layers-before-package-extraction.md).
+- **Architecture index** — navigate decisions and open threads from [docs/spec.md](docs/spec.md). The index is not an implementation spec.
+- **Authority** — accepted ADRs first, then the current issue and resolved Answer, then the architecture index. Temporary handoffs are never authoritative. Supersede an ADR explicitly; do not override one inside an implementation issue.
 - **Map / open threads** — GitHub [#1](https://github.com/bbtgnn/astro-dev-cms-gui/issues/1) (`wayfinder:map`). Decisions: [`docs/adr/`](docs/adr/).
 
 ## Locked invariants
@@ -17,9 +18,23 @@ first adapter, not the product identity. Not a hosted git CMS control plane.
 - **Protocol:** entry identities + serializable `data` (Zod input); no client filesystem paths (ADR-0005).
 - **FS adapter (v1):** YAML round-trip, id/path rules, live `content.config` discovery on the server (ADR-0004, 0006, 0007).
 - **FieldUi:** on Zod `.meta()`; components via Vite config, not the protocol (ADR-0003).
+- **Schemas:** editor, authoritative validation, and Astro are projections of one persisted-input model; never write transformed Astro output (ADR-0010).
+- **Form shell:** SJSF stays internal; recursive layouts, tabs, groups, and blocks remain in one form without changing persisted shape (ADR-0011).
+- **Blocks / preview:** block schemas stay separate from production renderers; the real Astro page is the default preview (ADR-0012, 0013).
+- **Local draft:** valid changes write atomically to the working tree with revision guards; invalid browser state does not replace canonical content (ADR-0014).
 - **Packages:** current `@cms/*` graph is approximate; do not explode or relock extraction yet (ADR-0009).
 - **Self-host proof:** `@cms/astro-template` on Bun — `bun run dev` → site `:4321`, shell `/cms`, API `/_cms`.
 - **Checks:** `bun run check && bun run check:allowlist && bun run lint`.
+
+## Where work belongs
+
+- Durable architectural choice and rationale → `docs/adr/`.
+- Unresolved design question → GitHub issue with `wayfinder:grilling`; keep `Answer` unset until resolved.
+- Implementable behavior → a small GitHub issue with acceptance criteria, tests, dependencies, and `ready-for-agent` only when complete.
+- Navigation and system summary → `docs/spec.md` and map issue #1.
+- Session state not captured elsewhere → temporary handoff only; link to durable artifacts rather than duplicating them.
+
+Do not put roadmaps, prototype-gap inventories, or feature requirements in agent instructions.
 
 ## Out of scope (v1)
 

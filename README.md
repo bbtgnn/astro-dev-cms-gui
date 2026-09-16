@@ -35,17 +35,20 @@ bun run dev
 - Shell UI: `/cms`
 - JSON API: `/_cms` (via middleware — Astro ignores `src/pages/_…`)
 
-## Package graph
+## Current prototype package graph
 
 ```
 @cms/fields → @cms/components → @cms/form → @cms/crud → @cms/routes → @cms/astro-template
 ```
+
+This graph describes the prototype, not the target extraction. See
+[ADR-0009](docs/adr/0009-conceptual-layers-before-package-extraction.md).
 
 Portable smoke: `bun run check && bun run check:allowlist && bun run lint`.
 
 ## Docs & language
 
 - Domain glossary: [CONTEXT.md](CONTEXT.md)
-- Architecture draft: [docs/spec.md](docs/spec.md)
+- Architecture index: [docs/spec.md](docs/spec.md)
 - ADRs: [docs/adr/](docs/adr/)
 - Wayfinder map: [GitHub #1](https://github.com/bbtgnn/astro-dev-cms-gui/issues/1)
