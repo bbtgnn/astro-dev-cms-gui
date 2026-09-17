@@ -17,6 +17,7 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p ."
+		"check": "tsc -p .",
+		"check:allowlist": "bun run ./scripts/check-write-back-contract.ts"
 	}
 }
