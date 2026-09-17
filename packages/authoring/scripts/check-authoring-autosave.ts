@@ -252,10 +252,18 @@ const sample: ContentEntry = {
 	});
 
 	ctrl.handleChange({ title: "A" });
+	if (status === "saved") {
+		fail("pending edit must not keep saved", status);
+	} else {
+		ok("pending edit clears saved");
+	}
 	clock.advance(50);
 	ctrl.handleChange({ title: "B" });
 	clock.advance(50);
 	ctrl.handleChange({ title: "C" });
+	if (status === "saved") {
+		fail("coalesced edits must not keep saved", status);
+	}
 	clock.advance(100);
 	await waitUntil(
 		() => !ctrl.isInFlight() && status === "saved",
@@ -534,6 +542,7 @@ console.log(`authoring autosave check passed (${passed.length} assertion(s))`);
 	);
 	const { tmpdir } = await import("node:os");
 	const path = await import("node:path");
+	const { fileURLToPath } = await import("node:url");
 	const { z } = await import("zod");
 	const { createCmsProtocol } = await import(
 		"../../crud/src/create-cms-protocol.ts"
@@ -612,12 +621,35 @@ console.log(`authoring autosave check passed (${passed.length} assertion(s))`);
 	/** Same contract as host `getPreviewUrl("posts", id)` (ADR-0013). */
 	const preview = `/posts/${encodeURIComponent("hello")}`;
 
+	const reread = await protocol.getEntry("posts", "hello");
+	const previewPage = await readFile(
+		path.resolve(
+			path.dirname(fileURLToPath(import.meta.url)),
+			"../../astro-template/src/pages/posts/[id].astro",
+		),
+		"utf8",
+	);
+
 	const selfFailures: string[] = [];
 	if (!yaml.includes("Autosaved title")) {
 		selfFailures.push(`yaml missing title: ${yaml}`);
 	}
 	if (preview !== "/posts/hello") {
 		selfFailures.push(`preview url: ${preview}`);
+	}
+	if (!reread.ok || reread.value.data.title !== "Autosaved title") {
+		selfFailures.push(
+			`protocol getEntry title for preview path: ${JSON.stringify(reread)}`,
+		);
+	}
+	if (!previewPage.includes('getEntry("posts"')) {
+		selfFailures.push("preview route missing getEntry(posts)");
+	}
+	if (!previewPage.includes("<h1>{title}</h1>")) {
+		selfFailures.push("preview route missing production title render");
+	}
+	if (!previewPage.includes("postBlocks")) {
+		selfFailures.push("preview route missing production block bindings");
 	}
 	if (status !== "saved") {
 		selfFailures.push(`status: ${status}`);
@@ -633,5 +665,7 @@ console.log(`authoring autosave check passed (${passed.length} assertion(s))`);
 	}
 	console.log("ok  valid title autosave updates YAML without explicit submit");
 	console.log("ok  preview URL available from identity after write-back");
+	console.log("ok  protocol reread exposes title the site route would render");
+	console.log("ok  posts/[id].astro uses getEntry + production title/blocks");
 	console.log("authoring autosave self-host yaml check passed");
 }
