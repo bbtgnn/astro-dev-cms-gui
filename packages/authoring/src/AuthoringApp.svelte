@@ -239,10 +239,6 @@ onMount(() => {
 		status:
 		{#if loading}loading{:else}idle{/if}
 		· view: {view}
-		{#if capabilities}
-			· delete: {canDelete ? "supported" : "unsupported"}
-			· assets: {canUploadAssets ? "supported" : "unsupported"}
-		{/if}
 		{#if error}
 			— error: {error}
 		{/if}
