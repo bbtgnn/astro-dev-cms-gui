@@ -120,6 +120,25 @@ async function onSaved(saved: ContentEntry) {
 	await refreshEntries();
 }
 
+/** Re-fetch current entry so editor gets canonical data + revision after conflict. */
+async function reloadEntry() {
+	if (!selectedCollection || !selectedEntryId) return;
+	loading = true;
+	error = null;
+	try {
+		const result = await client.getEntry(selectedCollection, selectedEntryId);
+		if (!result.ok) {
+			error = `${result.code}: ${result.message}`;
+			return;
+		}
+		entry = result.value;
+	} catch (e) {
+		error = errMsg(e);
+	} finally {
+		loading = false;
+	}
+}
+
 async function onDeleted() {
 	entry = null;
 	selectedEntryId = null;
@@ -220,16 +239,20 @@ onMount(() => {
 			</ul>
 		</section>
 	{:else if view === "editor" && selectedCollection && entry}
-		<ShellEditor
-			collection={selectedCollection}
-			entryId={entry.id}
-			schema={activeSchemas?.schema ?? null}
-			uiSchema={activeSchemas?.uiSchema}
-			value={entry.data}
-			onSaved={(saved) => void onSaved(saved)}
-			onDeleted={() => void onDeleted()}
-			onCancel={backToEntries}
-		/>
+		{#key entry.revision}
+			<ShellEditor
+				collection={selectedCollection}
+				entryId={entry.id}
+				revision={entry.revision}
+				schema={activeSchemas?.schema ?? null}
+				uiSchema={activeSchemas?.uiSchema}
+				value={entry.data}
+				onSaved={(saved) => void onSaved(saved)}
+				onDeleted={() => void onDeleted()}
+				onCancel={backToEntries}
+				onReload={() => void reloadEntry()}
+			/>
+		{/key}
 	{:else if view === "create" && selectedCollection}
 		<ShellEditor
 			collection={selectedCollection}

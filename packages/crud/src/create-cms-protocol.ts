@@ -7,14 +7,20 @@ import {
 	cmsErr,
 	cmsOk,
 	type GetEntryResult,
+	type SaveEntryResult,
 } from "./protocol";
-import type { CreateWriteModeOptions, WriteMode } from "./types";
+import type {
+	CreateWriteModeOptions,
+	UpsertEntryInput,
+	WriteMode,
+} from "./types";
 import { createWriteMode } from "./write-mode";
 
 type ErrLike = {
 	status?: number;
 	code?: string;
 	message?: string;
+	issues?: unknown;
 };
 
 function getEntryFailure(err: unknown): GetEntryResult | null {
@@ -23,8 +29,35 @@ function getEntryFailure(err: unknown): GetEntryResult | null {
 		// Stable domain message — never echo absolute filesystem paths.
 		return cmsErr("forbidden", "Forbidden");
 	}
-	if (e.status === 409 || e.code === "YAML_EXT_COLLISION") {
-		return cmsErr("conflict", "Conflict");
+	if (
+		e.status === 409 ||
+		e.code === "YAML_EXT_COLLISION" ||
+		e.code === "REVISION_CONFLICT"
+	) {
+		return cmsErr("conflict", e.message || "Conflict");
+	}
+	return null;
+}
+
+function saveEntryFailure(err: unknown): SaveEntryResult | null {
+	const e = err as ErrLike;
+	if (e.status === 403 || e.code === "PATH_NOT_ALLOWED") {
+		return cmsErr("forbidden", "Forbidden");
+	}
+	if (
+		e.status === 409 ||
+		e.code === "YAML_EXT_COLLISION" ||
+		e.code === "REVISION_CONFLICT"
+	) {
+		return cmsErr("conflict", e.message || "Conflict");
+	}
+	if (e.status === 404 || e.code === "NOT_FOUND") {
+		return cmsErr("not_found", e.message || "Not found");
+	}
+	if (e.status === 400 || e.code === "VALIDATION_FAILED") {
+		return cmsErr("validation_failed", e.message || "Validation failed", {
+			issues: e.issues,
+		});
 	}
 	return null;
 }
@@ -55,7 +88,16 @@ export function adaptWriteModeToProtocol(wm: WriteMode): CmsProtocol {
 			}
 		},
 
-		upsertEntry: (entry) => wm.upsertEntry(entry),
+		async upsertEntry(input: UpsertEntryInput): Promise<SaveEntryResult> {
+			try {
+				return cmsOk(await wm.upsertEntry(input));
+			} catch (err) {
+				const failure = saveEntryFailure(err);
+				if (failure) return failure;
+				throw err;
+			}
+		},
+
 		deleteEntry: (collection, id) => wm.deleteEntry(collection, id),
 		writeImageAssets: (input) => wm.writeImageAssets(input),
 		readAsset: (rel) => wm.readAsset(rel),

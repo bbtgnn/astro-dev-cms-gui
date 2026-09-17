@@ -1,6 +1,7 @@
 /**
  * PROTOTYPE / SPIKE — createWriteMode with allowlisted paths.
  * P2: prefer discovered collections (base + YAML helpers) over fakeCatalog/pathMap.
+ * Guarded write-back: opaque revisions + async Zod input validation (ADR-0010, 0014).
  */
 import path from "node:path";
 import { z } from "zod";
@@ -15,10 +16,12 @@ import {
 	resolveYamlEntryPath,
 	writerExists,
 } from "./path-resolve";
+import { opaqueRevision } from "./revision";
 import type {
 	ContentEntry,
 	CreateWriteModeOptions,
 	ReadAssetResult,
+	UpsertEntryInput,
 	WriteImageAssetsInput,
 	WriteMode,
 	WrittenImageAssets,
@@ -51,6 +54,22 @@ function isPathAllowed(
 	return false;
 }
 
+function revisionConflict(message = "Conflict"): never {
+	throw Object.assign(new Error(message), {
+		status: 409,
+		code: "REVISION_CONFLICT",
+	});
+}
+
+function entryFromRaw(
+	id: string,
+	collection: string,
+	raw: string,
+): ContentEntry {
+	const data = parseEntryFile(raw);
+	return { id, collection, data, revision: opaqueRevision(raw) };
+}
+
 const passthrough = z.record(z.string(), z.unknown());
 
 export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
@@ -74,6 +93,15 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 	}
 
 	const catalog: Record<string, ContentEntry[]> = structuredClone(fakeCatalog);
+	// Ensure catalog rows always carry a revision derived from serialized input.
+	for (const list of Object.values(catalog)) {
+		for (const entry of list) {
+			if (!entry.revision) {
+				entry.revision = opaqueRevision(serializeEntryFile(entry.data));
+			}
+		}
+	}
+
 	const exists = writerExists((p) => writer.readText(p));
 	const useDiscovery = collections.length > 0;
 
@@ -170,7 +198,15 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 		async getEntry(collection: string, id: string) {
 			if (!useDiscovery) {
 				const hit = (catalog[collection] ?? []).find((e) => e.id === id);
-				if (hit) return hit;
+				if (hit) {
+					return {
+						id: hit.id,
+						collection: hit.collection,
+						data: hit.data,
+						revision:
+							hit.revision || opaqueRevision(serializeEntryFile(hit.data)),
+					};
+				}
 				if (!pathMap[collection]?.[id]) return null;
 			} else if (!byName.has(collection) && !pathMap[collection]?.[id]) {
 				return null;
@@ -189,8 +225,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			try {
 				await assertNoYamlExtCollision(exists, absolutePath);
 				const raw = await writer.readText(absolutePath);
-				const data = parseEntryFile(raw);
-				return { id, collection, data };
+				return entryFromRaw(id, collection, raw);
 			} catch (err) {
 				const e = err as { code?: string; status?: number };
 				if (e.code === "YAML_EXT_COLLISION") throw err;
@@ -198,40 +233,68 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			}
 		},
 
-		async upsertEntry(entry: ContentEntry) {
-			assertSafeEntryId(entry.id);
+		async upsertEntry(input: UpsertEntryInput) {
+			assertSafeEntryId(input.id);
 
-			const schema = schemas[entry.collection] ?? passthrough;
-			const parsed = schema.safeParse(entry.data);
+			const schema = schemas[input.collection] ?? passthrough;
+			// Authoritative async Zod path (ADR-0010). Acceptance uses input shape;
+			// never persist transformed Astro/Zod output.
+			const parsed = await schema.safeParseAsync(input.data);
 			if (!parsed.success) {
 				throw Object.assign(new Error("Validation failed"), {
 					status: 400,
+					code: "VALIDATION_FAILED",
 					issues: parsed.error.issues,
 				});
 			}
 
-			const absolutePath = await resolvePath(entry.collection, entry.id, true);
+			const absolutePath = await resolvePath(input.collection, input.id, true);
 			assertAllowed(absolutePath);
 			await assertNoYamlExtCollision(exists, absolutePath);
 
-			// Persist Zod **input** (spec §5.2) so transforms like Astro
+			let currentRaw: string | null = null;
+			try {
+				currentRaw = await writer.readText(absolutePath);
+			} catch {
+				currentRaw = null;
+			}
+
+			if (input.expectedRevision === null) {
+				if (currentRaw !== null) {
+					revisionConflict("Entry already exists");
+				}
+			} else if (currentRaw === null) {
+				throw Object.assign(new Error("Not found"), {
+					status: 404,
+					code: "NOT_FOUND",
+				});
+			} else {
+				const current = opaqueRevision(currentRaw);
+				if (current !== input.expectedRevision) {
+					revisionConflict();
+				}
+			}
+
+			// Persist Zod **input** (ADR-0010) so transforms like Astro
 			// `reference()` do not rewrite string ids into lookup objects on disk.
+			const serialized = serializeEntryFile(input.data);
 			const next: ContentEntry = {
-				id: entry.id,
-				collection: entry.collection,
-				data: entry.data,
+				id: input.id,
+				collection: input.collection,
+				data: input.data,
+				revision: opaqueRevision(serialized),
 			};
 
-			// nodeFsWriter mkdir's parents; memoryWriter is path-key only.
-			await writer.writeText(absolutePath, serializeEntryFile(next.data));
+			// nodeFsWriter replaces atomically (temp + rename); memoryWriter is path-key.
+			await writer.writeText(absolutePath, serialized);
 
 			if (!useDiscovery) {
-				let list = catalog[entry.collection];
+				let list = catalog[input.collection];
 				if (!list) {
 					list = [];
-					catalog[entry.collection] = list;
+					catalog[input.collection] = list;
 				}
-				const idx = list.findIndex((e) => e.id === entry.id);
+				const idx = list.findIndex((e) => e.id === input.id);
 				if (idx >= 0) list[idx] = next;
 				else list.push(next);
 			}

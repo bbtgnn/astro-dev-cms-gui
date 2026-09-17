@@ -42,6 +42,7 @@ await wm.upsertEntry({
 	id: "hello",
 	collection: "posts",
 	data: { title: "img check" },
+	expectedRevision: null,
 });
 
 /** Minimal 1×1 PNG (red). */

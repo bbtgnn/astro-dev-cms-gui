@@ -9,6 +9,20 @@ export type ContentEntry = {
 	id: string;
 	collection: string;
 	data: Record<string, unknown>;
+	/** Opaque concurrency token from the write-back implementation. */
+	revision: string;
+};
+
+/**
+ * Guarded save input (ADR-0014).
+ * `expectedRevision` is the token from the last successful read/save;
+ * `null` means create-only (entry must not already exist).
+ */
+export type UpsertEntryInput = {
+	id: string;
+	collection: string;
+	data: Record<string, unknown>;
+	expectedRevision: string | null;
 };
 
 /** Low-level read/write within allowlisted roots (injected into write mode). */
@@ -56,7 +70,7 @@ export type WriteMode = {
 	listCollections(): Promise<CollectionSummary[]>;
 	listEntries(collection: string): Promise<{ id: string }[]>;
 	getEntry(collection: string, id: string): Promise<ContentEntry | null>;
-	upsertEntry(entry: ContentEntry): Promise<ContentEntry>;
+	upsertEntry(input: UpsertEntryInput): Promise<ContentEntry>;
 	deleteEntry(collection: string, id: string): Promise<void>;
 	/**
 	 * Write WebP files into `{base}/{id}/{name}/` beside the entry YAML.

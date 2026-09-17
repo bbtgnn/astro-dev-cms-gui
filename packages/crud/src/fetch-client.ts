@@ -11,6 +11,9 @@ import type {
 	EntryIdentity,
 	GetEntryFailureCode,
 	GetEntryResult,
+	SaveEntryFailureCode,
+	SaveEntryResult,
+	UpsertEntryInput,
 } from "./protocol";
 import { httpStatusForCmsErr } from "./protocol";
 
@@ -26,11 +29,14 @@ export type {
 	GetEntryResult,
 	ListCollectionsResult,
 	ListEntriesResult,
+	SaveEntryFailureCode,
+	SaveEntryResult,
+	UpsertEntryInput,
 } from "./protocol";
 
 export { cmsErr, cmsOk, httpStatusForCmsErr } from "./protocol";
 
-/** Thrown when the CMS JSON API returns a non-OK status outside typed read outcomes. */
+/** Thrown when the CMS JSON API returns a non-OK status outside typed outcomes. */
 export class CmsFetchError extends Error {
 	readonly status: number;
 	readonly code?: string;
@@ -78,6 +84,17 @@ function isGetEntryFailureCode(
 	return code === "not_found" || code === "forbidden" || code === "conflict";
 }
 
+function isSaveEntryFailureCode(
+	code: string | undefined,
+): code is SaveEntryFailureCode {
+	return (
+		code === "not_found" ||
+		code === "forbidden" ||
+		code === "conflict" ||
+		code === "validation_failed"
+	);
+}
+
 export type CmsFetchClient = CmsProtocol & {
 	/** Multipart image upload (Astro transport-specific; not a protocol op). */
 	uploadImage(input: {
@@ -93,8 +110,7 @@ export type CmsFetchClient = CmsProtocol & {
 
 /**
  * Browser protocol client — same read/write surface as CmsProtocol, over HTTP.
- * Typed read failures (`not_found` / `forbidden` / `conflict`) are outcomes;
- * other transport failures throw CmsFetchError.
+ * Typed read/save failures are outcomes; other transport failures throw CmsFetchError.
  */
 export function createFetchClient(base = "/_cms"): CmsFetchClient {
 	const root = base.replace(/\/+$/, "");
@@ -187,18 +203,68 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
 		},
 
-		upsertEntry: (entry: ContentEntry) =>
-			jsonOk<ContentEntry>(
-				`/api/collections/${encodeURIComponent(entry.collection)}/${encodeURIComponent(entry.id)}`,
+		async upsertEntry(input: UpsertEntryInput): Promise<SaveEntryResult> {
+			const res = await request(
+				`/api/collections/${encodeURIComponent(input.collection)}/${encodeURIComponent(input.id)}`,
 				{
 					method: "PUT",
 					body: JSON.stringify({
-						id: entry.id,
-						collection: entry.collection,
-						data: entry.data,
+						id: input.id,
+						collection: input.collection,
+						data: input.data,
+						expectedRevision: input.expectedRevision,
 					}),
 				},
-			),
+			);
+			if (res.ok) {
+				return { ok: true, value: (await res.json()) as ContentEntry };
+			}
+			const bodyText = await res.text();
+			const parsed = await parseErrorBody(bodyText);
+			const code = parsed?.code;
+			if (
+				isSaveEntryFailureCode(code) &&
+				res.status === httpStatusForCmsErr(code)
+			) {
+				return {
+					ok: false,
+					code,
+					message: parsed?.error ?? (bodyText || res.statusText),
+					...(parsed?.issues !== undefined ? { issues: parsed.issues } : {}),
+				} satisfies CmsErr<SaveEntryFailureCode>;
+			}
+			// Legacy transport mapping when code is absent.
+			if (res.status === 404) {
+				return {
+					ok: false,
+					code: "not_found",
+					message: parsed?.error ?? "Not found",
+				};
+			}
+			if (res.status === 403) {
+				return {
+					ok: false,
+					code: "forbidden",
+					message: parsed?.error ?? "Forbidden",
+				};
+			}
+			if (res.status === 409) {
+				return {
+					ok: false,
+					code: "conflict",
+					message: parsed?.error ?? "Conflict",
+				};
+			}
+			if (res.status === 400) {
+				return {
+					ok: false,
+					code: "validation_failed",
+					message: parsed?.error ?? "Validation failed",
+					...(parsed?.issues !== undefined ? { issues: parsed.issues } : {}),
+				};
+			}
+			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
+		},
 
 		deleteEntry: async (collection: string, id: string) => {
 			const res = await request(

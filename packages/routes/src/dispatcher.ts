@@ -2,7 +2,7 @@
  * PROTOTYPE / SPIKE — single /_cms/[...path] JSON dispatcher.
  * Thin Astro transport: maps CMS protocol outcomes ↔ HTTP; no domain rules.
  */
-import type { CmsProtocol, ContentEntry } from "@cms/crud";
+import type { CmsProtocol } from "@cms/crud";
 import { httpStatusForCmsErr } from "@cms/crud";
 import { cmsDevOnlyGuard } from "./dev-guard";
 import {
@@ -181,19 +181,32 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				}
 
 				if (id && method === "PUT") {
-					const body = (await request.json()) as Partial<ContentEntry>;
-					const entry: ContentEntry = {
-						id,
-						collection,
-						data: (body.data ?? body) as Record<string, unknown>,
+					const body = (await request.json()) as {
+						id?: string;
+						collection?: string;
+						data?: Record<string, unknown>;
+						expectedRevision?: string | null;
 					};
-					// Prefer explicit payload shape when provided
-					if (body.id && body.collection && body.data) {
-						entry.id = body.id;
-						entry.collection = body.collection;
-						entry.data = body.data;
+					const result = await protocol.upsertEntry({
+						id: body.id ?? id,
+						collection: body.collection ?? collection,
+						data: (body.data ?? body) as Record<string, unknown>,
+						expectedRevision:
+							body.expectedRevision === undefined
+								? null
+								: body.expectedRevision,
+					});
+					if (!result.ok) {
+						return Response.json(
+							{
+								error: result.message,
+								code: result.code,
+								issues: result.issues,
+							},
+							{ status: httpStatusForCmsErr(result.code) },
+						);
 					}
-					return Response.json(await protocol.upsertEntry(entry));
+					return Response.json(result.value);
 				}
 
 				if (id && method === "DELETE") {

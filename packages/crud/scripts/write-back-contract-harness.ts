@@ -15,7 +15,7 @@ import type { DiscoveredCollection } from "../src/discovery";
 import { memoryWriter } from "../src/memory-writer";
 import { nodeFsWriter } from "../src/node-fs-writer";
 import type { CmsProtocol } from "../src/protocol";
-import type { ContentEntry, WriteMode, Writer } from "../src/types";
+import type { WriteMode, Writer } from "../src/types";
 import { createWriteMode } from "../src/write-mode";
 
 export type WriterBackend = "memory" | "filesystem";
@@ -138,6 +138,7 @@ async function runAllowlistScenarios(
 				id: "evil",
 				collection: "posts",
 				data: { title: "nope" },
+				expectedRevision: null,
 			}),
 		403,
 	);
@@ -152,6 +153,7 @@ async function runAllowlistScenarios(
 				id: "env",
 				collection: "secrets",
 				data: { x: 1 },
+				expectedRevision: null,
 			}),
 		403,
 	);
@@ -166,6 +168,7 @@ async function runAllowlistScenarios(
 				id: "../escape",
 				collection: "posts",
 				data: { title: "nope" },
+				expectedRevision: null,
 			}),
 		400,
 	);
@@ -213,12 +216,22 @@ async function runListReadSaveScenarios(
 		});
 	}
 
-	const valid: ContentEntry = {
+	const created = await wm.upsertEntry({
 		id: "ok",
 		collection: "posts",
 		data: { title: "yes" },
-	};
-	await wm.upsertEntry(valid);
+		expectedRevision: null,
+	});
+
+	if (typeof created.revision !== "string" || created.revision.length === 0) {
+		failures.push({
+			backend,
+			label: "create returns opaque revision",
+			detail: JSON.stringify(created),
+		});
+	} else {
+		passed.push({ backend, label: "create returns opaque revision" });
+	}
 
 	const listed = await wm.listEntries("posts");
 	if (!listed.some((e) => e.id === "ok")) {
@@ -235,15 +248,19 @@ async function runListReadSaveScenarios(
 	if (
 		read?.id !== "ok" ||
 		read.collection !== "posts" ||
-		read.data.title !== "yes"
+		read.data.title !== "yes" ||
+		read.revision !== created.revision
 	) {
 		failures.push({
 			backend,
-			label: "valid persisted input round-trips",
+			label: "valid persisted input round-trips with revision",
 			detail: JSON.stringify(read),
 		});
 	} else {
-		passed.push({ backend, label: "valid persisted input round-trips" });
+		passed.push({
+			backend,
+			label: "valid persisted input round-trips with revision",
+		});
 	}
 
 	await expectReject(
@@ -256,12 +273,16 @@ async function runListReadSaveScenarios(
 				id: "ok",
 				collection: "posts",
 				data: { title: 1 },
+				expectedRevision: created.revision,
 			}),
 		400,
 	);
 
 	const afterInvalid = await wm.getEntry("posts", "ok");
-	if (afterInvalid?.data.title !== "yes") {
+	if (
+		afterInvalid?.data.title !== "yes" ||
+		afterInvalid.revision !== created.revision
+	) {
 		failures.push({
 			backend,
 			label: "invalid save does not replace canonical",
@@ -305,6 +326,118 @@ async function runListReadSaveScenarios(
 		});
 	} else {
 		passed.push({ backend, label: "unknown collection get returns null" });
+	}
+
+	// Guarded update + stale conflict (WriteMode seam).
+	const updated = await wm.upsertEntry({
+		id: "ok",
+		collection: "posts",
+		data: { title: "updated" },
+		expectedRevision: created.revision,
+	});
+	if (
+		updated.data.title !== "updated" ||
+		updated.revision === created.revision
+	) {
+		failures.push({
+			backend,
+			label: "guarded save returns new revision",
+			detail: JSON.stringify(updated),
+		});
+	} else {
+		passed.push({ backend, label: "guarded save returns new revision" });
+	}
+
+	await expectReject(
+		failures,
+		passed,
+		backend,
+		"stale revision is conflict",
+		() =>
+			wm.upsertEntry({
+				id: "ok",
+				collection: "posts",
+				data: { title: "stale" },
+				expectedRevision: created.revision,
+			}),
+		409,
+	);
+
+	const afterStale = await wm.getEntry("posts", "ok");
+	if (afterStale?.data.title !== "updated") {
+		failures.push({
+			backend,
+			label: "stale save leaves canonical unchanged",
+			detail: JSON.stringify(afterStale),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "stale save leaves canonical unchanged",
+		});
+	}
+
+	await expectReject(
+		failures,
+		passed,
+		backend,
+		"create when exists is conflict",
+		() =>
+			wm.upsertEntry({
+				id: "ok",
+				collection: "posts",
+				data: { title: "again" },
+				expectedRevision: null,
+			}),
+		409,
+	);
+
+	// External edit changes revision and blocks stale shell writes.
+	await fixture.seedFile("posts/ok.yaml", "title: external\n");
+	const afterExternal = await wm.getEntry("posts", "ok");
+	if (
+		afterExternal?.data.title !== "external" ||
+		afterExternal.revision === updated.revision
+	) {
+		failures.push({
+			backend,
+			label: "external edit changes opaque revision",
+			detail: JSON.stringify(afterExternal),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "external edit changes opaque revision",
+		});
+	}
+
+	await expectReject(
+		failures,
+		passed,
+		backend,
+		"save after external edit is conflict",
+		() =>
+			wm.upsertEntry({
+				id: "ok",
+				collection: "posts",
+				data: { title: "overwrite" },
+				expectedRevision: updated.revision,
+			}),
+		409,
+	);
+
+	const stillExternal = await wm.getEntry("posts", "ok");
+	if (stillExternal?.data.title !== "external") {
+		failures.push({
+			backend,
+			label: "conflict after external edit leaves file unchanged",
+			detail: JSON.stringify(stillExternal),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "conflict after external edit leaves file unchanged",
+		});
 	}
 }
 
@@ -444,11 +577,28 @@ async function runReadSideProtocolScenarios(
 		);
 	}
 
-	await protocol.upsertEntry({
+	const created = await protocol.upsertEntry({
 		id: "ok",
 		collection: "posts",
 		data: { title: "yes" },
+		expectedRevision: null,
 	});
+	if (
+		!created.ok ||
+		typeof created.value.revision !== "string" ||
+		created.value.revision.length === 0
+	) {
+		failures.push({
+			backend,
+			label: "protocol create returns opaque revision",
+			detail: JSON.stringify(created),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol create returns opaque revision",
+		});
+	}
 
 	const listed = await protocol.listEntries("posts");
 	if (
@@ -479,17 +629,19 @@ async function runReadSideProtocolScenarios(
 		!read.ok ||
 		read.value.id !== "ok" ||
 		read.value.collection !== "posts" ||
-		read.value.data.title !== "yes"
+		read.value.data.title !== "yes" ||
+		!created.ok ||
+		read.value.revision !== created.value.revision
 	) {
 		failures.push({
 			backend,
-			label: "protocol getEntry returns persisted input",
+			label: "protocol getEntry returns persisted input + revision",
 			detail: JSON.stringify(read),
 		});
 	} else {
 		passed.push({
 			backend,
-			label: "protocol getEntry returns persisted input",
+			label: "protocol getEntry returns persisted input + revision",
 		});
 		assertNoFilesystemPaths(
 			read.value,
@@ -566,6 +718,205 @@ async function runReadSideProtocolScenarios(
 }
 
 /**
+ * Write-side CMS protocol contract — guarded save, validation, conflict.
+ * Same scenarios on memory + filesystem.
+ */
+async function runWriteSideProtocolScenarios(
+	fixture: BackendFixture,
+	failures: ContractFailure[],
+	passed: ContractRunResult["passed"],
+): Promise<void> {
+	const { backend, root, writer } = fixture;
+	const protocol = discoveryProtocol(root, writer);
+
+	const created = await protocol.upsertEntry({
+		id: "guard",
+		collection: "posts",
+		data: { title: "first" },
+		expectedRevision: null,
+	});
+	if (!created.ok) {
+		failures.push({
+			backend,
+			label: "protocol valid create succeeds",
+			detail: JSON.stringify(created),
+		});
+		return;
+	}
+	passed.push({ backend, label: "protocol valid create succeeds" });
+
+	const saved = await protocol.upsertEntry({
+		id: "guard",
+		collection: "posts",
+		data: { title: "second" },
+		expectedRevision: created.value.revision,
+	});
+	if (
+		!saved.ok ||
+		saved.value.data.title !== "second" ||
+		saved.value.revision === created.value.revision
+	) {
+		failures.push({
+			backend,
+			label: "protocol guarded save returns new revision",
+			detail: JSON.stringify(saved),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol guarded save returns new revision",
+		});
+	}
+
+	const stale = await protocol.upsertEntry({
+		id: "guard",
+		collection: "posts",
+		data: { title: "stale" },
+		expectedRevision: created.value.revision,
+	});
+	if (stale.ok || stale.code !== "conflict") {
+		failures.push({
+			backend,
+			label: "protocol stale save is conflict",
+			detail: JSON.stringify(stale),
+		});
+	} else {
+		passed.push({ backend, label: "protocol stale save is conflict" });
+	}
+
+	const afterStale = await protocol.getEntry("posts", "guard");
+	if (!afterStale.ok || afterStale.value.data.title !== "second") {
+		failures.push({
+			backend,
+			label: "protocol conflict leaves canonical unchanged",
+			detail: JSON.stringify(afterStale),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol conflict leaves canonical unchanged",
+		});
+	}
+
+	const invalid = await protocol.upsertEntry({
+		id: "guard",
+		collection: "posts",
+		data: { title: 99 },
+		expectedRevision: saved.ok ? saved.value.revision : null,
+	});
+	if (
+		invalid.ok ||
+		invalid.code !== "validation_failed" ||
+		invalid.issues == null
+	) {
+		failures.push({
+			backend,
+			label: "protocol invalid save is validation_failed",
+			detail: JSON.stringify(invalid),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol invalid save is validation_failed",
+		});
+	}
+
+	// Persist Zod input, not transformed output (ADR-0010).
+	const transformSchema = z.object({
+		title: z.string().transform((s) => s.toUpperCase()),
+	});
+	const transformProtocol = createCmsProtocol({
+		root,
+		allowPaths: ["posts"],
+		writer,
+		collections: [
+			{
+				name: "posts",
+				label: "Posts",
+				schema: transformSchema,
+				base: "posts",
+				config: { label: "Posts", base: "posts" },
+			},
+		],
+	});
+	const transformed = await transformProtocol.upsertEntry({
+		id: "xform",
+		collection: "posts",
+		data: { title: "mixedCase" },
+		expectedRevision: null,
+	});
+	const reread = await transformProtocol.getEntry("posts", "xform");
+	if (
+		!transformed.ok ||
+		!reread.ok ||
+		reread.value.data.title !== "mixedCase"
+	) {
+		failures.push({
+			backend,
+			label: "protocol serializes accepted input not transform output",
+			detail: JSON.stringify({ transformed, reread }),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol serializes accepted input not transform output",
+		});
+	}
+
+	// Complete YAML document replacement after save.
+	if (backend === "filesystem") {
+		const abs = path.join(root, "posts/guard.yaml");
+		const { readFile } = await import("node:fs/promises");
+		const raw = await readFile(abs, "utf8");
+		if (raw !== "title: second\n") {
+			failures.push({
+				backend,
+				label: "filesystem write replaces complete YAML document",
+				detail: JSON.stringify(raw),
+			});
+		} else {
+			passed.push({
+				backend,
+				label: "filesystem write replaces complete YAML document",
+			});
+		}
+	}
+
+	await fixture.seedFile("posts/guard.yaml", "title: external\n");
+	const afterExternal = await protocol.getEntry("posts", "guard");
+	const conflictExternal = await protocol.upsertEntry({
+		id: "guard",
+		collection: "posts",
+		data: { title: "overwrite" },
+		expectedRevision: saved.ok ? saved.value.revision : "bogus",
+	});
+	const stillExternal = await protocol.getEntry("posts", "guard");
+	if (
+		!afterExternal.ok ||
+		afterExternal.value.data.title !== "external" ||
+		conflictExternal.ok ||
+		conflictExternal.code !== "conflict" ||
+		!stillExternal.ok ||
+		stillExternal.value.data.title !== "external"
+	) {
+		failures.push({
+			backend,
+			label: "protocol external-edit conflict leaves newer content",
+			detail: JSON.stringify({
+				afterExternal,
+				conflictExternal,
+				stillExternal,
+			}),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol external-edit conflict leaves newer content",
+		});
+	}
+}
+
+/**
  * Read-side protocol contract suite (issue #12).
  * Runs the same scenarios against in-memory and filesystem implementations.
  */
@@ -582,6 +933,31 @@ export async function runReadSideProtocolContract(
 				: await createFilesystemFixture();
 		try {
 			await runReadSideProtocolScenarios(fixture, failures, passed);
+		} finally {
+			await fixture.cleanup();
+		}
+	}
+
+	return { ok: failures.length === 0, failures, passed };
+}
+
+/**
+ * Write-side protocol contract suite (issue #13).
+ * Guarded save, revision, validation_failed, and conflict outcomes.
+ */
+export async function runWriteSideProtocolContract(
+	backends: WriterBackend[] = ["memory", "filesystem"],
+): Promise<ContractRunResult> {
+	const failures: ContractFailure[] = [];
+	const passed: ContractRunResult["passed"] = [];
+
+	for (const kind of backends) {
+		const fixture =
+			kind === "memory"
+				? await createMemoryFixture()
+				: await createFilesystemFixture();
+		try {
+			await runWriteSideProtocolScenarios(fixture, failures, passed);
 		} finally {
 			await fixture.cleanup();
 		}

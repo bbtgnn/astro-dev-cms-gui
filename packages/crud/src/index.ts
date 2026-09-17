@@ -53,13 +53,17 @@ export type {
 	GetEntryResult,
 	ListCollectionsResult,
 	ListEntriesResult,
+	SaveEntryFailureCode,
+	SaveEntryResult,
 } from "./protocol";
 export { cmsErr, cmsOk, httpStatusForCmsErr } from "./protocol";
+export { opaqueRevision } from "./revision";
 export type {
 	CollectionSummary,
 	ContentEntry,
 	CreateWriteModeOptions,
 	ReadAssetResult,
+	UpsertEntryInput,
 	WriteImageAssetsInput,
 	WriteMode,
 	Writer,

@@ -11,7 +11,12 @@ export type {
 	DiscoverCollectionsOptions,
 	DiscoveredCollection,
 	EntryIdentity,
+	GetEntryFailureCode,
+	GetEntryResult,
 	LoaderPathHint,
+	SaveEntryFailureCode,
+	SaveEntryResult,
+	UpsertEntryInput,
 } from "@cms/crud";
 export {
 	adaptWriteModeToProtocol,

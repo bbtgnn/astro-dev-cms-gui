@@ -1,4 +1,4 @@
-<!-- PROTOTYPE / SPIKE — entry editor: CmsForm + upsert / delete + Zod 400 UI -->
+<!-- PROTOTYPE / SPIKE — entry editor: CmsForm + guarded upsert / delete + write-back UI -->
 <script lang="ts">
 import {
 	type ContentEntry,
@@ -7,6 +7,7 @@ import {
 } from "@cms/crud/fetch-client";
 import type { UiSchemaNode } from "@cms/fields";
 import { CmsForm } from "@cms/form";
+import { untrack } from "svelte";
 
 let {
 	collection,
@@ -15,9 +16,11 @@ let {
 	uiSchema = undefined,
 	value = {},
 	creating = false,
+	revision: revisionProp = null,
 	onSaved,
 	onDeleted,
 	onCancel,
+	onReload,
 }: {
 	collection: string;
 	entryId: string;
@@ -25,16 +28,27 @@ let {
 	uiSchema?: UiSchemaNode;
 	value?: Record<string, unknown>;
 	creating?: boolean;
+	/** Opaque revision from loaded entry; null/absent when creating. */
+	revision?: string | null;
 	onSaved?: (entry: ContentEntry) => void;
 	onDeleted?: () => void;
 	onCancel?: () => void;
+	onReload?: () => void;
 } = $props();
 
 const client = createFetchClient("/_cms");
 
 /** Create-flow id field; default matches tracer pathMap `new-post`. */
 let idDraft = $state("new-post");
+/**
+ * Local opaque revision; seeded from prop (parent remounts via `{#key}` on reload).
+ * Updated after successful save.
+ */
+let revision = $state<string | null>(untrack(() => revisionProp));
 let busy = $state(false);
+let saveStatus = $state<
+	"idle" | "saving" | "saved" | "validation_failed" | "conflict"
+>("idle");
 let error = $state<string | null>(null);
 let issues = $state.raw<unknown>(null);
 let lastSaved = $state.raw<ContentEntry | null>(null);
@@ -49,19 +63,37 @@ async function save(data: Record<string, unknown>) {
 	if (!id) {
 		error = "Entry id is required";
 		issues = null;
+		saveStatus = "idle";
 		return;
 	}
 	busy = true;
+	saveStatus = "saving";
 	clearErrors();
 	try {
-		const entry = await client.upsertEntry({
+		const result = await client.upsertEntry({
 			id,
 			collection,
 			data,
+			expectedRevision: creating ? null : revision,
 		});
-		lastSaved = entry;
-		onSaved?.(entry);
+		if (!result.ok) {
+			error = result.message;
+			issues = result.issues ?? null;
+			if (result.code === "validation_failed") {
+				saveStatus = "validation_failed";
+			} else if (result.code === "conflict") {
+				saveStatus = "conflict";
+			} else {
+				saveStatus = "idle";
+			}
+			return;
+		}
+		revision = result.value.revision;
+		lastSaved = result.value;
+		saveStatus = "saved";
+		onSaved?.(result.value);
 	} catch (e) {
+		saveStatus = "idle";
 		if (isCmsFetchError(e)) {
 			error = e.message;
 			issues = e.issues ?? null;
@@ -79,6 +111,7 @@ async function remove() {
 	if (!confirm(`Delete ${collection}/${entryId}?`)) return;
 	busy = true;
 	clearErrors();
+	saveStatus = "idle";
 	try {
 		await client.deleteEntry(collection, entryId);
 		onDeleted?.();
@@ -95,7 +128,7 @@ async function remove() {
 	}
 }
 
-/** Force invalid payload to demo Zod 400 surfacing (posts title must be string). */
+/** Force invalid payload to demo authoritative validation_failed (posts title must be string). */
 async function saveInvalid() {
 	await save({
 		title: 123,
@@ -111,7 +144,11 @@ async function saveInvalid() {
 	<p>
 		<strong>Editor</strong>
 		— {collection}/{creating ? "(new)" : entryId}
-		{#if busy}
+		{#if saveStatus === "saving"}
+			<span>…saving</span>
+		{:else if saveStatus === "saved"}
+			<span>— saved</span>
+		{:else if busy}
 			<span>…busy</span>
 		{/if}
 	</p>
@@ -126,12 +163,21 @@ async function saveInvalid() {
 		</p>
 	{/if}
 
-	{#if error}
+	{#if saveStatus === "validation_failed"}
+		<p role="alert">authoritative validation failure: {error}</p>
+	{:else if saveStatus === "conflict"}
+		<p role="alert">conflict: {error}</p>
+		<p>
+			<button type="button" disabled={busy} onclick={() => onReload?.()}
+				>Reload</button
+			>
+		</p>
+	{:else if error}
 		<p role="alert">error: {error}</p>
 	{/if}
 	{#if issues}
 		<details open>
-			<summary>validation issues (Zod 400)</summary>
+			<summary>validation issues</summary>
 			<pre>{JSON.stringify(issues, null, 2)}</pre>
 		</details>
 	{/if}
@@ -162,7 +208,7 @@ async function saveInvalid() {
 			>
 		{/if}
 		<button type="button" disabled={busy} onclick={() => void saveInvalid()}
-			>save invalid (expect 400)</button
+			>save invalid (expect validation_failed)</button
 		>
 	</p>
 

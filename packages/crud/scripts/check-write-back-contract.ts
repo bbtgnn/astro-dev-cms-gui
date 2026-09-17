@@ -1,11 +1,12 @@
 /**
- * Portable check: write-back (#11) + read-side CMS protocol (#12) contracts.
+ * Portable check: write-back (#11) + CMS protocol read (#12) + write (#13).
  * Run: bun run check:allowlist
  */
 import {
 	type ContractRunResult,
 	runReadSideProtocolContract,
 	runWriteBackContract,
+	runWriteSideProtocolContract,
 } from "./write-back-contract-harness";
 
 function printResult(title: string, result: ContractRunResult): void {
@@ -24,7 +25,12 @@ printResult("write-back contract", writeBack);
 const readSide = await runReadSideProtocolContract();
 printResult("read-side protocol contract", readSide);
 
-if (!writeBack.ok || !readSide.ok) {
+const writeSide = await runWriteSideProtocolContract();
+printResult("write-side protocol contract", writeSide);
+
+if (!writeBack.ok || !readSide.ok || !writeSide.ok) {
 	process.exit(1);
 }
-console.log("write-back + read-side protocol contract checks passed");
+console.log(
+	"write-back + read-side + write-side protocol contract checks passed",
+);
