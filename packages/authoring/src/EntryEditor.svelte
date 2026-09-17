@@ -1,19 +1,17 @@
 <!--
   PROTOTYPE — entry editor: thin view over an AuthoringSession.
-  Host injects the client for asset upload only; session owns write-back (ADR-0008 / 0014).
+  Session owns write-back and asset upload context (ADR-0008 / 0014).
 -->
 <script lang="ts">
 import type { ContentEntry } from "@cms/crud/fetch-client";
-import { type CmsAssetsFieldContext, CmsForm } from "@cms/form";
+import { CmsForm } from "@cms/form";
 import { onMount } from "svelte";
 import type { z } from "zod";
 import type { AuthoringStatus } from "./autosave";
 import type { AuthoringSession } from "./session";
-import type { AuthoringClient } from "./types";
 
 let {
 	session,
-	client,
 	collection,
 	schema = null,
 	onSaved,
@@ -22,8 +20,6 @@ let {
 }: {
 	/** Parent-owned session — EntryEditor does not dispose it. */
 	session: AuthoringSession;
-	/** Kept only for uploadImage when snapshot.canUploadAssets. */
-	client: AuthoringClient;
 	collection: string;
 	/** Live Zod from host-compiled editor configuration. */
 	schema?: z.ZodType | null;
@@ -41,21 +37,10 @@ const snap = $derived.by(() => {
 	return session.getSnapshot();
 });
 
-const assetsContext = $derived.by((): CmsAssetsFieldContext => {
-	if (!snap.canUploadAssets) {
-		return { uploadEnabled: false };
-	}
-	return {
-		uploadEnabled: true,
-		maxUploadBytes: snap.maxUploadBytes,
-		uploadImage: async (input) => {
-			const result = await client.uploadImage(input);
-			if (!result.ok) {
-				return { ok: false, message: result.message };
-			}
-			return { ok: true, path: result.value.path };
-		},
-	};
+/** Session-owned field context — capabilities do not change mid-session. */
+const assetsContext = $derived.by(() => {
+	void version;
+	return session.assetsContext();
 });
 
 onMount(() => {

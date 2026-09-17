@@ -251,6 +251,15 @@ async function waitUntil(
 	} else {
 		ok("capabilities gate delete/upload");
 	}
+	const disabledAssets = session.assetsContext();
+	if (disabledAssets.uploadEnabled || disabledAssets.uploadImage) {
+		fail(
+			"assetsContext disabled when unsupported",
+			JSON.stringify(disabledAssets),
+		);
+	} else {
+		ok("assetsContext disabled when unsupported");
+	}
 	session.dispose();
 }
 
@@ -287,6 +296,81 @@ async function waitUntil(
 		);
 	} else {
 		ok("capabilities offer delete/upload");
+	}
+
+	const assets = session.assetsContext();
+	if (
+		!assets.uploadEnabled ||
+		assets.maxUploadBytes !== 1024 ||
+		!assets.uploadImage
+	) {
+		fail("assetsContext enabled when supported", JSON.stringify(assets));
+	} else {
+		ok("assetsContext enabled when supported");
+		const uploaded = await assets.uploadImage({
+			file: new Blob([new Uint8Array([1, 2, 3])]),
+			collection: "posts",
+			id: "hello",
+			name: "cover",
+			filename: "x.png",
+		});
+		if (!uploaded.ok || typeof uploaded.path !== "string" || !uploaded.path) {
+			fail("assetsContext upload returns field path", JSON.stringify(uploaded));
+		} else if ("value" in uploaded) {
+			fail(
+				"assetsContext hides protocol WrittenImageAssets",
+				JSON.stringify(uploaded),
+			);
+		} else {
+			ok("assetsContext upload returns field path");
+		}
+		if (fake.uploadCalls !== 1) {
+			fail("assetsContext issues one upload", String(fake.uploadCalls));
+		} else {
+			ok("assetsContext issues one upload");
+		}
+	}
+
+	session.dispose();
+}
+
+// --- Unsupported upload through assetsContext is message-only ---
+{
+	const fake = createFakeClient({
+		capabilities: resolveCmsCapabilities({
+			deleteEntry: true,
+			assets: { uploadImage: false },
+		}),
+		entries: [sample],
+	});
+	// Session claims upload supported only from capabilities; force-call via a
+	// session that offers upload but client refuses (capability flip mid-flight).
+	const session = createAuthoringSession({
+		client: fake.client,
+		collection: "posts",
+		mode: { kind: "edit", entry: sample },
+		capabilities: resolveCmsCapabilities({
+			deleteEntry: true,
+			assets: { uploadImage: true },
+		}),
+	});
+	const assets = session.assetsContext();
+	if (!assets.uploadImage) {
+		fail(
+			"assetsContext uploadImage present when offered",
+			"missing uploadImage",
+		);
+	} else {
+		const refused = await assets.uploadImage({
+			file: new Blob([new Uint8Array([1])]),
+			collection: "posts",
+			id: "hello",
+		});
+		if (refused.ok || !("message" in refused) || "code" in refused) {
+			fail("assetsContext failure is message-only", JSON.stringify(refused));
+		} else {
+			ok("assetsContext failure is message-only");
+		}
 	}
 	session.dispose();
 }

@@ -270,7 +270,6 @@ onDestroy(() => {
 	{:else if (view === "editor" || view === "create") && selectedCollection && session}
 		<EntryEditor
 			{session}
-			{client}
 			collection={selectedCollection}
 			schema={activeSchema}
 			onSaved={(saved) => void onSaved(saved)}

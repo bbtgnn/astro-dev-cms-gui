@@ -4,6 +4,7 @@
  * Debounce/coalesce lives behind an internal autosave seam.
  */
 import type { CmsCapabilities, ContentEntry } from "@cms/crud/fetch-client";
+import type { CmsAssetsFieldContext } from "@cms/form";
 import type { z } from "zod";
 import {
 	type AuthoringStatus,
@@ -60,6 +61,11 @@ export type AuthoringSession = {
 	flushNow: () => void;
 	deleteEntry: () => Promise<{ ok: true } | { ok: false; message: string }>;
 	reload: () => Promise<void>;
+	/**
+	 * Authoring-facing asset upload for the form shell.
+	 * File → field path | message; protocol bytes/FormData/Sharp stay behind the client.
+	 */
+	assetsContext: () => CmsAssetsFieldContext;
 	dispose: () => void;
 };
 
@@ -280,6 +286,22 @@ export function createAuthoringSession(
 			clearErrors();
 			formEpoch += 1;
 			notify();
+		},
+		assetsContext(): CmsAssetsFieldContext {
+			if (!canUploadAssets) {
+				return { uploadEnabled: false };
+			}
+			return {
+				uploadEnabled: true,
+				maxUploadBytes,
+				uploadImage: async (input) => {
+					const result = await options.client.uploadImage(input);
+					if (!result.ok) {
+						return { ok: false, message: result.message };
+					}
+					return { ok: true, path: result.value.path };
+				},
+			};
 		},
 		dispose() {
 			autosave.dispose();
