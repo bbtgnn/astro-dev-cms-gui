@@ -1,6 +1,7 @@
 /**
- * Adapt WriteMode (FS / memory writer) to the CMS protocol seam.
- * Domain behavior stays in write-mode; this only shapes typed outcomes.
+ * Filesystem / memory write-back behind the CMS protocol seam (ADR-0005).
+ * WriteMode stays private implementation; hosts construct via createCmsProtocol
+ * or createCmsHost (protocol + host-only readAsset).
  */
 import {
 	type CmsCapabilitiesInput,
@@ -16,6 +17,7 @@ import {
 } from "./protocol";
 import type {
 	CreateWriteModeOptions,
+	ReadAssetResult,
 	UpsertEntryInput,
 	WriteImageAssetsInput,
 	WriteMode,
@@ -59,10 +61,7 @@ type SharedFailureCode =
 	| "validation_failed"
 	| "unsupported_capability";
 
-const CONFLICT_CODES = new Set([
-	"YAML_EXT_COLLISION",
-	"REVISION_CONFLICT",
-]);
+const CONFLICT_CODES = new Set(["YAML_EXT_COLLISION", "REVISION_CONFLICT"]);
 
 const UPLOAD_VALIDATION_CODES = new Set([
 	"VALIDATION_FAILED",
@@ -103,8 +102,7 @@ function mapWriteModeFailure(
 	}
 	if (
 		allowed.has("validation_failed") &&
-		(e.status === 400 ||
-			(e.code != null && validationCodes.has(e.code)))
+		(e.status === 400 || (e.code != null && validationCodes.has(e.code)))
 	) {
 		return cmsErr("validation_failed", e.message || "Validation failed", {
 			issues: e.issues,
@@ -168,8 +166,8 @@ function uploadImageFailure(err: unknown): UploadImageResult | null {
 	) as UploadImageResult | null;
 }
 
-/** Lift an existing WriteMode behind the protocol interface. */
-export function adaptWriteModeToProtocol(
+/** Lift private WriteMode behind the protocol interface. */
+function adaptWriteModeToProtocol(
 	wm: WriteMode,
 	options?: AdaptProtocolOptions,
 ): CmsProtocol {
@@ -307,13 +305,31 @@ export function adaptWriteModeToProtocol(
 	};
 }
 
-/** In-memory or filesystem protocol from the same CreateWriteModeOptions. */
+/** Host transport needs: protocol ops + allowlisted asset GET (not on CmsProtocol). */
+export type CmsHost = {
+	protocol: CmsProtocol;
+	readAsset: (relFromRoot: string) => Promise<ReadAssetResult>;
+};
+
+/**
+ * Construct filesystem/memory write-back for an Astro (or other) host transport.
+ * Prefer this when the dispatcher needs GET /api/assets/*.
+ */
+export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
+	const { capabilities, processImage, ...wmOptions } = options;
+	const writeMode = createWriteMode(wmOptions);
+	return {
+		protocol: adaptWriteModeToProtocol(writeMode, {
+			capabilities,
+			processImage,
+		}),
+		readAsset: (rel) => writeMode.readAsset(rel),
+	};
+}
+
+/** In-memory or filesystem CmsProtocol (same options as {@link createCmsHost}). */
 export function createCmsProtocol(
 	options: CreateCmsProtocolOptions,
 ): CmsProtocol {
-	const { capabilities, processImage, ...wmOptions } = options;
-	return adaptWriteModeToProtocol(createWriteMode(wmOptions), {
-		capabilities,
-		processImage,
-	});
+	return createCmsHost(options).protocol;
 }

@@ -1,14 +1,10 @@
 /**
  * Portable check: sharp convert + protocol uploadImage + entry save (issue #17).
- * Also keeps writeImageAssets / srcset / safe-read allowlist coverage.
+ * Also keeps srcset / safe-read allowlist coverage via createCmsHost.
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-	adaptWriteModeToProtocol,
-	createWriteMode,
-	memoryWriter,
-} from "@cms/crud";
+import { createCmsHost, memoryWriter } from "@cms/crud";
 import { z } from "zod";
 import {
 	contentAssetPath,
@@ -27,7 +23,7 @@ const postsSchema = z.object({
 });
 
 const writer = memoryWriter();
-const wm = createWriteMode({
+const host = createCmsHost({
 	root,
 	allowPaths: ["posts"],
 	writer,
@@ -42,11 +38,9 @@ const wm = createWriteMode({
 	pathMap: {
 		posts: { hello: "posts/hello.yaml" },
 	},
-});
-
-const protocol = adaptWriteModeToProtocol(wm, {
 	processImage: processImageToWebpSizes,
 });
+const { protocol } = host;
 
 const created = await protocol.upsertEntry({
 	id: "hello",
@@ -82,19 +76,25 @@ if (
 	throw new Error(`unexpected names: ${names.join(",")}`);
 }
 
-const written = await wm.writeImageAssets({
+// Protocol uploadImage → field path → content entry save (self-host validation).
+const caps = await protocol.getCapabilities();
+if (!caps.ok || !caps.value.assets.uploadImage) {
+	throw new Error(`expected assets capability: ${JSON.stringify(caps)}`);
+}
+
+const uploaded = await protocol.uploadImage({
 	collection: "posts",
 	id: "hello",
 	name: "cover",
-	widths: processed.widths,
-	files: processed.files.map((f) => ({
-		relativeToFolder: f.relativeToFolder,
-		bytes: f.bytes,
-	})),
+	bytes: png,
+	filename: "pixel.png",
+	widths: [480, 960, 1600],
 });
-
-if (written.path !== "./hello/cover/cover.webp") {
-	throw new Error(`unexpected yaml path: ${written.path}`);
+if (!uploaded.ok) {
+	throw new Error(`uploadImage failed: ${JSON.stringify(uploaded)}`);
+}
+if (uploaded.value.path !== "./hello/cover/cover.webp") {
+	throw new Error(`unexpected upload path: ${uploaded.value.path}`);
 }
 
 let found480 = false;
@@ -111,8 +111,8 @@ if (!found480) {
 	throw new Error("480.webp not in memory store");
 }
 
-const items = resolveImageSrcsetItems(written.path, [480, 960, 1600]);
-const asset = contentAssetPath("posts", written.path, "960.webp");
+const items = resolveImageSrcsetItems(uploaded.value.path, [480, 960, 1600]);
+const asset = contentAssetPath("posts", uploaded.value.path, "960.webp");
 if (asset !== "posts/hello/cover/960.webp") {
 	throw new Error(`bad asset path: ${asset}`);
 }
@@ -122,32 +122,11 @@ if (items[2]?.file !== "cover.webp" || items[2]?.width !== 1600) {
 
 let denied = false;
 try {
-	await wm.readAsset("../etc/passwd");
+	await host.readAsset("../etc/passwd");
 } catch (e) {
 	denied = (e as { status?: number }).status === 400;
 }
 if (!denied) throw new Error("expected unsafe asset 400");
-
-// Protocol uploadImage → field path → content entry save (self-host validation).
-const caps = await protocol.getCapabilities();
-if (!caps.ok || !caps.value.assets.uploadImage) {
-	throw new Error(`expected assets capability: ${JSON.stringify(caps)}`);
-}
-
-const uploaded = await protocol.uploadImage({
-	collection: "posts",
-	id: "hello",
-	name: "hero",
-	bytes: png,
-	filename: "pixel.png",
-	widths: [480, 960, 1600],
-});
-if (!uploaded.ok) {
-	throw new Error(`uploadImage failed: ${JSON.stringify(uploaded)}`);
-}
-if (uploaded.value.path !== "./hello/hero/cover.webp") {
-	throw new Error(`unexpected upload path: ${uploaded.value.path}`);
-}
 
 const saved = await protocol.upsertEntry({
 	id: "hello",
@@ -182,6 +161,6 @@ if (!still.ok || still.value.data.cover !== uploaded.value.path) {
 	throw new Error("failed upload must not change persisted cover");
 }
 
-console.log("ok  image convert + writeImageAssets + srcset helpers");
+console.log("ok  image convert + uploadImage + srcset helpers");
 console.log("ok  protocol uploadImage + entry save");
 console.log("ok  items", items.map((i) => `${i.file}@${i.width}`).join(", "));

@@ -3,14 +3,16 @@
  * Dispatcher + middleware / integration seam + light fields barrel + discovery.
  */
 
-/** Discovery + write-mode helpers (implemented in @cms/crud). */
+/** Discovery + CMS protocol helpers (implemented in @cms/crud). */
 export type {
 	CmsAssetsCapability,
 	CmsCapabilities,
 	CmsCapabilitiesInput,
+	CmsHost,
 	CmsProtocol,
 	CollectionSummary,
 	ContentEntry,
+	CreateCmsProtocolOptions,
 	DeleteEntryFailureCode,
 	DeleteEntryResult,
 	DiscoverCollectionsOptions,
@@ -20,19 +22,23 @@ export type {
 	GetEntryFailureCode,
 	GetEntryResult,
 	LoaderPathHint,
+	ReadAssetResult,
 	SaveEntryFailureCode,
 	SaveEntryResult,
 	UploadImageFailureCode,
 	UploadImageInput,
 	UploadImageResult,
 	UpsertEntryInput,
+	Writer,
 } from "@cms/crud";
 export {
-	adaptWriteModeToProtocol,
 	CMS_LOADER_HINT,
+	createCmsHost,
 	createCmsProtocol,
 	discoverCollections,
 	httpStatusForCmsErr,
+	memoryWriter,
+	nodeFsWriter,
 	resolveCmsCapabilities,
 	resolveCollectionSchema,
 	scanYamlEntryIds,

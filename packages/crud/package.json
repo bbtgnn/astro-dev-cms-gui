@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "PROTOTYPE — write mode + writers (no UI)",
+	"description": "PROTOTYPE — CMS protocol + writers (filesystem write-back behind createCmsHost)",
 	"exports": {
 		".": "./src/index.ts",
 		"./fetch-client": "./src/fetch-client.ts",

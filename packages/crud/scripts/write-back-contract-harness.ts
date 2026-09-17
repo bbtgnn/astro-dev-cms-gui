@@ -1,17 +1,14 @@
 /**
- * Shared write-back + read-side protocol contract harness.
- * #11: WriteMode list/read/save against memory + filesystem.
- * #12: CmsProtocol read-side outcomes against the same backends.
+ * Shared write-back + CMS protocol contract harness.
+ * #11: list/read/save against memory + filesystem (internal WriteMode for throw status).
+ * #12+: CmsProtocol outcomes against the same backends (public seam).
  */
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import { processImageToWebpSizes } from "../../routes/src/process-image.ts";
-import {
-	adaptWriteModeToProtocol,
-	createCmsProtocol,
-} from "../src/create-cms-protocol";
+import { createCmsProtocol } from "../src/create-cms-protocol";
 import type { DiscoveredCollection } from "../src/discovery";
 import { memoryWriter } from "../src/memory-writer";
 import { nodeFsWriter } from "../src/node-fs-writer";
@@ -692,18 +689,16 @@ async function runReadSideProtocolScenarios(
 		});
 	}
 
-	const forbiddenProtocol = adaptWriteModeToProtocol(
-		createWriteMode({
-			root,
-			allowPaths: ["posts"],
-			writer,
-			pathMap: {
-				posts: {
-					blocked: "../blocked.yaml",
-				},
+	const forbiddenProtocol = createCmsProtocol({
+		root,
+		allowPaths: ["posts"],
+		writer,
+		pathMap: {
+			posts: {
+				blocked: "../blocked.yaml",
 			},
-		}),
-	);
+		},
+	});
 	const forbidden = await forbiddenProtocol.getEntry("posts", "blocked");
 	if (forbidden.ok || forbidden.code !== "forbidden") {
 		failures.push({

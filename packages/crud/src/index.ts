@@ -1,15 +1,17 @@
 /**
  * PROTOTYPE / SPIKE — @cms/crud
- * Write mode = domain ops + Zod + discovery/path helpers. Writer = low-level FS.
+ * CMS protocol + Writer injection. Filesystem write-back is implementation
+ * behind createCmsProtocol / createCmsHost (ADR-0005).
  */
 
 export type {
 	AdaptProtocolOptions,
+	CmsHost,
 	CreateCmsProtocolOptions,
 	ProcessImageToWebpSizes,
 } from "./create-cms-protocol";
 export {
-	adaptWriteModeToProtocol,
+	createCmsHost,
 	createCmsProtocol,
 } from "./create-cms-protocol";
 export type {
@@ -82,12 +84,9 @@ export { opaqueRevision } from "./revision";
 export type {
 	CollectionSummary,
 	ContentEntry,
-	CreateWriteModeOptions,
 	ReadAssetResult,
 	UpsertEntryInput,
 	WriteImageAssetsInput,
-	WriteMode,
 	Writer,
 	WrittenImageAssets,
 } from "./types";
-export { createWriteMode } from "./write-mode";

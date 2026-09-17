@@ -142,11 +142,8 @@ async function outcomeFromResponse<C extends string>(
 			ok: false,
 			code: legacy.code,
 			message:
-				parsed?.error ??
-				legacy.defaultMessage ??
-				(bodyText || res.statusText),
-			...(legacy.code === "validation_failed" &&
-			parsed?.issues !== undefined
+				parsed?.error ?? legacy.defaultMessage ?? (bodyText || res.statusText),
+			...(legacy.code === "validation_failed" && parsed?.issues !== undefined
 				? { issues: parsed.issues }
 				: {}),
 		};

@@ -9,7 +9,7 @@ import { cmsDevOnlyGuard } from "./dev-guard";
 export type CmsDispatcherOptions = {
 	protocol: CmsProtocol;
 	/**
-	 * Host-side asset bytes for GET /api/assets/* (WriteMode).
+	 * Host-side asset bytes for GET /api/assets/* (createCmsHost.readAsset).
 	 * Kept off the serializable CMS protocol so paths stay in the adapter.
 	 */
 	readAsset?: (relFromRoot: string) => Promise<ReadAssetResult>;
@@ -108,7 +108,7 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				return Response.json(result.value);
 			}
 
-			// GET /api/assets/<rel-from-content-root> — host WriteMode, not protocol
+			// GET /api/assets/<rel-from-content-root> — host readAsset, not protocol
 			if (path.startsWith("api/assets/") && method === "GET") {
 				if (!options.readAsset) {
 					return Response.json(

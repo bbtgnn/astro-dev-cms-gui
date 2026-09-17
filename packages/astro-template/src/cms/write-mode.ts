@@ -1,17 +1,15 @@
 /**
- * Template write-mode / CMS protocol — live `content.config` discovery (P2).
+ * Template CMS host — live `content.config` discovery behind createCmsHost.
  * Happy path: no fakeCatalog; pathMap only for Track D allowlist deny smoke.
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-	adaptWriteModeToProtocol,
-	type CmsProtocol,
-	createWriteMode,
+	type CmsHost,
+	createCmsHost,
 	discoverCollections,
 	memoryWriter,
 	nodeFsWriter,
-	type WriteMode,
 } from "@cms/crud";
 import { processImageToWebpSizes } from "../../../routes/src/process-image.ts";
 import { collections } from "../content.config";
@@ -24,16 +22,16 @@ export const allowPaths = ["posts", "authors", "data"];
 
 const discovered = discoverCollections(collections);
 
-export function createTemplateWriteMode(opts?: {
-	useMemory?: boolean;
-}): WriteMode {
+/** Self-host protocol + host-only asset read for the Astro `/_cms` transport. */
+export function createTemplateCmsHost(opts?: { useMemory?: boolean }): CmsHost {
 	const writer = opts?.useMemory ? memoryWriter() : nodeFsWriter();
 
-	return createWriteMode({
+	return createCmsHost({
 		root: contentRoot,
 		allowPaths,
 		writer,
 		collections: discovered,
+		processImage: processImageToWebpSizes,
 		// Track D: mapped path outside allowPaths → HTTP 403 / protocol forbidden
 		pathMap: {
 			posts: {
@@ -41,25 +39,4 @@ export function createTemplateWriteMode(opts?: {
 			},
 		},
 	});
-}
-
-/** Self-host protocol + host-only asset read for the Astro `/_cms` transport. */
-export function createTemplateCmsHost(opts?: { useMemory?: boolean }): {
-	protocol: CmsProtocol;
-	readAsset: WriteMode["readAsset"];
-} {
-	const writeMode = createTemplateWriteMode(opts);
-	return {
-		protocol: adaptWriteModeToProtocol(writeMode, {
-			processImage: processImageToWebpSizes,
-		}),
-		readAsset: (rel) => writeMode.readAsset(rel),
-	};
-}
-
-/** @deprecated Prefer {@link createTemplateCmsHost} when asset GET is needed. */
-export function createTemplateCmsProtocol(opts?: {
-	useMemory?: boolean;
-}): CmsProtocol {
-	return createTemplateCmsHost(opts).protocol;
 }

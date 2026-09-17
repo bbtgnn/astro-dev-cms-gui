@@ -36,6 +36,10 @@ _Avoid_: widget map (Decap-only sense), component library
 The path by which edits from the authoring shell land in project files (or a local store that later syncs to files).
 _Avoid_: persistence, save API, storage backend
 
+**CMS protocol**:
+The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` and an injected **writer**.
+_Avoid_: save API, REST CRUD, WriteMode (as a public API)
+
 **Content entry**:
 One unit of content addressed by the shell (a file or logical document in a collection).
 _Avoid_: page, document, post (unless collection-specific)
@@ -53,11 +57,16 @@ An (open-thread) authoring-shell capability to define or edit field schemas thro
 _Avoid_: form builder (sjsf demo sense), content editor
 
 **Write mode**:
-Domain-level content ops (list/get/upsert/delete…) for the authoring shell; constructed with an injected **writer**, not a runtime string enum.
-_Avoid_: storage backend, persistence driver
+Internal filesystem write-back implementation (list/get/upsert/delete, path
+rules, YAML, revisions) constructed with an injected **writer**. Not a second
+public face beside the CMS protocol; hosts use `createCmsProtocol` /
+`createCmsHost`.
+_Avoid_: storage backend, persistence driver, parallel public write-back API
 
 **Writer**:
-A concrete implementation plugged into **write mode** that performs reads/writes (e.g. local FS, later other backends). Injected as a value, not selected by a runtime string enum.
+A concrete implementation plugged into write-back that performs reads/writes
+(e.g. local FS, in-memory). Injected as a value into protocol/host construction,
+not selected by a runtime string enum.
 _Avoid_: storage backend, adapter (unless naming a specific Astro adapter)
 
 **Open thread**:
