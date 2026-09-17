@@ -91,6 +91,10 @@ export function isCmsFetchError(err: unknown): err is CmsFetchError {
 
 type ErrorBody = { error?: string; code?: string; issues?: unknown };
 
+type LegacyStatusMap<C extends string> = Partial<
+	Record<number, { code: C; defaultMessage?: string }>
+>;
+
 async function parseErrorBody(
 	bodyText: string,
 ): Promise<ErrorBody | undefined> {
@@ -101,44 +105,54 @@ async function parseErrorBody(
 	}
 }
 
-function isGetEntryFailureCode(
-	code: string | undefined,
-): code is GetEntryFailureCode {
-	return code === "not_found" || code === "forbidden" || code === "conflict";
-}
+/**
+ * Map a non-OK CMS response to a typed failure outcome, or throw CmsFetchError.
+ * Prefers an explicit protocol `code` when it is allowed and status-aligned;
+ * otherwise applies the op's legacy status→code map.
+ */
+async function outcomeFromResponse<C extends string>(
+	res: Response,
+	allowedCodes: readonly C[],
+	legacyByStatus: LegacyStatusMap<C>,
+	options?: { includeIssues?: boolean },
+): Promise<CmsErr<C>> {
+	const bodyText = await res.text();
+	const parsed = await parseErrorBody(bodyText);
+	const code = parsed?.code;
+	const includeIssues = options?.includeIssues === true;
 
-function isSaveEntryFailureCode(
-	code: string | undefined,
-): code is SaveEntryFailureCode {
-	return (
-		code === "not_found" ||
-		code === "forbidden" ||
-		code === "conflict" ||
-		code === "validation_failed"
-	);
-}
+	if (
+		code !== undefined &&
+		(allowedCodes as readonly string[]).includes(code) &&
+		res.status === httpStatusForCmsErr(code)
+	) {
+		return {
+			ok: false,
+			code: code as C,
+			message: parsed?.error ?? (bodyText || res.statusText),
+			...(includeIssues && parsed?.issues !== undefined
+				? { issues: parsed.issues }
+				: {}),
+		};
+	}
 
-function isDeleteEntryFailureCode(
-	code: string | undefined,
-): code is DeleteEntryFailureCode {
-	return (
-		code === "not_found" ||
-		code === "forbidden" ||
-		code === "conflict" ||
-		code === "unsupported_capability"
-	);
-}
+	const legacy = legacyByStatus[res.status];
+	if (legacy) {
+		return {
+			ok: false,
+			code: legacy.code,
+			message:
+				parsed?.error ??
+				legacy.defaultMessage ??
+				(bodyText || res.statusText),
+			...(legacy.code === "validation_failed" &&
+			parsed?.issues !== undefined
+				? { issues: parsed.issues }
+				: {}),
+		};
+	}
 
-function isUploadImageFailureCode(
-	code: string | undefined,
-): code is UploadImageFailureCode {
-	return (
-		code === "forbidden" ||
-		code === "conflict" ||
-		code === "validation_failed" ||
-		code === "unsupported_capability" ||
-		code === "processing_failed"
-	);
+	throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
 }
 
 export type CmsFetchClient = Omit<CmsProtocol, "uploadImage"> & {
@@ -219,42 +233,15 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			if (res.ok) {
 				return { ok: true, value: (await res.json()) as ContentEntry };
 			}
-			const bodyText = await res.text();
-			const parsed = await parseErrorBody(bodyText);
-			const code = parsed?.code;
-			if (
-				isGetEntryFailureCode(code) &&
-				res.status === httpStatusForCmsErr(code)
-			) {
-				return {
-					ok: false,
-					code,
-					message: parsed?.error ?? (bodyText || res.statusText),
-				} satisfies CmsErr<GetEntryFailureCode>;
-			}
-			// Legacy transport: 404/403/409 without a protocol code.
-			if (res.status === 404) {
-				return {
-					ok: false,
-					code: "not_found",
-					message: parsed?.error ?? "Not found",
-				};
-			}
-			if (res.status === 403) {
-				return {
-					ok: false,
-					code: "forbidden",
-					message: parsed?.error ?? "Forbidden",
-				};
-			}
-			if (res.status === 409) {
-				return {
-					ok: false,
-					code: "conflict",
-					message: parsed?.error ?? "Conflict",
-				};
-			}
-			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
+			return outcomeFromResponse<GetEntryFailureCode>(
+				res,
+				["not_found", "forbidden", "conflict"],
+				{
+					404: { code: "not_found", defaultMessage: "Not found" },
+					403: { code: "forbidden", defaultMessage: "Forbidden" },
+					409: { code: "conflict", defaultMessage: "Conflict" },
+				},
+			);
 		},
 
 		async upsertEntry(input: UpsertEntryInput): Promise<SaveEntryResult> {
@@ -273,51 +260,20 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			if (res.ok) {
 				return { ok: true, value: (await res.json()) as ContentEntry };
 			}
-			const bodyText = await res.text();
-			const parsed = await parseErrorBody(bodyText);
-			const code = parsed?.code;
-			if (
-				isSaveEntryFailureCode(code) &&
-				res.status === httpStatusForCmsErr(code)
-			) {
-				return {
-					ok: false,
-					code,
-					message: parsed?.error ?? (bodyText || res.statusText),
-					...(parsed?.issues !== undefined ? { issues: parsed.issues } : {}),
-				} satisfies CmsErr<SaveEntryFailureCode>;
-			}
-			// Legacy transport mapping when code is absent.
-			if (res.status === 404) {
-				return {
-					ok: false,
-					code: "not_found",
-					message: parsed?.error ?? "Not found",
-				};
-			}
-			if (res.status === 403) {
-				return {
-					ok: false,
-					code: "forbidden",
-					message: parsed?.error ?? "Forbidden",
-				};
-			}
-			if (res.status === 409) {
-				return {
-					ok: false,
-					code: "conflict",
-					message: parsed?.error ?? "Conflict",
-				};
-			}
-			if (res.status === 400) {
-				return {
-					ok: false,
-					code: "validation_failed",
-					message: parsed?.error ?? "Validation failed",
-					...(parsed?.issues !== undefined ? { issues: parsed.issues } : {}),
-				};
-			}
-			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
+			return outcomeFromResponse<SaveEntryFailureCode>(
+				res,
+				["not_found", "forbidden", "conflict", "validation_failed"],
+				{
+					404: { code: "not_found", defaultMessage: "Not found" },
+					403: { code: "forbidden", defaultMessage: "Forbidden" },
+					409: { code: "conflict", defaultMessage: "Conflict" },
+					400: {
+						code: "validation_failed",
+						defaultMessage: "Validation failed",
+					},
+				},
+				{ includeIssues: true },
+			);
 		},
 
 		async deleteEntry(
@@ -331,48 +287,19 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			if (res.ok || res.status === 204) {
 				return { ok: true, value: null };
 			}
-			const bodyText = await res.text();
-			const parsed = await parseErrorBody(bodyText);
-			const code = parsed?.code;
-			if (
-				isDeleteEntryFailureCode(code) &&
-				res.status === httpStatusForCmsErr(code)
-			) {
-				return {
-					ok: false,
-					code,
-					message: parsed?.error ?? (bodyText || res.statusText),
-				} satisfies CmsErr<DeleteEntryFailureCode>;
-			}
-			if (res.status === 404) {
-				return {
-					ok: false,
-					code: "not_found",
-					message: parsed?.error ?? "Not found",
-				};
-			}
-			if (res.status === 403) {
-				return {
-					ok: false,
-					code: "forbidden",
-					message: parsed?.error ?? "Forbidden",
-				};
-			}
-			if (res.status === 409) {
-				return {
-					ok: false,
-					code: "conflict",
-					message: parsed?.error ?? "Conflict",
-				};
-			}
-			if (res.status === 501) {
-				return {
-					ok: false,
-					code: "unsupported_capability",
-					message: parsed?.error ?? "Entry deletion is not supported",
-				};
-			}
-			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
+			return outcomeFromResponse<DeleteEntryFailureCode>(
+				res,
+				["not_found", "forbidden", "conflict", "unsupported_capability"],
+				{
+					404: { code: "not_found", defaultMessage: "Not found" },
+					403: { code: "forbidden", defaultMessage: "Forbidden" },
+					409: { code: "conflict", defaultMessage: "Conflict" },
+					501: {
+						code: "unsupported_capability",
+						defaultMessage: "Entry deletion is not supported",
+					},
+				},
+			);
 		},
 
 		uploadImage: async (input): Promise<UploadImageResult> => {
@@ -395,57 +322,31 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 					value: (await res.json()) as WrittenImageAssets,
 				};
 			}
-			const bodyText = await res.text();
-			const parsed = await parseErrorBody(bodyText);
-			const code = parsed?.code;
-			if (
-				isUploadImageFailureCode(code) &&
-				res.status === httpStatusForCmsErr(code)
-			) {
-				return {
-					ok: false,
-					code,
-					message: parsed?.error ?? (bodyText || res.statusText),
-					...(parsed?.issues !== undefined ? { issues: parsed.issues } : {}),
-				} satisfies CmsErr<UploadImageFailureCode>;
-			}
-			if (res.status === 403) {
-				return {
-					ok: false,
-					code: "forbidden",
-					message: parsed?.error ?? "Forbidden",
-				};
-			}
-			if (res.status === 409) {
-				return {
-					ok: false,
-					code: "conflict",
-					message: parsed?.error ?? "Conflict",
-				};
-			}
-			if (res.status === 400) {
-				return {
-					ok: false,
-					code: "validation_failed",
-					message: parsed?.error ?? "Validation failed",
-					...(parsed?.issues !== undefined ? { issues: parsed.issues } : {}),
-				};
-			}
-			if (res.status === 501) {
-				return {
-					ok: false,
-					code: "unsupported_capability",
-					message: parsed?.error ?? "Image upload is not supported",
-				};
-			}
-			if (res.status === 422 || res.status === 500) {
-				return {
-					ok: false,
-					code: "processing_failed",
-					message: parsed?.error ?? (bodyText || res.statusText),
-				};
-			}
-			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
+			return outcomeFromResponse<UploadImageFailureCode>(
+				res,
+				[
+					"forbidden",
+					"conflict",
+					"validation_failed",
+					"unsupported_capability",
+					"processing_failed",
+				],
+				{
+					403: { code: "forbidden", defaultMessage: "Forbidden" },
+					409: { code: "conflict", defaultMessage: "Conflict" },
+					400: {
+						code: "validation_failed",
+						defaultMessage: "Validation failed",
+					},
+					501: {
+						code: "unsupported_capability",
+						defaultMessage: "Image upload is not supported",
+					},
+					422: { code: "processing_failed" },
+					500: { code: "processing_failed" },
+				},
+				{ includeIssues: true },
+			);
 		},
 	};
 }
