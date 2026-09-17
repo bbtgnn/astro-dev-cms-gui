@@ -61,8 +61,8 @@ let {
 	onReload?: () => void;
 } = $props();
 
-/** Create-flow id field; default matches tracer pathMap `new-post`. */
-let idDraft = $state("new-post");
+/** Create-flow id field — host/pathMap defaults stay out of this package. */
+let idDraft = $state("");
 /**
  * Local opaque revision; seeded from prop (parent remounts via mount key on reload).
  * Updated after every successful write-back for the next guarded write.
@@ -204,48 +204,6 @@ async function remove() {
 	}
 }
 
-/** Force invalid payload to demo authoritative_error (posts title must be string). */
-async function saveInvalid() {
-	saveStatus = "saving";
-	busy = true;
-	clearErrors();
-	try {
-		const result = await writeBack({
-			title: 123,
-			draft: false,
-			body: "intentionally invalid title type",
-			author: "ada",
-			summary: { en: "x" },
-		} as unknown as Record<string, unknown>);
-		if (!result.ok) {
-			error = result.message;
-			issues = result.issues ?? null;
-			saveStatus =
-				result.code === "conflict"
-					? "conflict"
-					: result.code === "validation_failed"
-						? "authoritative_error"
-						: "idle";
-			return;
-		}
-		revision = result.entry.revision;
-		lastSaved = result.entry;
-		saveStatus = "saved";
-		onSaved?.(result.entry);
-	} catch (e) {
-		saveStatus = "idle";
-		if (isCmsFetchError(e)) {
-			error = e.message;
-			issues = e.issues ?? null;
-		} else {
-			error = e instanceof Error ? e.message : String(e);
-			issues = null;
-		}
-	} finally {
-		busy = false;
-	}
-}
-
 /** Open the real Astro site route for persisted content — no draft transport. */
 function openPreview() {
 	if (!previewUrl) return;
@@ -285,9 +243,8 @@ function statusLabel(status: AuthoringStatus): string | null {
 		<p>
 			<label>
 				new id
-				<input bind:value={idDraft} placeholder="new-post" />
+				<input bind:value={idDraft} placeholder="entry-id" />
 			</label>
-			<small>tracer pathMap includes <code>new-post</code></small>
 		</p>
 	{/if}
 
@@ -345,9 +302,6 @@ function statusLabel(status: AuthoringStatus): string | null {
 				>Open preview</button
 			>
 		{/if}
-		<button type="button" disabled={busy} onclick={() => void saveInvalid()}
-			>save invalid (expect authoritative-error)</button
-		>
 	</p>
 
 	{#if lastSaved}

@@ -323,7 +323,7 @@ onMount(() => {
 		<EntryEditor
 			{client}
 			collection={selectedCollection}
-			entryId="new-post"
+			entryId=""
 			schema={activeSchema}
 			value={{}}
 			creating={true}
