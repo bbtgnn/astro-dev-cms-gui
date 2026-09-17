@@ -15,6 +15,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@astrojs/svelte": "catalog:",
+        "@cms/authoring": "workspace:*",
         "@cms/components": "workspace:*",
         "@cms/crud": "workspace:*",
         "@cms/fields": "workspace:*",
@@ -28,6 +29,23 @@
       },
       "devDependencies": {
         "@astrojs/check": "^0.9.10",
+      },
+    },
+    "packages/authoring": {
+      "name": "@cms/authoring",
+      "version": "0.0.0",
+      "dependencies": {
+        "@cms/crud": "workspace:*",
+        "@cms/form": "workspace:*",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "svelte": "catalog:",
+        "svelte-check": "catalog:",
+        "typescript": "catalog:",
+      },
+      "peerDependencies": {
+        "svelte": "^5.0.0",
       },
     },
     "packages/components": {
@@ -158,6 +176,8 @@
     "@capsizecss/unpack": ["@capsizecss/unpack@4.0.1", "", { "dependencies": { "fontkitten": "^1.0.3" } }, "sha512-CuNiSqg7+e1cO/GjffyMOm5Tt2jUF9CWHHnvQ/UkqvtkGfHdgwEC0wpmq7fkN3gxwpRnrAN0WzO3vREKmNolMQ=="],
 
     "@cms/astro-template": ["@cms/astro-template@workspace:packages/astro-template"],
+
+    "@cms/authoring": ["@cms/authoring@workspace:packages/authoring"],
 
     "@cms/components": ["@cms/components@workspace:packages/components"],
 

@@ -1,13 +1,13 @@
 ---
 /**
- * PROTOTYPE / SPIKE — authoring shell mount.
+ * PROTOTYPE / SPIKE — thin Astro mount for the reusable authoring application.
  * UI at /cms; JSON API remains middleware-mounted at /_cms.
  * Editor schemas + direct Svelte fields come from virtual:@cms/config (Vite),
- * not from serializing live Zod through Astro island props.
+ * wired in the client-only mount — not serialized through Astro frontmatter.
  */
 
 import { PlaceholderChrome } from "@cms/components";
-import ShellList from "../components/ShellList.svelte";
+import CmsMount from "../components/CmsMount.svelte";
 ---
 
 <html lang="en">
@@ -20,6 +20,6 @@ import ShellList from "../components/ShellList.svelte";
 		<p><a href="/">← home</a></p>
 		<PlaceholderChrome label="@cms/components" />
 		<!-- client:only — sjsf templates break under Astro/Vite SSR -->
-		<ShellList client:only="svelte" />
+		<CmsMount client:only="svelte" />
 	</body>
 </html>

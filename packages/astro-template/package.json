@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"@astrojs/svelte": "catalog:",
+		"@cms/authoring": "workspace:*",
 		"@cms/components": "workspace:*",
 		"@cms/crud": "workspace:*",
 		"@cms/fields": "workspace:*",

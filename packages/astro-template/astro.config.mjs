@@ -29,6 +29,7 @@ export default defineConfig({
 				"@cms/components": pkg("components"),
 				"@cms/components/shadcn": pkg("components", "src/shadcn/index.ts"),
 				"@cms/form": pkg("form"),
+				"@cms/authoring": pkg("authoring"),
 				"@cms/crud/fetch-client": pkg("crud", "src/fetch-client.ts"),
 				"@cms/crud": pkg("crud"),
 				"@cms/routes": pkg("routes"),

@@ -1,15 +1,25 @@
-<!-- PROTOTYPE / SPIKE — P4 shell loop: collections → entries → editor via CMS protocol -->
+<!--
+  PROTOTYPE — reusable authoring application: collections → entries → editor.
+  Receives protocol client + host-compiled editor configuration (ADR-0008).
+-->
 <script lang="ts">
-import { collections as editorCollections } from "virtual:@cms/config";
 import {
 	type ContentEntry,
-	createFetchClient,
 	type EntryIdentity,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
 import { onMount } from "svelte";
 import type { z } from "zod";
-import ShellEditor from "./ShellEditor.svelte";
+import EntryEditor from "./EntryEditor.svelte";
+import type { AuthoringClient, EditorCollections } from "./types";
+
+let {
+	client,
+	collections: editorCollections,
+}: {
+	client: AuthoringClient;
+	collections: EditorCollections;
+} = $props();
 
 let view = $state<"collections" | "entries" | "editor" | "create">(
 	"collections",
@@ -22,8 +32,6 @@ let entries = $state.raw<EntryIdentity[]>([]);
 let selectedCollection = $state<string | null>(null);
 let selectedEntryId = $state<string | null>(null);
 let entry = $state.raw<ContentEntry | null>(null);
-
-const client = createFetchClient("/_cms");
 
 function errMsg(e: unknown): string {
 	if (isCmsFetchError(e)) return e.message;
@@ -165,9 +173,8 @@ onMount(() => {
 
 <main>
 	<p>
-		<strong>PROTOTYPE / SPIKE</strong> — P4 shell loop via CMS protocol client
-		(<code>@cms/crud/fetch-client</code>) + editor config from
-		<code>virtual:@cms/config</code>
+		<strong>PROTOTYPE / SPIKE</strong> — reusable authoring application via CMS
+		protocol client + host-compiled editor configuration
 	</p>
 
 	<p>
@@ -233,7 +240,8 @@ onMount(() => {
 		</section>
 	{:else if view === "editor" && selectedCollection && entry}
 		{#key entry.revision}
-			<ShellEditor
+			<EntryEditor
+				{client}
 				collection={selectedCollection}
 				entryId={entry.id}
 				revision={entry.revision}
@@ -246,7 +254,8 @@ onMount(() => {
 			/>
 		{/key}
 	{:else if view === "create" && selectedCollection}
-		<ShellEditor
+		<EntryEditor
+			{client}
 			collection={selectedCollection}
 			entryId="new-post"
 			schema={activeSchema}

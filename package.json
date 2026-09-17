@@ -9,6 +9,7 @@
 			"packages/components",
 			"packages/form",
 			"packages/crud",
+			"packages/authoring",
 			"packages/routes",
 			"packages/astro-template"
 		],
@@ -29,8 +30,8 @@
 	"scripts": {
 		"dev": "bun run --filter @cms/astro-template dev",
 		"build": "bun run --filter @cms/astro-template build",
-		"check": "tsc -p packages/routes && tsc -p packages/crud && tsc -p packages/fields && bun run --filter @cms/form check && bun run --filter @cms/components check",
-		"check:allowlist": "bun run packages/crud/scripts/check-write-back-contract.ts",
+		"check": "tsc -p packages/routes && tsc -p packages/crud && tsc -p packages/fields && bun run --filter @cms/form check && bun run --filter @cms/components check && bun run --filter @cms/authoring check",
+		"check:allowlist": "bun run packages/crud/scripts/check-write-back-contract.ts && bun run packages/authoring/scripts/check-layer-boundaries.ts",
 		"check:image": "bun run packages/astro-template/scripts/check-image.ts",
 		"lint": "biome check .",
 		"format": "biome check --write ."

@@ -1,15 +1,19 @@
-<!-- PROTOTYPE / SPIKE — entry editor: CmsForm + guarded upsert / delete + write-back UI -->
+<!--
+  PROTOTYPE — entry editor: form shell + guarded upsert / delete via protocol client.
+  Host injects the client; no Astro / Node / write-back imports (ADR-0008).
+-->
 <script lang="ts">
 import {
 	type ContentEntry,
-	createFetchClient,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
 import { CmsForm } from "@cms/form";
 import { untrack } from "svelte";
 import type { z } from "zod";
+import type { AuthoringClient } from "./types";
 
 let {
+	client,
 	collection,
 	entryId,
 	schema = null,
@@ -21,9 +25,10 @@ let {
 	onCancel,
 	onReload,
 }: {
+	client: AuthoringClient;
 	collection: string;
 	entryId: string;
-	/** Live Zod from virtual:@cms/config (components stay module values). */
+	/** Live Zod from host-compiled editor configuration. */
 	schema?: z.ZodType | null;
 	value?: Record<string, unknown>;
 	creating?: boolean;
@@ -34,8 +39,6 @@ let {
 	onCancel?: () => void;
 	onReload?: () => void;
 } = $props();
-
-const client = createFetchClient("/_cms");
 
 /** Create-flow id field; default matches tracer pathMap `new-post`. */
 let idDraft = $state("new-post");
@@ -194,8 +197,7 @@ async function saveInvalid() {
 		{/key}
 	{:else}
 		<p>
-			No editor schema for <code>{collection}</code> in
-			<code>virtual:@cms/config</code>.
+			No editor schema for <code>{collection}</code> in host editor configuration.
 		</p>
 	{/if}
 

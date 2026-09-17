@@ -1,0 +1,27 @@
+{
+	"name": "@cms/authoring",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "PROTOTYPE — reusable authoring application (list/editor shell). Package name is provisional (ADR-0009).",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@cms/crud": "workspace:*",
+		"@cms/form": "workspace:*",
+		"zod": "catalog:"
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	},
+	"devDependencies": {
+		"svelte": "catalog:",
+		"svelte-check": "catalog:",
+		"typescript": "catalog:"
+	},
+	"scripts": {
+		"check": "svelte-check --tsconfig ./tsconfig.json",
+		"check:layers": "bun run ./scripts/check-layer-boundaries.ts"
+	}
+}
