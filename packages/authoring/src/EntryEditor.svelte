@@ -23,6 +23,7 @@ let {
 	canDelete = false,
 	canUploadAssets = false,
 	maxUploadBytes = undefined,
+	previewUrl = null,
 	onSaved,
 	onDeleted,
 	onCancel,
@@ -42,6 +43,11 @@ let {
 	/** From protocol capabilities — disable image upload when unsupported. */
 	canUploadAssets?: boolean;
 	maxUploadBytes?: number;
+	/**
+	 * Site route for this entry after successful write-back (ADR-0013).
+	 * Null/absent → no preview control. Never carries unsaved form state.
+	 */
+	previewUrl?: string | null;
 	onSaved?: (entry: ContentEntry) => void;
 	onDeleted?: () => void;
 	onCancel?: () => void;
@@ -170,6 +176,12 @@ async function saveInvalid() {
 		summary: { en: "x" },
 	} as unknown as Record<string, unknown>);
 }
+
+/** Open the real Astro site route for persisted content — no draft transport. */
+function openPreview() {
+	if (!previewUrl) return;
+	window.open(previewUrl, "_blank", "noopener,noreferrer");
+}
 </script>
 
 <section>
@@ -239,6 +251,11 @@ async function saveInvalid() {
 		{#if !creating && canDelete}
 			<button type="button" disabled={busy} onclick={() => void remove()}
 				>delete</button
+			>
+		{/if}
+		{#if previewUrl}
+			<button type="button" disabled={busy} onclick={openPreview}
+				>Open preview</button
 			>
 		{/if}
 		<button type="button" disabled={busy} onclick={() => void saveInvalid()}

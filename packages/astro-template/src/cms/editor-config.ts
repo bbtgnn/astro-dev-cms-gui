@@ -81,5 +81,19 @@ export const collections = {
 
 export type EditorCollections = typeof collections;
 
-const editorConfig = { collections };
+/**
+ * Derive the real Astro site route for a content entry (ADR-0013).
+ * Host-compiled only — identity in, site path out; no form/draft payload.
+ * Unsupported collections return null so the authoring UI offers no action.
+ */
+export function getPreviewUrl(collection: string, id: string): string | null {
+	const trimmed = id.trim();
+	if (!trimmed) return null;
+	if (collection === "posts") {
+		return `/posts/${encodeURIComponent(trimmed)}`;
+	}
+	return null;
+}
+
+const editorConfig = { collections, getPreviewUrl };
 export default editorConfig;

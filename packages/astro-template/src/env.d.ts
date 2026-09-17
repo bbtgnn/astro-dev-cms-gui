@@ -16,6 +16,11 @@ declare module "virtual:@cms/config" {
 	import type { z } from "zod";
 
 	export const collections: Record<string, z.ZodType>;
-	const config: { collections: Record<string, z.ZodType> };
+	/** Host-compiled entry → site preview URL; null when unsupported. */
+	export function getPreviewUrl(collection: string, id: string): string | null;
+	const config: {
+		collections: Record<string, z.ZodType>;
+		getPreviewUrl?: (collection: string, id: string) => string | null;
+	};
 	export default config;
 }

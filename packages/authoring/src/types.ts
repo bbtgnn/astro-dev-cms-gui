@@ -22,3 +22,13 @@ export type AuthoringClient = Pick<
 
 /** Host-compiled editor schemas (Zod + FieldUi + direct components). */
 export type EditorCollections = Record<string, z.ZodType>;
+
+/**
+ * Host-compiled preview URL builder (ADR-0013).
+ * Returns a site path/URL from collection + entry identity, or null/undefined
+ * when that collection has no preview route. Never receives form data.
+ */
+export type GetPreviewUrl = (
+	collection: string,
+	id: string,
+) => string | null | undefined;

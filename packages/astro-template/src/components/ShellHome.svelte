@@ -16,6 +16,10 @@
 		</li>
 		<li><a href="/form-spike">/form-spike</a> — CmsForm spike</li>
 		<li>
+			<a href="/posts/hello"><strong>/posts/hello</strong></a> — real Astro
+			preview route (ADR-0013)
+		</li>
+		<li>
 			<a href="/blocks-demo">/blocks-demo</a> — resolveBlock render (hero/cta)
 		</li>
 		<li>

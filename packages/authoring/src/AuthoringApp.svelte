@@ -13,14 +13,24 @@ import { onMount } from "svelte";
 import type { z } from "zod";
 import { offersAssetUpload, offersEntryDeletion } from "./capabilities";
 import EntryEditor from "./EntryEditor.svelte";
-import type { AuthoringClient, EditorCollections } from "./types";
+import type {
+	AuthoringClient,
+	EditorCollections,
+	GetPreviewUrl,
+} from "./types";
 
 let {
 	client,
 	collections: editorCollections,
+	getPreviewUrl = undefined,
 }: {
 	client: AuthoringClient;
 	collections: EditorCollections;
+	/**
+	 * Optional host-compiled preview URL builder (ADR-0013).
+	 * Absent / returning null → no preview action (no broken control).
+	 */
+	getPreviewUrl?: GetPreviewUrl;
 } = $props();
 
 let view = $state<"collections" | "entries" | "editor" | "create">(
@@ -35,6 +45,11 @@ let entries = $state.raw<EntryIdentity[]>([]);
 let selectedCollection = $state<string | null>(null);
 let selectedEntryId = $state<string | null>(null);
 let entry = $state.raw<ContentEntry | null>(null);
+/**
+ * Entry id that completed write-back in this editor session.
+ * Preview opens the site route for persisted content only (not form state).
+ */
+let previewEligibleId = $state<string | null>(null);
 
 const canDelete = $derived(offersEntryDeletion(capabilities));
 const canUploadAssets = $derived(offersAssetUpload(capabilities));
@@ -68,6 +83,7 @@ async function loadCollections() {
 		entry = null;
 		selectedCollection = null;
 		selectedEntryId = null;
+		previewEligibleId = null;
 		view = "collections";
 	} catch (e) {
 		error = errMsg(e);
@@ -82,6 +98,7 @@ async function selectCollection(name: string) {
 	selectedCollection = name;
 	selectedEntryId = null;
 	entry = null;
+	previewEligibleId = null;
 	try {
 		const result = await client.listEntries(name);
 		entries = result.value;
@@ -99,6 +116,7 @@ async function openEntry(id: string) {
 	loading = true;
 	error = null;
 	selectedEntryId = id;
+	previewEligibleId = null;
 	try {
 		const result = await client.getEntry(selectedCollection, id);
 		if (!result.ok) {
@@ -120,6 +138,7 @@ function startCreate() {
 	if (!selectedCollection) return;
 	selectedEntryId = null;
 	entry = null;
+	previewEligibleId = null;
 	view = "create";
 	error = null;
 }
@@ -133,6 +152,7 @@ async function refreshEntries() {
 async function onSaved(saved: ContentEntry) {
 	selectedEntryId = saved.id;
 	entry = saved;
+	previewEligibleId = saved.id;
 	view = "editor";
 	await refreshEntries();
 }
@@ -159,6 +179,7 @@ async function reloadEntry() {
 async function onDeleted() {
 	entry = null;
 	selectedEntryId = null;
+	previewEligibleId = null;
 	view = "entries";
 	await refreshEntries();
 }
@@ -166,6 +187,7 @@ async function onDeleted() {
 function backToEntries() {
 	entry = null;
 	selectedEntryId = null;
+	previewEligibleId = null;
 	view = "entries";
 	error = null;
 }
@@ -175,8 +197,18 @@ function backToCollections() {
 	selectedEntryId = null;
 	entry = null;
 	entries = [];
+	previewEligibleId = null;
 	view = "collections";
 	error = null;
+}
+
+/** Site URL only after successful write-back; identity only — no draft payload. */
+function previewUrlFor(collection: string, id: string): string | null {
+	if (!getPreviewUrl || previewEligibleId !== id) return null;
+	const url = getPreviewUrl(collection, id);
+	if (typeof url !== "string") return null;
+	const trimmed = url.trim();
+	return trimmed.length > 0 ? trimmed : null;
 }
 
 onMount(() => {
@@ -267,6 +299,7 @@ onMount(() => {
 				{canDelete}
 				{canUploadAssets}
 				{maxUploadBytes}
+				previewUrl={previewUrlFor(selectedCollection, entry.id)}
 				onSaved={(saved) => void onSaved(saved)}
 				onDeleted={() => void onDeleted()}
 				onCancel={backToEntries}
@@ -284,6 +317,7 @@ onMount(() => {
 			{canDelete}
 			{canUploadAssets}
 			{maxUploadBytes}
+			previewUrl={null}
 			onSaved={(saved) => void onSaved(saved)}
 			onCancel={backToEntries}
 		/>
