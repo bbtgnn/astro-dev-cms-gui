@@ -43,11 +43,23 @@ export function createTemplateWriteMode(opts?: {
 	});
 }
 
-/** Self-host protocol seam used by the Astro `/_cms` transport. */
+/** Self-host protocol + host-only asset read for the Astro `/_cms` transport. */
+export function createTemplateCmsHost(opts?: { useMemory?: boolean }): {
+	protocol: CmsProtocol;
+	readAsset: WriteMode["readAsset"];
+} {
+	const writeMode = createTemplateWriteMode(opts);
+	return {
+		protocol: adaptWriteModeToProtocol(writeMode, {
+			processImage: processImageToWebpSizes,
+		}),
+		readAsset: (rel) => writeMode.readAsset(rel),
+	};
+}
+
+/** @deprecated Prefer {@link createTemplateCmsHost} when asset GET is needed. */
 export function createTemplateCmsProtocol(opts?: {
 	useMemory?: boolean;
 }): CmsProtocol {
-	return adaptWriteModeToProtocol(createTemplateWriteMode(opts), {
-		processImage: processImageToWebpSizes,
-	});
+	return createTemplateCmsHost(opts).protocol;
 }

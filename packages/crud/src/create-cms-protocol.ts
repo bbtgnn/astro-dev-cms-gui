@@ -278,9 +278,6 @@ export function adaptWriteModeToProtocol(
 				return cmsErr("processing_failed", message);
 			}
 		},
-
-		writeImageAssets: writeImageAssetsGuarded,
-		readAsset: (rel) => wm.readAsset(rel),
 	};
 }
 

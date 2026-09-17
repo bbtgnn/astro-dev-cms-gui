@@ -144,7 +144,7 @@ function isUploadImageFailureCode(
 export type CmsFetchClient = Omit<CmsProtocol, "uploadImage"> & {
 	/**
 	 * Multipart image upload over the HTTP transport.
-	 * Prefer this over `writeImageAssets` in the browser; returns typed outcomes.
+	 * Browser FormData shape; server protocol uses bytes.
 	 */
 	uploadImage(input: {
 		file: Blob;
@@ -373,18 +373,6 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 				};
 			}
 			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
-		},
-
-		writeImageAssets: async () => {
-			throw new Error(
-				"writeImageAssets is not available on the browser protocol client; use uploadImage",
-			);
-		},
-
-		readAsset: async () => {
-			throw new Error(
-				"readAsset is not available on the browser protocol client",
-			);
 		},
 
 		uploadImage: async (input): Promise<UploadImageResult> => {

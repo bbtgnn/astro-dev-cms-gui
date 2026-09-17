@@ -5,9 +5,7 @@
 import type {
 	CollectionSummary,
 	ContentEntry,
-	ReadAssetResult,
 	UpsertEntryInput,
-	WriteImageAssetsInput,
 	WrittenImageAssets,
 } from "./types";
 
@@ -135,8 +133,6 @@ export type CmsProtocol = {
 	 * Implementations without asset support return `unsupported_capability`.
 	 */
 	uploadImage(input: UploadImageInput): Promise<UploadImageResult>;
-	writeImageAssets(input: WriteImageAssetsInput): Promise<WrittenImageAssets>;
-	readAsset(relFromRoot: string): Promise<ReadAssetResult>;
 };
 
 export function cmsOk<T>(value: T): CmsOk<T> {

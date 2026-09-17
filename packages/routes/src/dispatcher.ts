@@ -2,12 +2,17 @@
  * PROTOTYPE / SPIKE — single /_cms/[...path] JSON dispatcher.
  * Thin Astro transport: maps CMS protocol outcomes ↔ HTTP; no domain rules.
  */
-import type { CmsProtocol } from "@cms/crud";
+import type { CmsProtocol, ReadAssetResult } from "@cms/crud";
 import { httpStatusForCmsErr } from "@cms/crud";
 import { cmsDevOnlyGuard } from "./dev-guard";
 
 export type CmsDispatcherOptions = {
 	protocol: CmsProtocol;
+	/**
+	 * Host-side asset bytes for GET /api/assets/* (WriteMode).
+	 * Kept off the serializable CMS protocol so paths stay in the adapter.
+	 */
+	readAsset?: (relFromRoot: string) => Promise<ReadAssetResult>;
 	/** import.meta.env.DEV in Astro */
 	isDev: boolean;
 	allowInProd?: boolean;
@@ -103,10 +108,16 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				return Response.json(result.value);
 			}
 
-			// GET /api/assets/<rel-from-content-root>
+			// GET /api/assets/<rel-from-content-root> — host WriteMode, not protocol
 			if (path.startsWith("api/assets/") && method === "GET") {
+				if (!options.readAsset) {
+					return Response.json(
+						{ error: "Asset reads are not configured", code: "not_found" },
+						{ status: 404 },
+					);
+				}
 				const rel = path.slice("api/assets/".length);
-				const asset = await protocol.readAsset(decodeURIComponent(rel));
+				const asset = await options.readAsset(decodeURIComponent(rel));
 				return new Response(Buffer.from(asset.bytes), {
 					status: 200,
 					headers: {

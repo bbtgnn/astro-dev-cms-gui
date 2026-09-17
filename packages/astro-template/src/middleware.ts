@@ -5,11 +5,14 @@
  */
 import { defineMiddleware } from "astro:middleware";
 import { createCmsMiddleware } from "@cms/routes";
-import { createTemplateCmsProtocol } from "./cms/write-mode";
+import { createTemplateCmsHost } from "./cms/write-mode";
+
+const host = createTemplateCmsHost();
 
 export const onRequest = defineMiddleware(
 	createCmsMiddleware({
-		protocol: createTemplateCmsProtocol(),
+		protocol: host.protocol,
+		readAsset: host.readAsset,
 		isDev: true,
 		mount: "/_cms",
 	}),
