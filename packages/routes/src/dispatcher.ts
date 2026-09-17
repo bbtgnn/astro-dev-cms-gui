@@ -208,16 +208,7 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 								? null
 								: body.expectedRevision,
 					});
-					if (!result.ok) {
-						return Response.json(
-							{
-								error: result.message,
-								code: result.code,
-								issues: result.issues,
-							},
-							{ status: httpStatusForCmsErr(result.code) },
-						);
-					}
+					if (!result.ok) return protocolErrResponse(result);
 					return Response.json(result.value);
 				}
 

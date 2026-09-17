@@ -37,6 +37,7 @@ export {
 	createCmsProtocol,
 	discoverCollections,
 	httpStatusForCmsErr,
+	legacyStatusMapForCodes,
 	memoryWriter,
 	nodeFsWriter,
 	resolveCmsCapabilities,

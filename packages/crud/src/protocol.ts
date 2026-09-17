@@ -184,6 +184,45 @@ export function resolveCmsCapabilities(
 	};
 }
 
+/** Default human messages for protocol failure codes (transports may override). */
+export const CMS_ERR_DEFAULT_MESSAGE: Record<string, string> = {
+	not_found: "Not found",
+	forbidden: "Forbidden",
+	conflict: "Conflict",
+	validation_failed: "Validation failed",
+	unsupported_capability: "Capability is not supported",
+	processing_failed: "Image processing failed",
+};
+
+/** Op-scoped failure vocabularies — single source for adapters and HTTP clients. */
+export const GET_ENTRY_FAILURE_CODES = [
+	"not_found",
+	"forbidden",
+	"conflict",
+] as const satisfies readonly GetEntryFailureCode[];
+
+export const SAVE_ENTRY_FAILURE_CODES = [
+	"not_found",
+	"forbidden",
+	"conflict",
+	"validation_failed",
+] as const satisfies readonly SaveEntryFailureCode[];
+
+export const DELETE_ENTRY_FAILURE_CODES = [
+	"not_found",
+	"forbidden",
+	"conflict",
+	"unsupported_capability",
+] as const satisfies readonly DeleteEntryFailureCode[];
+
+export const UPLOAD_IMAGE_FAILURE_CODES = [
+	"forbidden",
+	"conflict",
+	"validation_failed",
+	"unsupported_capability",
+	"processing_failed",
+] as const satisfies readonly UploadImageFailureCode[];
+
 /** Map protocol failure codes to HTTP status for thin transports. */
 export function httpStatusForCmsErr(code: string): number {
 	switch (code) {
@@ -202,4 +241,33 @@ export function httpStatusForCmsErr(code: string): number {
 		default:
 			return 400;
 	}
+}
+
+export function isAllowedCmsFailureCode<C extends string>(
+	code: string,
+	allowed: readonly C[],
+): code is C {
+	return (allowed as readonly string[]).includes(code);
+}
+
+export function defaultMessageForCmsErr(code: string): string {
+	return CMS_ERR_DEFAULT_MESSAGE[code] ?? "Request failed";
+}
+
+/**
+ * Status→code fallback when an HTTP body omits `code`.
+ * Derived from {@link httpStatusForCmsErr} so maps cannot drift from the tables.
+ */
+export function legacyStatusMapForCodes<C extends string>(
+	allowed: readonly C[],
+): Partial<Record<number, { code: C; defaultMessage: string }>> {
+	const map: Partial<Record<number, { code: C; defaultMessage: string }>> = {};
+	for (const code of allowed) {
+		const status = httpStatusForCmsErr(code);
+		map[status] = {
+			code,
+			defaultMessage: defaultMessageForCmsErr(code),
+		};
+	}
+	return map;
 }

@@ -9,19 +9,24 @@ import type {
 	CmsProtocol,
 	CollectionSummary,
 	ContentEntry,
-	DeleteEntryFailureCode,
 	DeleteEntryResult,
 	EntryIdentity,
 	GetCapabilitiesResult,
-	GetEntryFailureCode,
 	GetEntryResult,
-	SaveEntryFailureCode,
 	SaveEntryResult,
-	UploadImageFailureCode,
 	UploadImageResult,
 	UpsertEntryInput,
 } from "./protocol";
-import { httpStatusForCmsErr } from "./protocol";
+import {
+	DELETE_ENTRY_FAILURE_CODES,
+	defaultMessageForCmsErr,
+	GET_ENTRY_FAILURE_CODES,
+	httpStatusForCmsErr,
+	isAllowedCmsFailureCode,
+	legacyStatusMapForCodes,
+	SAVE_ENTRY_FAILURE_CODES,
+	UPLOAD_IMAGE_FAILURE_CODES,
+} from "./protocol";
 import type { WrittenImageAssets } from "./types";
 
 export type {
@@ -50,12 +55,20 @@ export type {
 	UpsertEntryInput,
 } from "./protocol";
 export {
+	CMS_ERR_DEFAULT_MESSAGE,
 	cmsErr,
 	cmsOk,
 	DEFAULT_CMS_ASSETS_CAPABILITY,
 	DEFAULT_CMS_CAPABILITIES,
+	DELETE_ENTRY_FAILURE_CODES,
+	defaultMessageForCmsErr,
+	GET_ENTRY_FAILURE_CODES,
 	httpStatusForCmsErr,
+	isAllowedCmsFailureCode,
+	legacyStatusMapForCodes,
 	resolveCmsCapabilities,
+	SAVE_ENTRY_FAILURE_CODES,
+	UPLOAD_IMAGE_FAILURE_CODES,
 } from "./protocol";
 export type { WrittenImageAssets } from "./types";
 
@@ -108,7 +121,7 @@ async function parseErrorBody(
 /**
  * Map a non-OK CMS response to a typed failure outcome, or throw CmsFetchError.
  * Prefers an explicit protocol `code` when it is allowed and status-aligned;
- * otherwise applies the op's legacy status→code map.
+ * otherwise applies the op's derived status→code map from protocol tables.
  */
 async function outcomeFromResponse<C extends string>(
 	res: Response,
@@ -123,12 +136,12 @@ async function outcomeFromResponse<C extends string>(
 
 	if (
 		code !== undefined &&
-		(allowedCodes as readonly string[]).includes(code) &&
+		isAllowedCmsFailureCode(code, allowedCodes) &&
 		res.status === httpStatusForCmsErr(code)
 	) {
 		return {
 			ok: false,
-			code: code as C,
+			code,
 			message: parsed?.error ?? (bodyText || res.statusText),
 			...(includeIssues && parsed?.issues !== undefined
 				? { issues: parsed.issues }
@@ -142,7 +155,9 @@ async function outcomeFromResponse<C extends string>(
 			ok: false,
 			code: legacy.code,
 			message:
-				parsed?.error ?? legacy.defaultMessage ?? (bodyText || res.statusText),
+				parsed?.error ??
+				legacy.defaultMessage ??
+				defaultMessageForCmsErr(legacy.code),
 			...(legacy.code === "validation_failed" && parsed?.issues !== undefined
 				? { issues: parsed.issues }
 				: {}),
@@ -230,14 +245,10 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			if (res.ok) {
 				return { ok: true, value: (await res.json()) as ContentEntry };
 			}
-			return outcomeFromResponse<GetEntryFailureCode>(
+			return outcomeFromResponse(
 				res,
-				["not_found", "forbidden", "conflict"],
-				{
-					404: { code: "not_found", defaultMessage: "Not found" },
-					403: { code: "forbidden", defaultMessage: "Forbidden" },
-					409: { code: "conflict", defaultMessage: "Conflict" },
-				},
+				GET_ENTRY_FAILURE_CODES,
+				legacyStatusMapForCodes(GET_ENTRY_FAILURE_CODES),
 			);
 		},
 
@@ -257,18 +268,10 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			if (res.ok) {
 				return { ok: true, value: (await res.json()) as ContentEntry };
 			}
-			return outcomeFromResponse<SaveEntryFailureCode>(
+			return outcomeFromResponse(
 				res,
-				["not_found", "forbidden", "conflict", "validation_failed"],
-				{
-					404: { code: "not_found", defaultMessage: "Not found" },
-					403: { code: "forbidden", defaultMessage: "Forbidden" },
-					409: { code: "conflict", defaultMessage: "Conflict" },
-					400: {
-						code: "validation_failed",
-						defaultMessage: "Validation failed",
-					},
-				},
+				SAVE_ENTRY_FAILURE_CODES,
+				legacyStatusMapForCodes(SAVE_ENTRY_FAILURE_CODES),
 				{ includeIssues: true },
 			);
 		},
@@ -284,18 +287,10 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			if (res.ok || res.status === 204) {
 				return { ok: true, value: null };
 			}
-			return outcomeFromResponse<DeleteEntryFailureCode>(
+			return outcomeFromResponse(
 				res,
-				["not_found", "forbidden", "conflict", "unsupported_capability"],
-				{
-					404: { code: "not_found", defaultMessage: "Not found" },
-					403: { code: "forbidden", defaultMessage: "Forbidden" },
-					409: { code: "conflict", defaultMessage: "Conflict" },
-					501: {
-						code: "unsupported_capability",
-						defaultMessage: "Entry deletion is not supported",
-					},
-				},
+				DELETE_ENTRY_FAILURE_CODES,
+				legacyStatusMapForCodes(DELETE_ENTRY_FAILURE_CODES),
 			);
 		},
 
@@ -319,28 +314,16 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 					value: (await res.json()) as WrittenImageAssets,
 				};
 			}
-			return outcomeFromResponse<UploadImageFailureCode>(
+			return outcomeFromResponse(
 				res,
-				[
-					"forbidden",
-					"conflict",
-					"validation_failed",
-					"unsupported_capability",
-					"processing_failed",
-				],
+				UPLOAD_IMAGE_FAILURE_CODES,
 				{
-					403: { code: "forbidden", defaultMessage: "Forbidden" },
-					409: { code: "conflict", defaultMessage: "Conflict" },
-					400: {
-						code: "validation_failed",
-						defaultMessage: "Validation failed",
+					...legacyStatusMapForCodes(UPLOAD_IMAGE_FAILURE_CODES),
+					// Transport quirk: some hosts still report processor crashes as 500.
+					500: {
+						code: "processing_failed",
+						defaultMessage: defaultMessageForCmsErr("processing_failed"),
 					},
-					501: {
-						code: "unsupported_capability",
-						defaultMessage: "Image upload is not supported",
-					},
-					422: { code: "processing_failed" },
-					500: { code: "processing_failed" },
 				},
 				{ includeIssues: true },
 			);

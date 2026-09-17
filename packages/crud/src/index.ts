@@ -73,12 +73,20 @@ export type {
 	UploadImageResult,
 } from "./protocol";
 export {
+	CMS_ERR_DEFAULT_MESSAGE,
 	cmsErr,
 	cmsOk,
 	DEFAULT_CMS_ASSETS_CAPABILITY,
 	DEFAULT_CMS_CAPABILITIES,
+	DELETE_ENTRY_FAILURE_CODES,
+	defaultMessageForCmsErr,
+	GET_ENTRY_FAILURE_CODES,
 	httpStatusForCmsErr,
+	isAllowedCmsFailureCode,
+	legacyStatusMapForCodes,
 	resolveCmsCapabilities,
+	SAVE_ENTRY_FAILURE_CODES,
+	UPLOAD_IMAGE_FAILURE_CODES,
 } from "./protocol";
 export { opaqueRevision } from "./revision";
 export type {

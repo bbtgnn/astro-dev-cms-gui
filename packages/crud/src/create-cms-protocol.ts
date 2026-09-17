@@ -8,10 +8,16 @@ import {
 	type CmsProtocol,
 	cmsErr,
 	cmsOk,
+	type DeleteEntryFailureCode,
 	type DeleteEntryResult,
+	defaultMessageForCmsErr,
+	type GetEntryFailureCode,
 	type GetEntryResult,
 	resolveCmsCapabilities,
+	SAVE_ENTRY_FAILURE_CODES,
+	type SaveEntryFailureCode,
 	type SaveEntryResult,
+	type UploadImageFailureCode,
 	type UploadImageInput,
 	type UploadImageResult,
 } from "./protocol";
@@ -54,16 +60,14 @@ export type AdaptProtocolOptions = {
 export type CreateCmsProtocolOptions = CreateWriteModeOptions &
 	AdaptProtocolOptions;
 
-type SharedFailureCode =
-	| "forbidden"
-	| "conflict"
-	| "not_found"
-	| "validation_failed"
-	| "unsupported_capability";
+/** WriteMode throw codes that surface as protocol `conflict`. */
+const CONFLICT_IMPL_CODES = new Set([
+	"YAML_EXT_COLLISION",
+	"REVISION_CONFLICT",
+]);
 
-const CONFLICT_CODES = new Set(["YAML_EXT_COLLISION", "REVISION_CONFLICT"]);
-
-const UPLOAD_VALIDATION_CODES = new Set([
+/** WriteMode throw codes that surface as protocol `validation_failed` on upload. */
+const UPLOAD_VALIDATION_IMPL_CODES = new Set([
 	"VALIDATION_FAILED",
 	"UNSAFE_ASSET",
 	"INVALID_WIDTHS",
@@ -71,75 +75,78 @@ const UPLOAD_VALIDATION_CODES = new Set([
 	"MISSING_ENTRY",
 ]);
 
+function allows<C extends string>(allowed: ReadonlySet<C>, code: C): boolean {
+	return allowed.has(code);
+}
+
 /**
- * Map WriteMode throws to shared protocol failure codes.
- * Callers pass the subset they surface for that op.
+ * Map WriteMode throws to protocol failure codes.
+ * Allowed sets are subsets of the op tables in protocol.ts.
  */
-function mapWriteModeFailure(
+function mapWriteModeFailure<C extends string>(
 	err: unknown,
-	allowed: ReadonlySet<SharedFailureCode>,
-	validationCodes: ReadonlySet<string> = new Set(["VALIDATION_FAILED"]),
-): CmsErrLike | null {
+	allowed: ReadonlySet<C>,
+	validationImplCodes: ReadonlySet<string> = new Set(["VALIDATION_FAILED"]),
+): { ok: false; code: C; message: string; issues?: unknown } | null {
 	const e = err as ErrLike;
 	if (
-		allowed.has("forbidden") &&
+		allows(allowed, "forbidden" as C) &&
 		(e.status === 403 || e.code === "PATH_NOT_ALLOWED")
 	) {
 		// Stable domain message — never echo absolute filesystem paths.
-		return cmsErr("forbidden", "Forbidden");
+		return cmsErr("forbidden" as C, defaultMessageForCmsErr("forbidden"));
 	}
 	if (
-		allowed.has("conflict") &&
-		(e.status === 409 || (e.code != null && CONFLICT_CODES.has(e.code)))
+		allows(allowed, "conflict" as C) &&
+		(e.status === 409 || (e.code != null && CONFLICT_IMPL_CODES.has(e.code)))
 	) {
-		return cmsErr("conflict", e.message || "Conflict");
+		return cmsErr(
+			"conflict" as C,
+			e.message || defaultMessageForCmsErr("conflict"),
+		);
 	}
 	if (
-		allowed.has("not_found") &&
+		allows(allowed, "not_found" as C) &&
 		(e.status === 404 || e.code === "NOT_FOUND")
 	) {
-		return cmsErr("not_found", e.message || "Not found");
+		return cmsErr(
+			"not_found" as C,
+			e.message || defaultMessageForCmsErr("not_found"),
+		);
 	}
 	if (
-		allowed.has("validation_failed") &&
-		(e.status === 400 || (e.code != null && validationCodes.has(e.code)))
+		allows(allowed, "validation_failed" as C) &&
+		(e.status === 400 || (e.code != null && validationImplCodes.has(e.code)))
 	) {
-		return cmsErr("validation_failed", e.message || "Validation failed", {
-			issues: e.issues,
-		});
+		return cmsErr(
+			"validation_failed" as C,
+			e.message || defaultMessageForCmsErr("validation_failed"),
+			{ issues: e.issues },
+		);
 	}
 	if (
-		allowed.has("unsupported_capability") &&
+		allows(allowed, "unsupported_capability" as C) &&
 		(e.status === 501 || e.code === "unsupported_capability")
 	) {
 		return cmsErr(
-			"unsupported_capability",
-			e.message || "Capability is not supported",
+			"unsupported_capability" as C,
+			e.message || defaultMessageForCmsErr("unsupported_capability"),
 		);
 	}
 	return null;
 }
 
-type CmsErrLike = {
-	ok: false;
-	code: SharedFailureCode;
-	message: string;
-	issues?: unknown;
-};
-
-const GET_CODES = new Set<SharedFailureCode>(["forbidden", "conflict"]);
-const SAVE_CODES = new Set<SharedFailureCode>([
-	"forbidden",
-	"conflict",
-	"not_found",
-	"validation_failed",
-]);
-const DELETE_CODES = new Set<SharedFailureCode>([
+/** Throws mapped for getEntry (not_found is returned when the entry is null). */
+const GET_THROW_CODES = new Set<GetEntryFailureCode>(["forbidden", "conflict"]);
+const SAVE_THROW_CODES = new Set<SaveEntryFailureCode>(
+	SAVE_ENTRY_FAILURE_CODES,
+);
+const DELETE_THROW_CODES = new Set<DeleteEntryFailureCode>([
 	"forbidden",
 	"conflict",
 	"not_found",
 ]);
-const UPLOAD_CODES = new Set<SharedFailureCode>([
+const UPLOAD_THROW_CODES = new Set<UploadImageFailureCode>([
 	"forbidden",
 	"conflict",
 	"validation_failed",
@@ -147,23 +154,23 @@ const UPLOAD_CODES = new Set<SharedFailureCode>([
 ]);
 
 function getEntryFailure(err: unknown): GetEntryResult | null {
-	return mapWriteModeFailure(err, GET_CODES) as GetEntryResult | null;
+	return mapWriteModeFailure(err, GET_THROW_CODES);
 }
 
 function saveEntryFailure(err: unknown): SaveEntryResult | null {
-	return mapWriteModeFailure(err, SAVE_CODES) as SaveEntryResult | null;
+	return mapWriteModeFailure(err, SAVE_THROW_CODES);
 }
 
 function deleteEntryFailure(err: unknown): DeleteEntryResult | null {
-	return mapWriteModeFailure(err, DELETE_CODES) as DeleteEntryResult | null;
+	return mapWriteModeFailure(err, DELETE_THROW_CODES);
 }
 
 function uploadImageFailure(err: unknown): UploadImageResult | null {
 	return mapWriteModeFailure(
 		err,
-		UPLOAD_CODES,
-		UPLOAD_VALIDATION_CODES,
-	) as UploadImageResult | null;
+		UPLOAD_THROW_CODES,
+		UPLOAD_VALIDATION_IMPL_CODES,
+	);
 }
 
 /** Lift private WriteMode behind the protocol interface. */
@@ -204,7 +211,7 @@ function adaptWriteModeToProtocol(
 			try {
 				const entry = await wm.getEntry(collection, id);
 				if (!entry) {
-					return cmsErr("not_found", "Not found");
+					return cmsErr("not_found", defaultMessageForCmsErr("not_found"));
 				}
 				return cmsOk(entry);
 			} catch (err) {
@@ -298,7 +305,9 @@ function adaptWriteModeToProtocol(
 				const failure = uploadImageFailure(err);
 				if (failure) return failure;
 				const message =
-					err instanceof Error ? err.message : "Image processing failed";
+					err instanceof Error
+						? err.message
+						: defaultMessageForCmsErr("processing_failed");
 				return cmsErr("processing_failed", message);
 			}
 		},
