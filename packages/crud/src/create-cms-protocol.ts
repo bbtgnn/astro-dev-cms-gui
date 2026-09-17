@@ -52,94 +52,120 @@ export type AdaptProtocolOptions = {
 export type CreateCmsProtocolOptions = CreateWriteModeOptions &
 	AdaptProtocolOptions;
 
-function getEntryFailure(err: unknown): GetEntryResult | null {
+type SharedFailureCode =
+	| "forbidden"
+	| "conflict"
+	| "not_found"
+	| "validation_failed"
+	| "unsupported_capability";
+
+const CONFLICT_CODES = new Set([
+	"YAML_EXT_COLLISION",
+	"REVISION_CONFLICT",
+]);
+
+const UPLOAD_VALIDATION_CODES = new Set([
+	"VALIDATION_FAILED",
+	"UNSAFE_ASSET",
+	"INVALID_WIDTHS",
+	"MISSING_FILE",
+	"MISSING_ENTRY",
+]);
+
+/**
+ * Map WriteMode throws to shared protocol failure codes.
+ * Callers pass the subset they surface for that op.
+ */
+function mapWriteModeFailure(
+	err: unknown,
+	allowed: ReadonlySet<SharedFailureCode>,
+	validationCodes: ReadonlySet<string> = new Set(["VALIDATION_FAILED"]),
+): CmsErrLike | null {
 	const e = err as ErrLike;
-	if (e.status === 403 || e.code === "PATH_NOT_ALLOWED") {
+	if (
+		allowed.has("forbidden") &&
+		(e.status === 403 || e.code === "PATH_NOT_ALLOWED")
+	) {
 		// Stable domain message — never echo absolute filesystem paths.
 		return cmsErr("forbidden", "Forbidden");
 	}
 	if (
-		e.status === 409 ||
-		e.code === "YAML_EXT_COLLISION" ||
-		e.code === "REVISION_CONFLICT"
+		allowed.has("conflict") &&
+		(e.status === 409 || (e.code != null && CONFLICT_CODES.has(e.code)))
 	) {
 		return cmsErr("conflict", e.message || "Conflict");
-	}
-	return null;
-}
-
-function saveEntryFailure(err: unknown): SaveEntryResult | null {
-	const e = err as ErrLike;
-	if (e.status === 403 || e.code === "PATH_NOT_ALLOWED") {
-		return cmsErr("forbidden", "Forbidden");
 	}
 	if (
-		e.status === 409 ||
-		e.code === "YAML_EXT_COLLISION" ||
-		e.code === "REVISION_CONFLICT"
+		allowed.has("not_found") &&
+		(e.status === 404 || e.code === "NOT_FOUND")
 	) {
-		return cmsErr("conflict", e.message || "Conflict");
-	}
-	if (e.status === 404 || e.code === "NOT_FOUND") {
 		return cmsErr("not_found", e.message || "Not found");
 	}
-	if (e.status === 400 || e.code === "VALIDATION_FAILED") {
-		return cmsErr("validation_failed", e.message || "Validation failed", {
-			issues: e.issues,
-		});
-	}
-	return null;
-}
-
-function deleteEntryFailure(err: unknown): DeleteEntryResult | null {
-	const e = err as ErrLike;
-	if (e.status === 403 || e.code === "PATH_NOT_ALLOWED") {
-		return cmsErr("forbidden", "Forbidden");
-	}
 	if (
-		e.status === 409 ||
-		e.code === "YAML_EXT_COLLISION" ||
-		e.code === "REVISION_CONFLICT"
-	) {
-		return cmsErr("conflict", e.message || "Conflict");
-	}
-	if (e.status === 404 || e.code === "NOT_FOUND") {
-		return cmsErr("not_found", e.message || "Not found");
-	}
-	return null;
-}
-
-function uploadImageFailure(err: unknown): UploadImageResult | null {
-	const e = err as ErrLike;
-	if (e.status === 403 || e.code === "PATH_NOT_ALLOWED") {
-		return cmsErr("forbidden", "Forbidden");
-	}
-	if (
-		e.status === 409 ||
-		e.code === "YAML_EXT_COLLISION" ||
-		e.code === "REVISION_CONFLICT"
-	) {
-		return cmsErr("conflict", e.message || "Conflict");
-	}
-	if (
-		e.status === 400 ||
-		e.code === "VALIDATION_FAILED" ||
-		e.code === "UNSAFE_ASSET" ||
-		e.code === "INVALID_WIDTHS" ||
-		e.code === "MISSING_FILE" ||
-		e.code === "MISSING_ENTRY"
+		allowed.has("validation_failed") &&
+		(e.status === 400 ||
+			(e.code != null && validationCodes.has(e.code)))
 	) {
 		return cmsErr("validation_failed", e.message || "Validation failed", {
 			issues: e.issues,
 		});
 	}
-	if (e.status === 501 || e.code === "unsupported_capability") {
+	if (
+		allowed.has("unsupported_capability") &&
+		(e.status === 501 || e.code === "unsupported_capability")
+	) {
 		return cmsErr(
 			"unsupported_capability",
-			e.message || "Image upload is not supported",
+			e.message || "Capability is not supported",
 		);
 	}
 	return null;
+}
+
+type CmsErrLike = {
+	ok: false;
+	code: SharedFailureCode;
+	message: string;
+	issues?: unknown;
+};
+
+const GET_CODES = new Set<SharedFailureCode>(["forbidden", "conflict"]);
+const SAVE_CODES = new Set<SharedFailureCode>([
+	"forbidden",
+	"conflict",
+	"not_found",
+	"validation_failed",
+]);
+const DELETE_CODES = new Set<SharedFailureCode>([
+	"forbidden",
+	"conflict",
+	"not_found",
+]);
+const UPLOAD_CODES = new Set<SharedFailureCode>([
+	"forbidden",
+	"conflict",
+	"validation_failed",
+	"unsupported_capability",
+]);
+
+function getEntryFailure(err: unknown): GetEntryResult | null {
+	return mapWriteModeFailure(err, GET_CODES) as GetEntryResult | null;
+}
+
+function saveEntryFailure(err: unknown): SaveEntryResult | null {
+	return mapWriteModeFailure(err, SAVE_CODES) as SaveEntryResult | null;
+}
+
+function deleteEntryFailure(err: unknown): DeleteEntryResult | null {
+	return mapWriteModeFailure(err, DELETE_CODES) as DeleteEntryResult | null;
+}
+
+function uploadImageFailure(err: unknown): UploadImageResult | null {
+	return mapWriteModeFailure(
+		err,
+		UPLOAD_CODES,
+		UPLOAD_VALIDATION_CODES,
+	) as UploadImageResult | null;
 }
 
 /** Lift an existing WriteMode behind the protocol interface. */
