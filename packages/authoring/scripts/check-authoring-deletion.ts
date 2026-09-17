@@ -5,90 +5,14 @@
  * Run: bun run packages/authoring/scripts/check-authoring-deletion.ts
  */
 import {
-	type CmsCapabilities,
 	type ContentEntry,
-	cmsErr,
-	cmsOk,
-	type DeleteEntryResult,
-	type GetCapabilitiesResult,
-	type ListCollectionsResult,
-	type ListEntriesResult,
 	resolveCmsCapabilities,
-	type SaveEntryResult,
-	type UploadImageResult,
 } from "@cms/crud/fetch-client";
 import { offersEntryDeletion } from "../src/capabilities";
-import type { AuthoringClient } from "../src/types";
+import { createCheckRecorder } from "./check-helpers";
+import { createFakeClient } from "./fake-client";
 
-type Failure = { label: string; detail: string };
-
-const failures: Failure[] = [];
-const passed: string[] = [];
-
-function ok(label: string): void {
-	passed.push(label);
-}
-
-function fail(label: string, detail: string): void {
-	failures.push({ label, detail });
-}
-
-function createFakeClient(opts: {
-	capabilities: CmsCapabilities;
-	entries: ContentEntry[];
-}): {
-	client: AuthoringClient;
-	deleteCalls: Array<{ collection: string; id: string }>;
-} {
-	const store = [...opts.entries];
-	const deleteCalls: Array<{ collection: string; id: string }> = [];
-
-	const client: AuthoringClient = {
-		async getCapabilities(): Promise<GetCapabilitiesResult> {
-			return cmsOk(opts.capabilities);
-		},
-		async listCollections(): Promise<ListCollectionsResult> {
-			return cmsOk([{ name: "posts", label: "Posts" }]);
-		},
-		async listEntries(collection: string): Promise<ListEntriesResult> {
-			const value = store
-				.filter((e) => e.collection === collection)
-				.map((e) => ({ collection: e.collection, id: e.id }));
-			return cmsOk(value);
-		},
-		async getEntry(collection: string, id: string) {
-			const hit = store.find((e) => e.collection === collection && e.id === id);
-			if (!hit) return cmsErr("not_found", "Not found");
-			return cmsOk(hit);
-		},
-		async upsertEntry(): Promise<SaveEntryResult> {
-			return cmsErr("forbidden", "not used in this check");
-		},
-		async deleteEntry(
-			collection: string,
-			id: string,
-		): Promise<DeleteEntryResult> {
-			deleteCalls.push({ collection, id });
-			if (!opts.capabilities.deleteEntry) {
-				return cmsErr(
-					"unsupported_capability",
-					"Entry deletion is not supported",
-				);
-			}
-			const idx = store.findIndex(
-				(e) => e.collection === collection && e.id === id,
-			);
-			if (idx < 0) return cmsErr("not_found", "Not found");
-			store.splice(idx, 1);
-			return cmsOk(null);
-		},
-		async uploadImage(): Promise<UploadImageResult> {
-			return cmsErr("forbidden", "not used in this check");
-		},
-	};
-
-	return { client, deleteCalls };
-}
+const { ok, fail, finish } = createCheckRecorder();
 
 const sample: ContentEntry = {
 	id: "hello",
@@ -205,13 +129,7 @@ if (!offersEntryDeletion(null) && !offersEntryDeletion(undefined)) {
 	}
 }
 
-console.log("--- authoring deletion capability ---");
-for (const p of passed) console.log(`ok  ${p}`);
-for (const f of failures) console.error(`FAIL ${f.label}: ${f.detail}`);
-
-if (failures.length > 0) {
-	process.exit(1);
-}
-console.log(
-	`authoring deletion capability check passed (${passed.length} assertion(s))`,
-);
+finish({
+	title: "authoring deletion capability",
+	passedLabel: "authoring deletion capability check passed",
+});

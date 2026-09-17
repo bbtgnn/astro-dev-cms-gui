@@ -5,110 +5,15 @@
  *
  * Run: bun run packages/authoring/scripts/check-authoring-autosave.ts
  */
-import {
-	type ContentEntry,
-	cmsErr,
-	cmsOk,
-	type DeleteEntryResult,
-	type GetCapabilitiesResult,
-	type ListCollectionsResult,
-	type ListEntriesResult,
-	resolveCmsCapabilities,
-	type SaveEntryResult,
-	type UploadImageResult,
-} from "@cms/crud/fetch-client";
+import { type ContentEntry } from "@cms/crud/fetch-client";
 import {
 	type AuthoringStatus,
 	createAutosaveController,
 } from "../src/autosave";
-import type { AuthoringClient } from "../src/types";
+import { createCheckRecorder } from "./check-helpers";
+import { createFakeClient } from "./fake-client";
 
-type Failure = { label: string; detail: string };
-
-const failures: Failure[] = [];
-const passed: string[] = [];
-
-function ok(label: string): void {
-	passed.push(label);
-}
-
-function fail(label: string, detail: string): void {
-	failures.push({ label, detail });
-}
-
-function createFakeClient(opts: {
-	entries: ContentEntry[];
-	/** When set, next matching upsert returns conflict and leaves store unchanged. */
-	conflictOnRevision?: string;
-}): {
-	client: AuthoringClient;
-	upsertCalls: Array<{
-		data: Record<string, unknown>;
-		expectedRevision: string | null;
-	}>;
-	store: ContentEntry[];
-} {
-	const store = [...opts.entries];
-	const upsertCalls: Array<{
-		data: Record<string, unknown>;
-		expectedRevision: string | null;
-	}> = [];
-	let revCounter = 1;
-
-	const client: AuthoringClient = {
-		async getCapabilities(): Promise<GetCapabilitiesResult> {
-			return cmsOk(resolveCmsCapabilities({ deleteEntry: true }));
-		},
-		async listCollections(): Promise<ListCollectionsResult> {
-			return cmsOk([{ name: "posts", label: "Posts" }]);
-		},
-		async listEntries(collection: string): Promise<ListEntriesResult> {
-			return cmsOk(
-				store
-					.filter((e) => e.collection === collection)
-					.map((e) => ({ collection: e.collection, id: e.id })),
-			);
-		},
-		async getEntry(collection: string, id: string) {
-			const hit = store.find((e) => e.collection === collection && e.id === id);
-			if (!hit) return cmsErr("not_found", "Not found");
-			return cmsOk(hit);
-		},
-		async upsertEntry(input): Promise<SaveEntryResult> {
-			upsertCalls.push({
-				data: input.data,
-				expectedRevision: input.expectedRevision,
-			});
-			if (
-				opts.conflictOnRevision != null &&
-				input.expectedRevision === opts.conflictOnRevision
-			) {
-				return cmsErr("conflict", "Revision conflict");
-			}
-			const idx = store.findIndex(
-				(e) => e.collection === input.collection && e.id === input.id,
-			);
-			revCounter += 1;
-			const next: ContentEntry = {
-				id: input.id,
-				collection: input.collection,
-				data: input.data,
-				revision: `rev-${revCounter}`,
-			};
-			if (idx >= 0) store[idx] = next;
-			else store.push(next);
-			return cmsOk(next);
-		},
-		async deleteEntry(): Promise<DeleteEntryResult> {
-			return cmsErr("forbidden", "not used");
-		},
-		async uploadImage(): Promise<UploadImageResult> {
-			return cmsErr("unsupported_capability", "not used");
-		},
-	};
-
-	return { client, upsertCalls, store };
-}
+const { ok, fail, finish } = createCheckRecorder();
 
 /** Deterministic timer queue for debounce tests. */
 function createFakeTimers() {
@@ -522,14 +427,10 @@ const sample: ContentEntry = {
 	ctrl.dispose();
 }
 
-console.log("--- authoring autosave ---");
-for (const p of passed) console.log(`ok  ${p}`);
-for (const f of failures) console.error(`FAIL ${f.label}: ${f.detail}`);
-
-if (failures.length > 0) {
-	process.exit(1);
-}
-console.log(`authoring autosave check passed (${passed.length} assertion(s))`);
+finish({
+	title: "authoring autosave",
+	passedLabel: "authoring autosave check passed",
+});
 
 /**
  * Self-host-shaped proof: autosave write-back updates YAML on disk without an

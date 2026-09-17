@@ -5,102 +5,14 @@
  * Run: bun run packages/authoring/scripts/check-authoring-assets.ts
  */
 import {
-	type CmsCapabilities,
 	type ContentEntry,
-	cmsErr,
-	cmsOk,
-	type DeleteEntryResult,
-	type GetCapabilitiesResult,
-	type ListCollectionsResult,
-	type ListEntriesResult,
 	resolveCmsCapabilities,
-	type SaveEntryResult,
-	type UploadImageResult,
 } from "@cms/crud/fetch-client";
 import { offersAssetUpload } from "../src/capabilities";
-import type { AuthoringClient } from "../src/types";
+import { createCheckRecorder } from "./check-helpers";
+import { createFakeClient } from "./fake-client";
 
-type Failure = { label: string; detail: string };
-
-const failures: Failure[] = [];
-const passed: string[] = [];
-
-function ok(label: string): void {
-	passed.push(label);
-}
-
-function fail(label: string, detail: string): void {
-	failures.push({ label, detail });
-}
-
-function createFakeClient(opts: {
-	capabilities: CmsCapabilities;
-	entries: ContentEntry[];
-}): {
-	client: AuthoringClient;
-	uploadCalls: number;
-} {
-	const store = [...opts.entries];
-	let uploadCalls = 0;
-
-	const client: AuthoringClient = {
-		async getCapabilities(): Promise<GetCapabilitiesResult> {
-			return cmsOk(opts.capabilities);
-		},
-		async listCollections(): Promise<ListCollectionsResult> {
-			return cmsOk([{ name: "posts", label: "Posts" }]);
-		},
-		async listEntries(collection: string): Promise<ListEntriesResult> {
-			const value = store
-				.filter((e) => e.collection === collection)
-				.map((e) => ({ collection: e.collection, id: e.id }));
-			return cmsOk(value);
-		},
-		async getEntry(collection: string, id: string) {
-			const hit = store.find((e) => e.collection === collection && e.id === id);
-			if (!hit) return cmsErr("not_found", "Not found");
-			return cmsOk(hit);
-		},
-		async upsertEntry(input): Promise<SaveEntryResult> {
-			const idx = store.findIndex(
-				(e) => e.collection === input.collection && e.id === input.id,
-			);
-			const next: ContentEntry = {
-				id: input.id,
-				collection: input.collection,
-				data: input.data,
-				revision: `rev-${Date.now()}`,
-			};
-			if (idx >= 0) store[idx] = next;
-			else store.push(next);
-			return cmsOk(next);
-		},
-		async deleteEntry(): Promise<DeleteEntryResult> {
-			return cmsErr("forbidden", "not used in this check");
-		},
-		async uploadImage(input): Promise<UploadImageResult> {
-			uploadCalls += 1;
-			if (!opts.capabilities.assets.uploadImage) {
-				return cmsErr(
-					"unsupported_capability",
-					"Image upload is not supported",
-				);
-			}
-			return cmsOk({
-				path: `./${input.id}/cover/cover.webp`,
-				files: [`posts/${input.id}/cover/cover.webp`],
-				widths: opts.capabilities.assets.defaultWidths,
-			});
-		},
-	};
-
-	return {
-		client,
-		get uploadCalls() {
-			return uploadCalls;
-		},
-	};
-}
+const { ok, fail, finish } = createCheckRecorder();
 
 const sample: ContentEntry = {
 	id: "hello",
@@ -245,13 +157,7 @@ if (!offersAssetUpload(null) && !offersAssetUpload(undefined)) {
 	}
 }
 
-console.log("--- authoring assets capability ---");
-for (const p of passed) console.log(`ok  ${p}`);
-for (const f of failures) console.error(`FAIL ${f.label}: ${f.detail}`);
-
-if (failures.length > 0) {
-	process.exit(1);
-}
-console.log(
-	`authoring assets capability check passed (${passed.length} assertion(s))`,
-);
+finish({
+	title: "authoring assets capability",
+	passedLabel: "authoring assets capability check passed",
+});
