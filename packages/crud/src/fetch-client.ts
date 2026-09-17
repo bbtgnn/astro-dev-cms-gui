@@ -4,11 +4,15 @@
  * root re-exports Node FS writers).
  */
 import type {
+	CmsCapabilities,
 	CmsErr,
 	CmsProtocol,
 	CollectionSummary,
 	ContentEntry,
+	DeleteEntryFailureCode,
+	DeleteEntryResult,
 	EntryIdentity,
+	GetCapabilitiesResult,
 	GetEntryFailureCode,
 	GetEntryResult,
 	SaveEntryFailureCode,
@@ -18,13 +22,17 @@ import type {
 import { httpStatusForCmsErr } from "./protocol";
 
 export type {
+	CmsCapabilities,
 	CmsErr,
 	CmsOk,
 	CmsProtocol,
 	CmsResult,
 	CollectionSummary,
 	ContentEntry,
+	DeleteEntryFailureCode,
+	DeleteEntryResult,
 	EntryIdentity,
+	GetCapabilitiesResult,
 	GetEntryFailureCode,
 	GetEntryResult,
 	ListCollectionsResult,
@@ -34,7 +42,13 @@ export type {
 	UpsertEntryInput,
 } from "./protocol";
 
-export { cmsErr, cmsOk, httpStatusForCmsErr } from "./protocol";
+export {
+	cmsErr,
+	cmsOk,
+	DEFAULT_CMS_CAPABILITIES,
+	httpStatusForCmsErr,
+	resolveCmsCapabilities,
+} from "./protocol";
 
 /** Thrown when the CMS JSON API returns a non-OK status outside typed outcomes. */
 export class CmsFetchError extends Error {
@@ -95,6 +109,17 @@ function isSaveEntryFailureCode(
 	);
 }
 
+function isDeleteEntryFailureCode(
+	code: string | undefined,
+): code is DeleteEntryFailureCode {
+	return (
+		code === "not_found" ||
+		code === "forbidden" ||
+		code === "conflict" ||
+		code === "unsupported_capability"
+	);
+}
+
 export type CmsFetchClient = CmsProtocol & {
 	/** Multipart image upload (Astro transport-specific; not a protocol op). */
 	uploadImage(input: {
@@ -110,7 +135,7 @@ export type CmsFetchClient = CmsProtocol & {
 
 /**
  * Browser protocol client — same read/write surface as CmsProtocol, over HTTP.
- * Typed read/save failures are outcomes; other transport failures throw CmsFetchError.
+ * Typed read/save/delete failures are outcomes; other transport failures throw CmsFetchError.
  */
 export function createFetchClient(base = "/_cms"): CmsFetchClient {
 	const root = base.replace(/\/+$/, "");
@@ -141,6 +166,11 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 	}
 
 	return {
+		async getCapabilities(): Promise<GetCapabilitiesResult> {
+			const value = await jsonOk<CmsCapabilities>("/api/capabilities");
+			return { ok: true, value };
+		},
+
 		async listCollections() {
 			const value = await jsonOk<CollectionSummary[]>("/api/collections");
 			return { ok: true, value };
@@ -266,12 +296,59 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
 		},
 
-		deleteEntry: async (collection: string, id: string) => {
+		async deleteEntry(
+			collection: string,
+			id: string,
+		): Promise<DeleteEntryResult> {
 			const res = await request(
 				`/api/collections/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,
 				{ method: "DELETE" },
 			);
-			await throwIfNotOk(res);
+			if (res.ok || res.status === 204) {
+				return { ok: true, value: null };
+			}
+			const bodyText = await res.text();
+			const parsed = await parseErrorBody(bodyText);
+			const code = parsed?.code;
+			if (
+				isDeleteEntryFailureCode(code) &&
+				res.status === httpStatusForCmsErr(code)
+			) {
+				return {
+					ok: false,
+					code,
+					message: parsed?.error ?? (bodyText || res.statusText),
+				} satisfies CmsErr<DeleteEntryFailureCode>;
+			}
+			if (res.status === 404) {
+				return {
+					ok: false,
+					code: "not_found",
+					message: parsed?.error ?? "Not found",
+				};
+			}
+			if (res.status === 403) {
+				return {
+					ok: false,
+					code: "forbidden",
+					message: parsed?.error ?? "Forbidden",
+				};
+			}
+			if (res.status === 409) {
+				return {
+					ok: false,
+					code: "conflict",
+					message: parsed?.error ?? "Conflict",
+				};
+			}
+			if (res.status === 501) {
+				return {
+					ok: false,
+					code: "unsupported_capability",
+					message: parsed?.error ?? "Entry deletion is not supported",
+				};
+			}
+			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
 		},
 
 		writeImageAssets: async () => {

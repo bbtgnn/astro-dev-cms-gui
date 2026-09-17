@@ -3,6 +3,10 @@
  * Write mode = domain ops + Zod + discovery/path helpers. Writer = low-level FS.
  */
 
+export type {
+	AdaptProtocolOptions,
+	CreateCmsProtocolOptions,
+} from "./create-cms-protocol";
 export {
 	adaptWriteModeToProtocol,
 	createCmsProtocol,
@@ -44,11 +48,15 @@ export {
 	writerExists,
 } from "./path-resolve";
 export type {
+	CmsCapabilities,
 	CmsErr,
 	CmsOk,
 	CmsProtocol,
 	CmsResult,
+	DeleteEntryFailureCode,
+	DeleteEntryResult,
 	EntryIdentity,
+	GetCapabilitiesResult,
 	GetEntryFailureCode,
 	GetEntryResult,
 	ListCollectionsResult,
@@ -56,7 +64,13 @@ export type {
 	SaveEntryFailureCode,
 	SaveEntryResult,
 } from "./protocol";
-export { cmsErr, cmsOk, httpStatusForCmsErr } from "./protocol";
+export {
+	cmsErr,
+	cmsOk,
+	DEFAULT_CMS_CAPABILITIES,
+	httpStatusForCmsErr,
+	resolveCmsCapabilities,
+} from "./protocol";
 export { opaqueRevision } from "./revision";
 export type {
 	CollectionSummary,

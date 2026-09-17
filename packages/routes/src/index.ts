@@ -5,12 +5,16 @@
 
 /** Discovery + write-mode helpers (implemented in @cms/crud). */
 export type {
+	CmsCapabilities,
 	CmsProtocol,
 	CollectionSummary,
 	ContentEntry,
+	DeleteEntryFailureCode,
+	DeleteEntryResult,
 	DiscoverCollectionsOptions,
 	DiscoveredCollection,
 	EntryIdentity,
+	GetCapabilitiesResult,
 	GetEntryFailureCode,
 	GetEntryResult,
 	LoaderPathHint,
@@ -24,6 +28,7 @@ export {
 	createCmsProtocol,
 	discoverCollections,
 	httpStatusForCmsErr,
+	resolveCmsCapabilities,
 	resolveCollectionSchema,
 	scanYamlEntryIds,
 	withLoaderPathHint,

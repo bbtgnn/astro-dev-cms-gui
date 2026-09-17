@@ -53,15 +53,36 @@ export type SaveEntryFailureCode =
 export type SaveEntryResult = CmsResult<ContentEntry, SaveEntryFailureCode>;
 
 /**
+ * Serializable optional-ops advertisement (ADR-0005 / ADR-0008).
+ * Booleans only — no implementation or transport details.
+ */
+export type CmsCapabilities = {
+	/** Whether content-entry deletion is available on this implementation. */
+	deleteEntry: boolean;
+};
+
+export type GetCapabilitiesResult = CmsOk<CmsCapabilities>;
+
+/** Delete failure codes, including capability negotiation. */
+export type DeleteEntryFailureCode =
+	| "not_found"
+	| "forbidden"
+	| "conflict"
+	| "unsupported_capability";
+
+export type DeleteEntryResult = CmsResult<null, DeleteEntryFailureCode>;
+
+/**
  * Principal external seam for the authoring shell.
  * Read and guarded-save ops return typed outcomes.
  */
 export type CmsProtocol = {
+	getCapabilities(): Promise<GetCapabilitiesResult>;
 	listCollections(): Promise<ListCollectionsResult>;
 	listEntries(collection: string): Promise<ListEntriesResult>;
 	getEntry(collection: string, id: string): Promise<GetEntryResult>;
 	upsertEntry(input: UpsertEntryInput): Promise<SaveEntryResult>;
-	deleteEntry(collection: string, id: string): Promise<void>;
+	deleteEntry(collection: string, id: string): Promise<DeleteEntryResult>;
 	writeImageAssets(input: WriteImageAssetsInput): Promise<WrittenImageAssets>;
 	readAsset(relFromRoot: string): Promise<ReadAssetResult>;
 };
@@ -83,6 +104,19 @@ export function cmsErr<C extends string>(
 	};
 }
 
+/** Default capabilities when an implementation does not override. */
+export const DEFAULT_CMS_CAPABILITIES: CmsCapabilities = {
+	deleteEntry: true,
+};
+
+export function resolveCmsCapabilities(
+	partial?: Partial<CmsCapabilities> | null,
+): CmsCapabilities {
+	return {
+		deleteEntry: partial?.deleteEntry ?? DEFAULT_CMS_CAPABILITIES.deleteEntry,
+	};
+}
+
 /** Map protocol failure codes to HTTP status for thin transports. */
 export function httpStatusForCmsErr(code: string): number {
 	switch (code) {
@@ -94,6 +128,8 @@ export function httpStatusForCmsErr(code: string): number {
 			return 409;
 		case "validation_failed":
 			return 400;
+		case "unsupported_capability":
+			return 501;
 		default:
 			return 400;
 	}

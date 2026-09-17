@@ -917,6 +917,157 @@ async function runWriteSideProtocolScenarios(
 }
 
 /**
+ * Deletion capability contract — supported delete + unsupported outcome.
+ * Default FS/memory advertise and perform deletion; a memory variant can refuse.
+ */
+async function runDeletionCapabilityScenarios(
+	fixture: BackendFixture,
+	failures: ContractFailure[],
+	passed: ContractRunResult["passed"],
+): Promise<void> {
+	const { backend, root, writer } = fixture;
+	const protocol = discoveryProtocol(root, writer);
+
+	const caps = await protocol.getCapabilities();
+	if (!caps.ok || caps.value.deleteEntry !== true) {
+		failures.push({
+			backend,
+			label: "protocol reports deleteEntry capability",
+			detail: JSON.stringify(caps),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol reports deleteEntry capability",
+		});
+		assertNoFilesystemPaths(
+			caps.value,
+			failures,
+			passed,
+			backend,
+			"protocol capabilities have no FS paths",
+		);
+	}
+
+	const created = await protocol.upsertEntry({
+		id: "to-delete",
+		collection: "posts",
+		data: { title: "gone" },
+		expectedRevision: null,
+	});
+	if (!created.ok) {
+		failures.push({
+			backend,
+			label: "protocol create before delete succeeds",
+			detail: JSON.stringify(created),
+		});
+		return;
+	}
+	passed.push({ backend, label: "protocol create before delete succeeds" });
+
+	const deleted = await protocol.deleteEntry("posts", "to-delete");
+	if (!deleted.ok) {
+		failures.push({
+			backend,
+			label: "protocol supported delete succeeds",
+			detail: JSON.stringify(deleted),
+		});
+	} else {
+		passed.push({ backend, label: "protocol supported delete succeeds" });
+	}
+
+	const listed = await protocol.listEntries("posts");
+	if (!listed.ok || listed.value.some((e) => e.id === "to-delete")) {
+		failures.push({
+			backend,
+			label: "protocol delete removes entry from list",
+			detail: JSON.stringify(listed),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol delete removes entry from list",
+		});
+	}
+
+	const missing = await protocol.getEntry("posts", "to-delete");
+	if (missing.ok || missing.code !== "not_found") {
+		failures.push({
+			backend,
+			label: "protocol deleted entry is not_found",
+			detail: JSON.stringify(missing),
+		});
+	} else {
+		passed.push({ backend, label: "protocol deleted entry is not_found" });
+	}
+
+	// In-memory (and FS) variant that advertises deletion as unsupported.
+	const unsupported = createCmsProtocol({
+		root,
+		allowPaths: ["posts"],
+		writer,
+		collections: [postsCollection],
+		capabilities: { deleteEntry: false },
+	});
+	const unsupportedCaps = await unsupported.getCapabilities();
+	if (!unsupportedCaps.ok || unsupportedCaps.value.deleteEntry !== false) {
+		failures.push({
+			backend,
+			label: "protocol variant reports deleteEntry unsupported",
+			detail: JSON.stringify(unsupportedCaps),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol variant reports deleteEntry unsupported",
+		});
+	}
+
+	const kept = await unsupported.upsertEntry({
+		id: "keep-me",
+		collection: "posts",
+		data: { title: "stay" },
+		expectedRevision: null,
+	});
+	if (!kept.ok) {
+		failures.push({
+			backend,
+			label: "unsupported-delete variant can still save",
+			detail: JSON.stringify(kept),
+		});
+		return;
+	}
+
+	const refused = await unsupported.deleteEntry("posts", "keep-me");
+	if (refused.ok || refused.code !== "unsupported_capability") {
+		failures.push({
+			backend,
+			label: "unsupported delete returns unsupported_capability",
+			detail: JSON.stringify(refused),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "unsupported delete returns unsupported_capability",
+		});
+	}
+
+	const stillThere = await unsupported.getEntry("posts", "keep-me");
+	if (!stillThere.ok || stillThere.value.data.title !== "stay") {
+		failures.push({
+			backend,
+			label: "unsupported delete leaves entry unchanged",
+			detail: JSON.stringify(stillThere),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "unsupported delete leaves entry unchanged",
+		});
+	}
+}
+
+/**
  * Read-side protocol contract suite (issue #12).
  * Runs the same scenarios against in-memory and filesystem implementations.
  */
@@ -958,6 +1109,30 @@ export async function runWriteSideProtocolContract(
 				: await createFilesystemFixture();
 		try {
 			await runWriteSideProtocolScenarios(fixture, failures, passed);
+		} finally {
+			await fixture.cleanup();
+		}
+	}
+
+	return { ok: failures.length === 0, failures, passed };
+}
+
+/**
+ * Deletion capability contract suite (issue #16).
+ */
+export async function runDeletionCapabilityContract(
+	backends: WriterBackend[] = ["memory", "filesystem"],
+): Promise<ContractRunResult> {
+	const failures: ContractFailure[] = [];
+	const passed: ContractRunResult["passed"] = [];
+
+	for (const kind of backends) {
+		const fixture =
+			kind === "memory"
+				? await createMemoryFixture()
+				: await createFilesystemFixture();
+		try {
+			await runDeletionCapabilityScenarios(fixture, failures, passed);
 		} finally {
 			await fixture.cleanup();
 		}

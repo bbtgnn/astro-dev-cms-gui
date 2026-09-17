@@ -11,7 +11,12 @@ import type { z } from "zod";
  */
 export type AuthoringClient = Pick<
 	CmsFetchClient,
-	"listCollections" | "listEntries" | "getEntry" | "upsertEntry" | "deleteEntry"
+	| "getCapabilities"
+	| "listCollections"
+	| "listEntries"
+	| "getEntry"
+	| "upsertEntry"
+	| "deleteEntry"
 >;
 
 /** Host-compiled editor schemas (Zod + FieldUi + direct components). */

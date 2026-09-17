@@ -91,6 +91,12 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				return Response.json({ ok: true, mount, prototype: true });
 			}
 
+			// GET /api/capabilities
+			if (path === "api/capabilities" && method === "GET") {
+				const result = await protocol.getCapabilities();
+				return Response.json(result.value);
+			}
+
 			// GET /api/collections
 			if (path === "api/collections" && method === "GET") {
 				const result = await protocol.listCollections();
@@ -210,7 +216,8 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				}
 
 				if (id && method === "DELETE") {
-					await protocol.deleteEntry(collection, id);
+					const result = await protocol.deleteEntry(collection, id);
+					if (!result.ok) return protocolErrResponse(result);
 					return new Response(null, { status: 204 });
 				}
 			}

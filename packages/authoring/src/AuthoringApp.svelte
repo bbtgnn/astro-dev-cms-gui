@@ -4,12 +4,14 @@
 -->
 <script lang="ts">
 import {
+	type CmsCapabilities,
 	type ContentEntry,
 	type EntryIdentity,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
 import { onMount } from "svelte";
 import type { z } from "zod";
+import { offersEntryDeletion } from "./capabilities";
 import EntryEditor from "./EntryEditor.svelte";
 import type { AuthoringClient, EditorCollections } from "./types";
 
@@ -27,11 +29,14 @@ let view = $state<"collections" | "entries" | "editor" | "create">(
 let loading = $state(false);
 let error = $state<string | null>(null);
 
+let capabilities = $state.raw<CmsCapabilities | null>(null);
 let collections = $state.raw<{ name: string }[]>([]);
 let entries = $state.raw<EntryIdentity[]>([]);
 let selectedCollection = $state<string | null>(null);
 let selectedEntryId = $state<string | null>(null);
 let entry = $state.raw<ContentEntry | null>(null);
+
+const canDelete = $derived(offersEntryDeletion(capabilities));
 
 function errMsg(e: unknown): string {
 	if (isCmsFetchError(e)) return e.message;
@@ -45,10 +50,16 @@ function editorSchemaFor(name: string | null): z.ZodType | null {
 
 const activeSchema = $derived(editorSchemaFor(selectedCollection));
 
+async function loadCapabilities() {
+	const result = await client.getCapabilities();
+	capabilities = result.value;
+}
+
 async function loadCollections() {
 	loading = true;
 	error = null;
 	try {
+		await loadCapabilities();
 		const result = await client.listCollections();
 		collections = result.value;
 		entries = [];
@@ -181,6 +192,9 @@ onMount(() => {
 		status:
 		{#if loading}loading{:else}idle{/if}
 		· view: {view}
+		{#if capabilities}
+			· delete: {canDelete ? "supported" : "unsupported"}
+		{/if}
 		{#if error}
 			— error: {error}
 		{/if}
@@ -247,6 +261,7 @@ onMount(() => {
 				revision={entry.revision}
 				schema={activeSchema}
 				value={entry.data}
+				{canDelete}
 				onSaved={(saved) => void onSaved(saved)}
 				onDeleted={() => void onDeleted()}
 				onCancel={backToEntries}
@@ -261,6 +276,7 @@ onMount(() => {
 			schema={activeSchema}
 			value={{}}
 			creating={true}
+			{canDelete}
 			onSaved={(saved) => void onSaved(saved)}
 			onCancel={backToEntries}
 		/>

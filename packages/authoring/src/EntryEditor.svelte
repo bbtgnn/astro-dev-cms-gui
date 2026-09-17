@@ -20,6 +20,7 @@ let {
 	value = {},
 	creating = false,
 	revision: revisionProp = null,
+	canDelete = false,
 	onSaved,
 	onDeleted,
 	onCancel,
@@ -34,6 +35,8 @@ let {
 	creating?: boolean;
 	/** Opaque revision from loaded entry; null/absent when creating. */
 	revision?: string | null;
+	/** From protocol capabilities — hide delete when unsupported. */
+	canDelete?: boolean;
 	onSaved?: (entry: ContentEntry) => void;
 	onDeleted?: () => void;
 	onCancel?: () => void;
@@ -109,13 +112,18 @@ async function save(data: Record<string, unknown>) {
 }
 
 async function remove() {
-	if (creating) return;
+	if (creating || !canDelete) return;
 	if (!confirm(`Delete ${collection}/${entryId}?`)) return;
 	busy = true;
 	clearErrors();
 	saveStatus = "idle";
 	try {
-		await client.deleteEntry(collection, entryId);
+		const result = await client.deleteEntry(collection, entryId);
+		if (!result.ok) {
+			error = `${result.code}: ${result.message}`;
+			issues = null;
+			return;
+		}
 		onDeleted?.();
 	} catch (e) {
 		if (isCmsFetchError(e)) {
@@ -205,7 +213,7 @@ async function saveInvalid() {
 		<button type="button" disabled={busy} onclick={() => onCancel?.()}
 			>back</button
 		>
-		{#if !creating}
+		{#if !creating && canDelete}
 			<button type="button" disabled={busy} onclick={() => void remove()}
 				>delete</button
 			>
