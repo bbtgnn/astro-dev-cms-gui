@@ -3,6 +3,10 @@
  * Write mode = domain ops + Zod + discovery/path helpers. Writer = low-level FS.
  */
 
+export {
+	adaptWriteModeToProtocol,
+	createCmsProtocol,
+} from "./create-cms-protocol";
 export type {
 	DiscoverCollectionsOptions,
 	DiscoveredCollection,
@@ -16,7 +20,12 @@ export {
 	withLoaderPathHint,
 } from "./discovery";
 export { parseEntryFile, serializeEntryFile } from "./entry-file";
-export { createFetchClient } from "./fetch-client";
+export {
+	type CmsFetchClient,
+	CmsFetchError,
+	createFetchClient,
+	isCmsFetchError,
+} from "./fetch-client";
 export { memoryWriter } from "./memory-writer";
 export { nodeFsWriter } from "./node-fs-writer";
 export type {
@@ -34,6 +43,18 @@ export {
 	resolveYamlEntryPath,
 	writerExists,
 } from "./path-resolve";
+export type {
+	CmsErr,
+	CmsOk,
+	CmsProtocol,
+	CmsResult,
+	EntryIdentity,
+	GetEntryFailureCode,
+	GetEntryResult,
+	ListCollectionsResult,
+	ListEntriesResult,
+} from "./protocol";
+export { cmsErr, cmsOk, httpStatusForCmsErr } from "./protocol";
 export type {
 	CollectionSummary,
 	ContentEntry,

@@ -4,10 +4,10 @@
  */
 import { defineMiddleware } from "astro:middleware";
 import { createCmsIntegration } from "@cms/routes";
-import { createTemplateWriteMode } from "./cms/write-mode";
+import { createTemplateCmsProtocol } from "./cms/write-mode";
 
 const cms = createCmsIntegration({
-	writeMode: createTemplateWriteMode(),
+	protocol: createTemplateCmsProtocol(),
 	isDev: true,
 	mount: "/_cms",
 });

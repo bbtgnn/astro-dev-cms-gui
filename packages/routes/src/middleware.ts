@@ -8,7 +8,7 @@
  * import { createCmsMiddleware } from "@cms/routes";
  *
  * export const onRequest = defineMiddleware(
- *   createCmsMiddleware({ writeMode, isDev: import.meta.env.DEV, mount: "/_cms" }),
+ *   createCmsMiddleware({ protocol, isDev: import.meta.env.DEV, mount: "/_cms" }),
  * );
  * ```
  *

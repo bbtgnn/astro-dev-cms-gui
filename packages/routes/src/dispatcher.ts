@@ -1,7 +1,9 @@
 /**
  * PROTOTYPE / SPIKE — single /_cms/[...path] JSON dispatcher.
+ * Thin Astro transport: maps CMS protocol outcomes ↔ HTTP; no domain rules.
  */
-import type { ContentEntry, WriteMode } from "@cms/crud";
+import type { CmsProtocol, ContentEntry } from "@cms/crud";
+import { httpStatusForCmsErr } from "@cms/crud";
 import { cmsDevOnlyGuard } from "./dev-guard";
 import {
 	DEFAULT_IMAGE_WIDTHS,
@@ -10,7 +12,7 @@ import {
 } from "./process-image";
 
 export type CmsDispatcherOptions = {
-	writeMode: WriteMode;
+	protocol: CmsProtocol;
 	/** import.meta.env.DEV in Astro */
 	isDev: boolean;
 	allowInProd?: boolean;
@@ -30,6 +32,18 @@ function errorResponse(err: unknown): Response {
 			issues: e.issues,
 		},
 		{ status },
+	);
+}
+
+/** Translate a typed protocol failure into HTTP without inventing domain codes. */
+function protocolErrResponse(result: {
+	ok: false;
+	code: string;
+	message: string;
+}): Response {
+	return Response.json(
+		{ error: result.message, code: result.code },
+		{ status: httpStatusForCmsErr(result.code) },
 	);
 }
 
@@ -69,7 +83,7 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 
 		const path = pathSegments.filter(Boolean).join("/");
 		const method = request.method.toUpperCase();
-		const wm = options.writeMode;
+		const protocol = options.protocol;
 
 		try {
 			// Pass 0 heartbeat
@@ -79,13 +93,14 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 
 			// GET /api/collections
 			if (path === "api/collections" && method === "GET") {
-				return Response.json(await wm.listCollections());
+				const result = await protocol.listCollections();
+				return Response.json(result.value);
 			}
 
 			// GET /api/assets/<rel-from-content-root>
 			if (path.startsWith("api/assets/") && method === "GET") {
 				const rel = path.slice("api/assets/".length);
-				const asset = await wm.readAsset(decodeURIComponent(rel));
+				const asset = await protocol.readAsset(decodeURIComponent(rel));
 				return new Response(Buffer.from(asset.bytes), {
 					status: 200,
 					headers: {
@@ -132,7 +147,7 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 					widths,
 					quality: Number.isFinite(quality) ? quality : DEFAULT_WEBP_QUALITY,
 				});
-				const written = await wm.writeImageAssets({
+				const written = await protocol.writeImageAssets({
 					collection,
 					id,
 					name,
@@ -152,15 +167,17 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				const id = collMatch[2] ? decodeURIComponent(collMatch[2]) : undefined;
 
 				if (!id && method === "GET") {
-					return Response.json(await wm.listEntries(collection));
+					const result = await protocol.listEntries(collection);
+					// Transport keeps the prior `{ id }[]` JSON shape for shell compat.
+					return Response.json(
+						result.value.map(({ id: entryId }) => ({ id: entryId })),
+					);
 				}
 
 				if (id && method === "GET") {
-					const entry = await wm.getEntry(collection, id);
-					if (!entry) {
-						return Response.json({ error: "Not found" }, { status: 404 });
-					}
-					return Response.json(entry);
+					const result = await protocol.getEntry(collection, id);
+					if (!result.ok) return protocolErrResponse(result);
+					return Response.json(result.value);
 				}
 
 				if (id && method === "PUT") {
@@ -176,11 +193,11 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 						entry.collection = body.collection;
 						entry.data = body.data;
 					}
-					return Response.json(await wm.upsertEntry(entry));
+					return Response.json(await protocol.upsertEntry(entry));
 				}
 
 				if (id && method === "DELETE") {
-					await wm.deleteEntry(collection, id);
+					await protocol.deleteEntry(collection, id);
 					return new Response(null, { status: 204 });
 				}
 			}

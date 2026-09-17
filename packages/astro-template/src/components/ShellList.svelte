@@ -1,8 +1,9 @@
-<!-- PROTOTYPE / SPIKE — P4 shell loop: collections → entries → editor -->
+<!-- PROTOTYPE / SPIKE — P4 shell loop: collections → entries → editor via CMS protocol -->
 <script lang="ts">
 import {
 	type ContentEntry,
 	createFetchClient,
+	type EntryIdentity,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
 import type { UiSchemaNode } from "@cms/fields";
@@ -30,7 +31,7 @@ let loading = $state(false);
 let error = $state<string | null>(null);
 
 let collections = $state.raw<{ name: string }[]>([]);
-let entries = $state.raw<{ id: string }[]>([]);
+let entries = $state.raw<EntryIdentity[]>([]);
 let selectedCollection = $state<string | null>(null);
 let selectedEntryId = $state<string | null>(null);
 let entry = $state.raw<ContentEntry | null>(null);
@@ -44,7 +45,8 @@ async function loadCollections() {
 	loading = true;
 	error = null;
 	try {
-		collections = await client.listCollections();
+		const result = await client.listCollections();
+		collections = result.value;
 		entries = [];
 		entry = null;
 		selectedCollection = null;
@@ -64,7 +66,8 @@ async function selectCollection(name: string) {
 	selectedEntryId = null;
 	entry = null;
 	try {
-		entries = await client.listEntries(name);
+		const result = await client.listEntries(name);
+		entries = result.value;
 		view = "entries";
 	} catch (e) {
 		error = errMsg(e);
@@ -80,7 +83,13 @@ async function openEntry(id: string) {
 	error = null;
 	selectedEntryId = id;
 	try {
-		entry = await client.getEntry(selectedCollection, id);
+		const result = await client.getEntry(selectedCollection, id);
+		if (!result.ok) {
+			error = `${result.code}: ${result.message}`;
+			entry = null;
+			return;
+		}
+		entry = result.value;
 		view = "editor";
 	} catch (e) {
 		error = errMsg(e);
@@ -100,7 +109,8 @@ function startCreate() {
 
 async function refreshEntries() {
 	if (!selectedCollection) return;
-	entries = await client.listEntries(selectedCollection);
+	const result = await client.listEntries(selectedCollection);
+	entries = result.value;
 }
 
 async function onSaved(saved: ContentEntry) {
@@ -144,8 +154,8 @@ onMount(() => {
 
 <main>
 	<p>
-		<strong>PROTOTYPE / SPIKE</strong> — P4 shell loop via
-		<code>@cms/crud/fetch-client</code>
+		<strong>PROTOTYPE / SPIKE</strong> — P4 shell loop via CMS protocol client
+		(<code>@cms/crud/fetch-client</code>)
 	</p>
 
 	<p>

@@ -1,13 +1,36 @@
 /**
- * PROTOTYPE / SPIKE — thin fetch client for shell UI → /_cms API.
+ * PROTOTYPE / SPIKE — thin protocol client for shell UI → /_cms transport.
  * Browser-safe: import from `@cms/crud/fetch-client` (not package root —
  * root re-exports Node FS writers).
  */
-import type { ContentEntry } from "./types";
+import type {
+	CmsErr,
+	CmsProtocol,
+	CollectionSummary,
+	ContentEntry,
+	EntryIdentity,
+	GetEntryFailureCode,
+	GetEntryResult,
+} from "./protocol";
+import { httpStatusForCmsErr } from "./protocol";
 
-export type { ContentEntry };
+export type {
+	CmsErr,
+	CmsOk,
+	CmsProtocol,
+	CmsResult,
+	CollectionSummary,
+	ContentEntry,
+	EntryIdentity,
+	GetEntryFailureCode,
+	GetEntryResult,
+	ListCollectionsResult,
+	ListEntriesResult,
+} from "./protocol";
 
-/** Thrown when the CMS JSON API returns a non-OK status. */
+export { cmsErr, cmsOk, httpStatusForCmsErr } from "./protocol";
+
+/** Thrown when the CMS JSON API returns a non-OK status outside typed read outcomes. */
 export class CmsFetchError extends Error {
 	readonly status: number;
 	readonly code?: string;
@@ -37,11 +60,47 @@ export function isCmsFetchError(err: unknown): err is CmsFetchError {
 	return err instanceof CmsFetchError;
 }
 
-export function createFetchClient(base = "/_cms") {
+type ErrorBody = { error?: string; code?: string; issues?: unknown };
+
+async function parseErrorBody(
+	bodyText: string,
+): Promise<ErrorBody | undefined> {
+	try {
+		return JSON.parse(bodyText) as ErrorBody;
+	} catch {
+		return undefined;
+	}
+}
+
+function isGetEntryFailureCode(
+	code: string | undefined,
+): code is GetEntryFailureCode {
+	return code === "not_found" || code === "forbidden" || code === "conflict";
+}
+
+export type CmsFetchClient = CmsProtocol & {
+	/** Multipart image upload (Astro transport-specific; not a protocol op). */
+	uploadImage(input: {
+		file: Blob;
+		collection: string;
+		id: string;
+		name?: string;
+		widths?: number[];
+		quality?: number;
+		filename?: string;
+	}): Promise<{ path: string; files: string[]; widths: number[] }>;
+};
+
+/**
+ * Browser protocol client — same read/write surface as CmsProtocol, over HTTP.
+ * Typed read failures (`not_found` / `forbidden` / `conflict`) are outcomes;
+ * other transport failures throw CmsFetchError.
+ */
+export function createFetchClient(base = "/_cms"): CmsFetchClient {
 	const root = base.replace(/\/+$/, "");
 
 	async function request(path: string, init?: RequestInit): Promise<Response> {
-		const res = await fetch(`${root}${path}`, {
+		return fetch(`${root}${path}`, {
 			...init,
 			headers: {
 				accept: "application/json",
@@ -49,43 +108,87 @@ export function createFetchClient(base = "/_cms") {
 				...init?.headers,
 			},
 		});
-		if (!res.ok) {
-			const bodyText = await res.text();
-			let parsed:
-				| { error?: string; code?: string; issues?: unknown }
-				| undefined;
-			try {
-				parsed = JSON.parse(bodyText) as {
-					error?: string;
-					code?: string;
-					issues?: unknown;
-				};
-			} catch {
-				parsed = undefined;
-			}
-			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
-		}
-		return res;
 	}
 
-	async function json<T>(path: string, init?: RequestInit): Promise<T> {
+	async function throwIfNotOk(res: Response): Promise<void> {
+		if (res.ok) return;
+		const bodyText = await res.text();
+		const parsed = await parseErrorBody(bodyText);
+		throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
+	}
+
+	async function jsonOk<T>(path: string, init?: RequestInit): Promise<T> {
 		const res = await request(path, init);
+		await throwIfNotOk(res);
 		if (res.status === 204) return undefined as T;
 		return (await res.json()) as T;
 	}
 
 	return {
-		listCollections: () => json<{ name: string }[]>("/api/collections"),
-		listEntries: (collection: string) =>
-			json<{ id: string }[]>(
+		async listCollections() {
+			const value = await jsonOk<CollectionSummary[]>("/api/collections");
+			return { ok: true, value };
+		},
+
+		async listEntries(collection: string) {
+			const listed = await jsonOk<Array<{ id: string } | EntryIdentity>>(
 				`/api/collections/${encodeURIComponent(collection)}`,
-			),
-		getEntry: (collection: string, id: string) =>
-			json<ContentEntry>(
+			);
+			const value: EntryIdentity[] = listed.map((row) =>
+				"collection" in row && typeof row.collection === "string"
+					? { collection: row.collection, id: row.id }
+					: { collection, id: row.id },
+			);
+			return { ok: true, value };
+		},
+
+		async getEntry(collection: string, id: string): Promise<GetEntryResult> {
+			const res = await request(
 				`/api/collections/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,
-			),
+			);
+			if (res.ok) {
+				return { ok: true, value: (await res.json()) as ContentEntry };
+			}
+			const bodyText = await res.text();
+			const parsed = await parseErrorBody(bodyText);
+			const code = parsed?.code;
+			if (
+				isGetEntryFailureCode(code) &&
+				res.status === httpStatusForCmsErr(code)
+			) {
+				return {
+					ok: false,
+					code,
+					message: parsed?.error ?? (bodyText || res.statusText),
+				} satisfies CmsErr<GetEntryFailureCode>;
+			}
+			// Legacy transport: 404/403/409 without a protocol code.
+			if (res.status === 404) {
+				return {
+					ok: false,
+					code: "not_found",
+					message: parsed?.error ?? "Not found",
+				};
+			}
+			if (res.status === 403) {
+				return {
+					ok: false,
+					code: "forbidden",
+					message: parsed?.error ?? "Forbidden",
+				};
+			}
+			if (res.status === 409) {
+				return {
+					ok: false,
+					code: "conflict",
+					message: parsed?.error ?? "Conflict",
+				};
+			}
+			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
+		},
+
 		upsertEntry: (entry: ContentEntry) =>
-			json<ContentEntry>(
+			jsonOk<ContentEntry>(
 				`/api/collections/${encodeURIComponent(entry.collection)}/${encodeURIComponent(entry.id)}`,
 				{
 					method: "PUT",
@@ -96,21 +199,28 @@ export function createFetchClient(base = "/_cms") {
 					}),
 				},
 			),
+
 		deleteEntry: async (collection: string, id: string) => {
-			await request(
+			const res = await request(
 				`/api/collections/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,
 				{ method: "DELETE" },
 			);
+			await throwIfNotOk(res);
 		},
-		uploadImage: async (input: {
-			file: Blob;
-			collection: string;
-			id: string;
-			name?: string;
-			widths?: number[];
-			quality?: number;
-			filename?: string;
-		}) => {
+
+		writeImageAssets: async () => {
+			throw new Error(
+				"writeImageAssets is not available on the browser protocol client; use uploadImage",
+			);
+		},
+
+		readAsset: async () => {
+			throw new Error(
+				"readAsset is not available on the browser protocol client",
+			);
+		},
+
+		uploadImage: async (input) => {
 			const body = new FormData();
 			body.append("file", input.file, input.filename ?? "upload.bin");
 			body.append("collection", input.collection);
@@ -126,18 +236,7 @@ export function createFetchClient(base = "/_cms") {
 			});
 			if (!res.ok) {
 				const bodyText = await res.text();
-				let parsed:
-					| { error?: string; code?: string; issues?: unknown }
-					| undefined;
-				try {
-					parsed = JSON.parse(bodyText) as {
-						error?: string;
-						code?: string;
-						issues?: unknown;
-					};
-				} catch {
-					parsed = undefined;
-				}
+				const parsed = await parseErrorBody(bodyText);
 				throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
 			}
 			return (await res.json()) as {

@@ -5,14 +5,20 @@
 
 /** Discovery + write-mode helpers (implemented in @cms/crud). */
 export type {
+	CmsProtocol,
 	CollectionSummary,
+	ContentEntry,
 	DiscoverCollectionsOptions,
 	DiscoveredCollection,
+	EntryIdentity,
 	LoaderPathHint,
 } from "@cms/crud";
 export {
+	adaptWriteModeToProtocol,
 	CMS_LOADER_HINT,
+	createCmsProtocol,
 	discoverCollections,
+	httpStatusForCmsErr,
 	resolveCollectionSchema,
 	scanYamlEntryIds,
 	withLoaderPathHint,

@@ -1,14 +1,20 @@
 /**
- * Shared write-back contract harness — same list/read/save scenarios against
- * in-memory and filesystem writers (issue #11). Public seam: WriteMode.
+ * Shared write-back + read-side protocol contract harness.
+ * #11: WriteMode list/read/save against memory + filesystem.
+ * #12: CmsProtocol read-side outcomes against the same backends.
  */
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import {
+	adaptWriteModeToProtocol,
+	createCmsProtocol,
+} from "../src/create-cms-protocol";
 import type { DiscoveredCollection } from "../src/discovery";
 import { memoryWriter } from "../src/memory-writer";
 import { nodeFsWriter } from "../src/node-fs-writer";
+import type { CmsProtocol } from "../src/protocol";
 import type { ContentEntry, WriteMode, Writer } from "../src/types";
 import { createWriteMode } from "../src/write-mode";
 
@@ -354,6 +360,228 @@ export async function runWriteBackContract(
 			await runAllowlistScenarios(fixture, failures, passed);
 			await runListReadSaveScenarios(fixture, failures, passed);
 			await runYamlCollisionScenario(fixture, failures, passed);
+		} finally {
+			await fixture.cleanup();
+		}
+	}
+
+	return { ok: failures.length === 0, failures, passed };
+}
+
+function assertNoFilesystemPaths(
+	value: unknown,
+	failures: ContractFailure[],
+	passed: ContractRunResult["passed"],
+	backend: WriterBackend,
+	label: string,
+): void {
+	const encoded = JSON.stringify(value);
+	const leaks =
+		encoded.includes("\\\\") ||
+		/"(?:\/|file:|[A-Za-z]:\\)/.test(encoded) ||
+		encoded.includes('"root"') ||
+		encoded.includes('"absolutePath"') ||
+		encoded.includes('"pathMap"');
+	if (leaks) {
+		failures.push({
+			backend,
+			label,
+			detail: encoded.slice(0, 400),
+		});
+	} else {
+		passed.push({ backend, label });
+	}
+}
+
+function discoveryProtocol(
+	root: string,
+	writer: Writer,
+	extras?: Partial<Parameters<typeof createWriteMode>[0]>,
+): CmsProtocol {
+	return createCmsProtocol({
+		root,
+		allowPaths: ["posts"],
+		writer,
+		collections: [postsCollection],
+		...extras,
+	});
+}
+
+/**
+ * Read-side CMS protocol contract — same scenarios on memory + filesystem.
+ * Outcomes are typed (`not_found` / `forbidden` / `conflict`); payloads stay
+ * free of filesystem paths.
+ */
+async function runReadSideProtocolScenarios(
+	fixture: BackendFixture,
+	failures: ContractFailure[],
+	passed: ContractRunResult["passed"],
+): Promise<void> {
+	const { backend, root, writer } = fixture;
+	const protocol = discoveryProtocol(root, writer);
+
+	const colls = await protocol.listCollections();
+	if (
+		!colls.ok ||
+		!colls.value.some((c) => c.name === "posts" && c.label === "Posts")
+	) {
+		failures.push({
+			backend,
+			label: "protocol listCollections returns summaries",
+			detail: JSON.stringify(colls),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol listCollections returns summaries",
+		});
+		assertNoFilesystemPaths(
+			colls.value,
+			failures,
+			passed,
+			backend,
+			"protocol collection summaries have no FS paths",
+		);
+	}
+
+	await protocol.upsertEntry({
+		id: "ok",
+		collection: "posts",
+		data: { title: "yes" },
+	});
+
+	const listed = await protocol.listEntries("posts");
+	if (
+		!listed.ok ||
+		!listed.value.some((e) => e.collection === "posts" && e.id === "ok")
+	) {
+		failures.push({
+			backend,
+			label: "protocol listEntries returns entry identities",
+			detail: JSON.stringify(listed),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol listEntries returns entry identities",
+		});
+		assertNoFilesystemPaths(
+			listed.value,
+			failures,
+			passed,
+			backend,
+			"protocol entry identities have no FS paths",
+		);
+	}
+
+	const read = await protocol.getEntry("posts", "ok");
+	if (
+		!read.ok ||
+		read.value.id !== "ok" ||
+		read.value.collection !== "posts" ||
+		read.value.data.title !== "yes"
+	) {
+		failures.push({
+			backend,
+			label: "protocol getEntry returns persisted input",
+			detail: JSON.stringify(read),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol getEntry returns persisted input",
+		});
+		assertNoFilesystemPaths(
+			read.value,
+			failures,
+			passed,
+			backend,
+			"protocol entry payload has no FS paths",
+		);
+	}
+
+	const missing = await protocol.getEntry("posts", "does-not-exist");
+	if (missing.ok || missing.code !== "not_found") {
+		failures.push({
+			backend,
+			label: "protocol missing entry is not_found",
+			detail: JSON.stringify(missing),
+		});
+	} else {
+		passed.push({ backend, label: "protocol missing entry is not_found" });
+	}
+
+	const unknown = await protocol.getEntry("no-such-collection", "x");
+	if (unknown.ok || unknown.code !== "not_found") {
+		failures.push({
+			backend,
+			label: "protocol unknown collection get is not_found",
+			detail: JSON.stringify(unknown),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol unknown collection get is not_found",
+		});
+	}
+
+	const forbiddenProtocol = adaptWriteModeToProtocol(
+		createWriteMode({
+			root,
+			allowPaths: ["posts"],
+			writer,
+			pathMap: {
+				posts: {
+					blocked: "../blocked.yaml",
+				},
+			},
+		}),
+	);
+	const forbidden = await forbiddenProtocol.getEntry("posts", "blocked");
+	if (forbidden.ok || forbidden.code !== "forbidden") {
+		failures.push({
+			backend,
+			label: "protocol forbidden read is forbidden",
+			detail: JSON.stringify(forbidden),
+		});
+	} else {
+		passed.push({ backend, label: "protocol forbidden read is forbidden" });
+	}
+
+	await fixture.seedFile("posts/both.yaml", "title: a\n");
+	await fixture.seedFile("posts/both.yml", "title: b\n");
+	const collide = await discoveryProtocol(root, writer).getEntry(
+		"posts",
+		"both",
+	);
+	if (collide.ok || collide.code !== "conflict") {
+		failures.push({
+			backend,
+			label: "protocol yaml collision is conflict",
+			detail: JSON.stringify(collide),
+		});
+	} else {
+		passed.push({ backend, label: "protocol yaml collision is conflict" });
+	}
+}
+
+/**
+ * Read-side protocol contract suite (issue #12).
+ * Runs the same scenarios against in-memory and filesystem implementations.
+ */
+export async function runReadSideProtocolContract(
+	backends: WriterBackend[] = ["memory", "filesystem"],
+): Promise<ContractRunResult> {
+	const failures: ContractFailure[] = [];
+	const passed: ContractRunResult["passed"] = [];
+
+	for (const kind of backends) {
+		const fixture =
+			kind === "memory"
+				? await createMemoryFixture()
+				: await createFilesystemFixture();
+		try {
+			await runReadSideProtocolScenarios(fixture, failures, passed);
 		} finally {
 			await fixture.cleanup();
 		}

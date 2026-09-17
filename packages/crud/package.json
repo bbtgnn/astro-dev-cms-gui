@@ -6,7 +6,8 @@
 	"description": "PROTOTYPE — write mode + writers (no UI)",
 	"exports": {
 		".": "./src/index.ts",
-		"./fetch-client": "./src/fetch-client.ts"
+		"./fetch-client": "./src/fetch-client.ts",
+		"./protocol": "./src/protocol.ts"
 	},
 	"dependencies": {
 		"@cms/fields": "workspace:*",

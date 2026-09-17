@@ -1,13 +1,15 @@
 /**
- * Portable check: write-back contract harness (memory + filesystem).
+ * Portable check: write-back (#11) + read-side CMS protocol (#12) contracts.
  * Run: bun run check:allowlist
  */
 import {
 	type ContractRunResult,
+	runReadSideProtocolContract,
 	runWriteBackContract,
 } from "./write-back-contract-harness";
 
-function printResult(result: ContractRunResult): void {
+function printResult(title: string, result: ContractRunResult): void {
+	console.log(`--- ${title} ---`);
 	for (const p of result.passed) {
 		console.log(`ok  [${p.backend}] ${p.label}`);
 	}
@@ -16,10 +18,13 @@ function printResult(result: ContractRunResult): void {
 	}
 }
 
-const result = await runWriteBackContract();
-printResult(result);
+const writeBack = await runWriteBackContract();
+printResult("write-back contract", writeBack);
 
-if (!result.ok) {
+const readSide = await runReadSideProtocolContract();
+printResult("read-side protocol contract", readSide);
+
+if (!writeBack.ok || !readSide.ok) {
 	process.exit(1);
 }
-console.log("write-back contract checks passed");
+console.log("write-back + read-side protocol contract checks passed");
