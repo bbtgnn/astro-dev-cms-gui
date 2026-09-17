@@ -12,6 +12,7 @@ export type {
 	CmsProtocol,
 	CollectionSummary,
 	ContentEntry,
+	CreateCmsHostOptions,
 	CreateCmsProtocolOptions,
 	DeleteEntryFailureCode,
 	DeleteEntryResult,

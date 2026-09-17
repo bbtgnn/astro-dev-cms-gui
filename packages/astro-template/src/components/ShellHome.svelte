@@ -26,8 +26,8 @@
 			<a href="/image-demo">/image-demo</a> — CmsImage srcset (cover folder)
 		</li>
 		<li>
-			Track D: <code>PUT</code> invalid → 400; <code>posts/blocked</code> → 403;
-			<code>DELETE</code> → 204
+			Track D: <code>PUT</code> invalid → 400; <code>DELETE</code> → 204
+			(allowlist deny → contract harness)
 		</li>
 	</ul>
 </main>

@@ -31,7 +31,6 @@ Portable package smoke (from root): `bun run check && bun run check:allowlist &&
 | `PUT /_cms/api/collections/posts/new-post` | Upsert (allowlisted) |
 | `DELETE /_cms/api/collections/posts/new-post` | Delete (204) |
 | `PUT` invalid posts body | Zod fail → 400 |
-| `PUT /_cms/api/collections/posts/blocked` | Allowlist deny → 403 |
 | `/form-spike` | Zod → JSON Schema → `@cms/form` sjsf (`client:only`) |
 
 `src/middleware.ts` mounts `/_cms` via `createCmsIntegration({ writeMode, isDev, mount })` from `@cms/routes`.
@@ -42,7 +41,7 @@ Portable package smoke (from root): `bun run check && bun run check:allowlist &&
 bun run check:allowlist
 ```
 
-Writes only under `content-sandbox/` prefixes in `allowPaths`.
+Writes only under `content-sandbox/` prefixes in `allowPaths`. Allowlist deny (mapped path outside roots) is covered by the write-back contract harness, not the template host.
 
 ## Track D curl smoke (with `bun run dev` running)
 
@@ -60,12 +59,6 @@ curl -sS -o /tmp/cms-400.json -w "%{http_code}\n" -X PUT \
   http://127.0.0.1:4321/_cms/api/collections/posts/new-post \
   -H 'content-type: application/json' \
   -d '{"id":"new-post","collection":"posts","data":{"title":1}}'
-
-# 403 — mapped path outside allowlist
-curl -sS -o /tmp/cms-403.json -w "%{http_code}\n" -X PUT \
-  http://127.0.0.1:4321/_cms/api/collections/posts/blocked \
-  -H 'content-type: application/json' \
-  -d '{"id":"blocked","collection":"posts","data":{"title":"x","draft":false,"body":"y"}}'
 
 # 204 — delete allowlisted entry (re-PUT first if missing)
 curl -sS -o /tmp/cms-del.json -w "%{http_code}\n" -X DELETE \

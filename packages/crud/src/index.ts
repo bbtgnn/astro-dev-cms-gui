@@ -7,6 +7,7 @@
 export type {
 	AdaptProtocolOptions,
 	CmsHost,
+	CreateCmsHostOptions,
 	CreateCmsProtocolOptions,
 	ProcessImageToWebpSizes,
 } from "./create-cms-protocol";

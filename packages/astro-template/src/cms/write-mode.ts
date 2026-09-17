@@ -1,6 +1,6 @@
 /**
  * Template CMS host — live `content.config` discovery behind createCmsHost.
- * Happy path: no fakeCatalog; pathMap only for Track D allowlist deny smoke.
+ * Happy path: discovered collections only (allowlist deny is contract-harness coverage).
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -32,11 +32,5 @@ export function createTemplateCmsHost(opts?: { useMemory?: boolean }): CmsHost {
 		writer,
 		collections: discovered,
 		processImage: processImageToWebpSizes,
-		// Track D: mapped path outside allowPaths → HTTP 403 / protocol forbidden
-		pathMap: {
-			posts: {
-				blocked: "../blocked.yaml",
-			},
-		},
 	});
 }

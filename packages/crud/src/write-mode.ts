@@ -1,6 +1,6 @@
 /**
  * PROTOTYPE / SPIKE — createWriteMode with allowlisted paths.
- * P2: prefer discovered collections (base + YAML helpers) over fakeCatalog/pathMap.
+ * Prefer discovered collections; pathMap / fakeCatalog are internal test seams.
  * Guarded write-back: opaque revisions + async Zod input validation (ADR-0010, 0014).
  */
 import path from "node:path";

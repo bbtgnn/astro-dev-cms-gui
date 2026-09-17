@@ -81,13 +81,13 @@ export type WriteMode = {
 	readAsset(relFromRoot: string): Promise<ReadAssetResult>;
 };
 
-export type CreateWriteModeOptions = {
+export type CreateCmsHostOptions = {
 	root: string;
 	/** Absolute or root-relative path prefixes that may be written. */
 	allowPaths: string[];
 	writer: Writer;
 	/**
-	 * P2 discovery result — preferred over fakeCatalog / pathMap for happy path.
+	 * Discovery result — preferred happy path (ADR-0006 / 0007).
 	 * Path = root + collection.base + id + ext (or pathTemplate).
 	 */
 	collections?: DiscoveredCollection[];
@@ -96,15 +96,22 @@ export type CreateWriteModeOptions = {
 	 * When absent, listEntries FS-scans the collection base.
 	 */
 	entryIndex?: Record<string, string[]>;
-	/**
-	 * Optional (collection, id) → relative path overrides (tests / Track D).
-	 * Happy path should not need this once discovery is wired.
-	 */
-	pathMap?: Record<string, Record<string, string>>;
 	/** Per-collection Zod schemas. Merged under discovery schemas when both set. */
 	schemas?: Record<string, z.ZodType>;
+};
+
+/**
+ * Full WriteMode construction — includes internal test seams.
+ * Hosts use {@link CreateCmsHostOptions} via createCmsHost / createCmsProtocol.
+ */
+export type CreateWriteModeOptions = CreateCmsHostOptions & {
 	/**
-	 * @deprecated Prefer `collections` + FS scan. Kept for tracer tests without discovery.
+	 * Internal test seam: (collection, id) → relative path overrides.
+	 * Not part of the public host construction face.
+	 */
+	pathMap?: Record<string, Record<string, string>>;
+	/**
+	 * @deprecated Prefer `collections` + FS scan. Internal test seam only.
 	 */
 	fakeCatalog?: Record<string, ContentEntry[]>;
 };

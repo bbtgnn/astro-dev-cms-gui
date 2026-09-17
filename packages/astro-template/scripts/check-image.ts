@@ -35,9 +35,6 @@ const host = createCmsHost({
 			config: { base: "posts", extension: "yaml" },
 		},
 	],
-	pathMap: {
-		posts: { hello: "posts/hello.yaml" },
-	},
 	processImage: processImageToWebpSizes,
 });
 const { protocol } = host;

@@ -22,7 +22,7 @@ import {
 	type UploadImageResult,
 } from "./protocol";
 import type {
-	CreateWriteModeOptions,
+	CreateCmsHostOptions,
 	ReadAssetResult,
 	UpsertEntryInput,
 	WriteImageAssetsInput,
@@ -57,8 +57,11 @@ export type AdaptProtocolOptions = {
 	processImage?: ProcessImageToWebpSizes;
 };
 
-export type CreateCmsProtocolOptions = CreateWriteModeOptions &
+export type CreateCmsProtocolOptions = CreateCmsHostOptions &
 	AdaptProtocolOptions;
+
+/** Re-export host construction options (no pathMap / fakeCatalog). */
+export type { CreateCmsHostOptions };
 
 /** WriteMode throw codes that surface as protocol `conflict`. */
 const CONFLICT_IMPL_CODES = new Set([
@@ -173,8 +176,8 @@ function uploadImageFailure(err: unknown): UploadImageResult | null {
 	);
 }
 
-/** Lift private WriteMode behind the protocol interface. */
-function adaptWriteModeToProtocol(
+/** Lift private WriteMode behind the protocol interface (also used by contract harness). */
+export function adaptWriteModeToProtocol(
 	wm: WriteMode,
 	options?: AdaptProtocolOptions,
 ): CmsProtocol {

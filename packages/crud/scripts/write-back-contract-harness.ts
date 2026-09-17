@@ -8,7 +8,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import { processImageToWebpSizes } from "../../routes/src/process-image.ts";
-import { createCmsProtocol } from "../src/create-cms-protocol";
+import {
+	adaptWriteModeToProtocol,
+	createCmsProtocol,
+} from "../src/create-cms-protocol";
 import type { DiscoveredCollection } from "../src/discovery";
 import { memoryWriter } from "../src/memory-writer";
 import { nodeFsWriter } from "../src/node-fs-writer";
@@ -689,16 +692,18 @@ async function runReadSideProtocolScenarios(
 		});
 	}
 
-	const forbiddenProtocol = createCmsProtocol({
-		root,
-		allowPaths: ["posts"],
-		writer,
-		pathMap: {
-			posts: {
-				blocked: "../blocked.yaml",
+	const forbiddenProtocol = adaptWriteModeToProtocol(
+		createWriteMode({
+			root,
+			allowPaths: ["posts"],
+			writer,
+			pathMap: {
+				posts: {
+					blocked: "../blocked.yaml",
+				},
 			},
-		},
-	});
+		}),
+	);
 	const forbidden = await forbiddenProtocol.getEntry("posts", "blocked");
 	if (forbidden.ok || forbidden.code !== "forbidden") {
 		failures.push({
