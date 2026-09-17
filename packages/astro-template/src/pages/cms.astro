@@ -1,22 +1,13 @@
 ---
 /**
- * PROTOTYPE / SPIKE — P4/P5 authoring shell loop (collections → entries → editor).
- * UI lives at /cms; JSON API remains middleware-mounted at /_cms.
- * Schemas come from live content.config discovery (P2); uiSchema carries markdown textarea.
+ * PROTOTYPE / SPIKE — authoring shell mount.
+ * UI at /cms; JSON API remains middleware-mounted at /_cms.
+ * Editor schemas + direct Svelte fields come from virtual:@cms/config (Vite),
+ * not from serializing live Zod through Astro island props.
  */
 
 import { PlaceholderChrome } from "@cms/components";
-import { discoverCollections, toFormSchemas } from "@cms/routes";
 import ShellList from "../components/ShellList.svelte";
-import { collections } from "../content.config";
-
-const discovered = discoverCollections(collections);
-const schemas = Object.fromEntries(
-	discovered.map((c) => {
-		const { schema, uiSchema } = toFormSchemas(c.schema);
-		return [c.name, { schema, uiSchema }];
-	}),
-);
 ---
 
 <html lang="en">
@@ -29,6 +20,6 @@ const schemas = Object.fromEntries(
 		<p><a href="/">← home</a></p>
 		<PlaceholderChrome label="@cms/components" />
 		<!-- client:only — sjsf templates break under Astro/Vite SSR -->
-		<ShellList client:only="svelte" schemas={schemas} />
+		<ShellList client:only="svelte" />
 	</body>
 </html>

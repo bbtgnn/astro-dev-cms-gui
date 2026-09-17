@@ -86,6 +86,7 @@ export {
 } from "./dispatcher";
 export {
 	type CmsIntegration,
+	type CmsIntegrationOptions,
 	type CmsMiddlewareContext,
 	type CmsMiddlewareHandler,
 	type CmsMiddlewareNext,
@@ -99,3 +100,10 @@ export {
 	type ProcessImageOptions,
 	processImageToWebpSizes,
 } from "./process-image";
+export {
+	CMS_CONFIG_VIRTUAL_ID,
+	type CmsConfigVitePluginOptions,
+	type CmsVitePlugin,
+	cmsConfigVitePlugin,
+	resolveEditorConfigEntry,
+} from "./vite-config-plugin";

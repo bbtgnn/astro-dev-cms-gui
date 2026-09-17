@@ -5,15 +5,14 @@ import {
 	createFetchClient,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
-import type { UiSchemaNode } from "@cms/fields";
 import { CmsForm } from "@cms/form";
 import { untrack } from "svelte";
+import type { z } from "zod";
 
 let {
 	collection,
 	entryId,
 	schema = null,
-	uiSchema = undefined,
 	value = {},
 	creating = false,
 	revision: revisionProp = null,
@@ -24,8 +23,8 @@ let {
 }: {
 	collection: string;
 	entryId: string;
-	schema?: Record<string, unknown> | null;
-	uiSchema?: UiSchemaNode;
+	/** Live Zod from virtual:@cms/config (components stay module values). */
+	schema?: z.ZodType | null;
 	value?: Record<string, unknown>;
 	creating?: boolean;
 	/** Opaque revision from loaded entry; null/absent when creating. */
@@ -187,7 +186,6 @@ async function saveInvalid() {
 			<CmsForm
 				title={`${collection} / ${creating ? idDraft || "new" : entryId}`}
 				{schema}
-				{uiSchema}
 				{value}
 				{collection}
 				entryId={creating ? idDraft.trim() : entryId}
@@ -195,7 +193,10 @@ async function saveInvalid() {
 			/>
 		{/key}
 	{:else}
-		<p>No JSON Schema for <code>{collection}</code> — raw upsert not wired.</p>
+		<p>
+			No editor schema for <code>{collection}</code> in
+			<code>virtual:@cms/config</code>.
+		</p>
 	{/if}
 
 	<p>

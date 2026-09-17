@@ -7,3 +7,15 @@ declare module "*.svelte" {
 	const component: Component;
 	export default component;
 }
+
+/**
+ * Host-compiled editor configuration (ADR-0003 / ADR-0004).
+ * Live Zod schemas + direct Svelte components — not protocol payloads.
+ */
+declare module "virtual:@cms/config" {
+	import type { z } from "zod";
+
+	export const collections: Record<string, z.ZodType>;
+	const config: { collections: Record<string, z.ZodType> };
+	export default config;
+}

@@ -35,13 +35,15 @@ function fieldUiFromJsonNode(
 function buildNodeFromFieldUi(
 	fieldUi: FieldUi | undefined,
 	component?: unknown,
+	titleFallback?: string,
 ): UiSchemaNode | undefined {
-	if (!fieldUi && !component) return undefined;
+	if (!fieldUi && !component && !titleFallback) return undefined;
 
 	const registry = fieldUi ? getFieldUiDefault(fieldUi.widget) : undefined;
 	const node: UiSchemaNode = {};
 
-	const title = fieldUi?.label;
+	// Direct `meta({ ui: Component, title })` keeps the label when FieldUi is replaced.
+	const title = fieldUi?.label ?? titleFallback;
 	const options = {
 		...(registry?.options ?? {}),
 		...(fieldUi?.options ?? {}),
@@ -81,7 +83,7 @@ function walkJsonSchema(
 	// Component on live Zod wins even when JSON lost it.
 	const component = resolved.component;
 
-	const self = buildNodeFromFieldUi(fieldUi, component);
+	const self = buildNodeFromFieldUi(fieldUi, component, meta?.title);
 	const out: UiSchemaNode = { ...(self ?? {}) };
 
 	if (

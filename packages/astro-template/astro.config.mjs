@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import svelte from "@astrojs/svelte";
+import { createCmsIntegration } from "@cms/routes";
 import { defineConfig } from "astro/config";
 
 const root = path.resolve(
@@ -15,7 +16,12 @@ function pkg(name, entry = "src/index.ts") {
 
 // https://astro.build/config
 export default defineConfig({
-	integrations: [svelte()],
+	integrations: [
+		svelte(),
+		createCmsIntegration({
+			editorConfig: "./src/cms/editor-config.ts",
+		}),
+	],
 	vite: {
 		resolve: {
 			alias: {

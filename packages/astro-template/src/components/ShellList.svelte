@@ -1,32 +1,19 @@
 <!-- PROTOTYPE / SPIKE — P4 shell loop: collections → entries → editor via CMS protocol -->
 <script lang="ts">
+import { collections as editorCollections } from "virtual:@cms/config";
 import {
 	type ContentEntry,
 	createFetchClient,
 	type EntryIdentity,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
-import type { UiSchemaNode } from "@cms/fields";
 import { onMount } from "svelte";
+import type { z } from "zod";
 import ShellEditor from "./ShellEditor.svelte";
 
-type CollectionFormSchemas = {
-	schema: Record<string, unknown>;
-	uiSchema?: UiSchemaNode;
-};
-
-let {
-	schemas = {},
-}: {
-	/** collection name → JSON Schema (from Astro / @cms/fields) */
-	schemas?: Record<string, CollectionFormSchemas>;
-} = $props();
-
-const client = createFetchClient("/_cms");
-
-type View = "collections" | "entries" | "editor" | "create";
-
-let view = $state<View>("collections");
+let view = $state<"collections" | "entries" | "editor" | "create">(
+	"collections",
+);
 let loading = $state(false);
 let error = $state<string | null>(null);
 
@@ -36,10 +23,19 @@ let selectedCollection = $state<string | null>(null);
 let selectedEntryId = $state<string | null>(null);
 let entry = $state.raw<ContentEntry | null>(null);
 
+const client = createFetchClient("/_cms");
+
 function errMsg(e: unknown): string {
 	if (isCmsFetchError(e)) return e.message;
 	return e instanceof Error ? e.message : String(e);
 }
+
+function editorSchemaFor(name: string | null): z.ZodType | null {
+	if (!name) return null;
+	return (editorCollections[name] as z.ZodType | undefined) ?? null;
+}
+
+const activeSchema = $derived(editorSchemaFor(selectedCollection));
 
 async function loadCollections() {
 	loading = true;
@@ -162,10 +158,6 @@ function backToCollections() {
 	error = null;
 }
 
-const activeSchemas = $derived(
-	selectedCollection ? (schemas[selectedCollection] ?? null) : null,
-);
-
 onMount(() => {
 	void loadCollections();
 });
@@ -174,7 +166,8 @@ onMount(() => {
 <main>
 	<p>
 		<strong>PROTOTYPE / SPIKE</strong> — P4 shell loop via CMS protocol client
-		(<code>@cms/crud/fetch-client</code>)
+		(<code>@cms/crud/fetch-client</code>) + editor config from
+		<code>virtual:@cms/config</code>
 	</p>
 
 	<p>
@@ -244,8 +237,7 @@ onMount(() => {
 				collection={selectedCollection}
 				entryId={entry.id}
 				revision={entry.revision}
-				schema={activeSchemas?.schema ?? null}
-				uiSchema={activeSchemas?.uiSchema}
+				schema={activeSchema}
 				value={entry.data}
 				onSaved={(saved) => void onSaved(saved)}
 				onDeleted={() => void onDeleted()}
@@ -257,8 +249,7 @@ onMount(() => {
 		<ShellEditor
 			collection={selectedCollection}
 			entryId="new-post"
-			schema={activeSchemas?.schema ?? null}
-			uiSchema={activeSchemas?.uiSchema}
+			schema={activeSchema}
 			value={{}}
 			creating={true}
 			onSaved={(saved) => void onSaved(saved)}
