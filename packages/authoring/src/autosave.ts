@@ -181,6 +181,8 @@ export function createAutosaveController(
 		}
 
 		queued = data;
+		// Do not leave "saved" visible while a newer write is only pending.
+		options.onStatus("idle");
 		scheduleDebounce();
 	}
 
