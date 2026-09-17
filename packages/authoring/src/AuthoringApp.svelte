@@ -1,6 +1,7 @@
 <!--
   PROTOTYPE — reusable authoring application: collections → entries → editor.
   Receives protocol client + host-compiled editor configuration (ADR-0008).
+  Owns AuthoringSession lifecycle; EntryEditor is a thin session view.
 -->
 <script lang="ts">
 import {
@@ -9,10 +10,13 @@ import {
 	type EntryIdentity,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
-import { onMount } from "svelte";
+import { onDestroy, onMount } from "svelte";
 import type { z } from "zod";
-import { offersAssetUpload, offersEntryDeletion } from "./capabilities";
 import EntryEditor from "./EntryEditor.svelte";
+import {
+	type AuthoringSession,
+	createAuthoringSession,
+} from "./session";
 import type {
 	AuthoringClient,
 	EditorCollections,
@@ -44,21 +48,13 @@ let collections = $state.raw<{ name: string }[]>([]);
 let entries = $state.raw<EntryIdentity[]>([]);
 let selectedCollection = $state<string | null>(null);
 let selectedEntryId = $state<string | null>(null);
-let entry = $state.raw<ContentEntry | null>(null);
-/**
- * Entry id that completed write-back in this editor session.
- * Preview opens the site route for persisted content only (not form state).
- */
-let previewEligibleId = $state<string | null>(null);
-/**
- * Bumps when the editor must remount (open / conflict reload / create→edit).
- * Successful autosave does not bump — keeps browser form state (issue #19).
- */
-let editorMountKey = $state(0);
+/** Parent-owned session — disposed when leaving editor/create or remounting. */
+let session = $state.raw<AuthoringSession | null>(null);
 
-const canDelete = $derived(offersEntryDeletion(capabilities));
-const canUploadAssets = $derived(offersAssetUpload(capabilities));
-const maxUploadBytes = $derived(capabilities?.assets?.maxUploadBytes);
+function disposeSession() {
+	session?.dispose();
+	session = null;
+}
 
 function errMsg(e: unknown): string {
 	if (isCmsFetchError(e)) return e.message;
@@ -81,14 +77,13 @@ async function loadCollections() {
 	loading = true;
 	error = null;
 	try {
+		disposeSession();
 		await loadCapabilities();
 		const result = await client.listCollections();
 		collections = result.value;
 		entries = [];
-		entry = null;
 		selectedCollection = null;
 		selectedEntryId = null;
-		previewEligibleId = null;
 		view = "collections";
 	} catch (e) {
 		error = errMsg(e);
@@ -100,10 +95,9 @@ async function loadCollections() {
 async function selectCollection(name: string) {
 	loading = true;
 	error = null;
+	disposeSession();
 	selectedCollection = name;
 	selectedEntryId = null;
-	entry = null;
-	previewEligibleId = null;
 	try {
 		const result = await client.listEntries(name);
 		entries = result.value;
@@ -121,20 +115,26 @@ async function openEntry(id: string) {
 	loading = true;
 	error = null;
 	selectedEntryId = id;
-	previewEligibleId = null;
 	try {
 		const result = await client.getEntry(selectedCollection, id);
 		if (!result.ok) {
 			error = `${result.code}: ${result.message}`;
-			entry = null;
+			disposeSession();
 			return;
 		}
-		entry = result.value;
-		editorMountKey += 1;
+		disposeSession();
+		session = createAuthoringSession({
+			client,
+			collection: selectedCollection,
+			mode: { kind: "edit", entry: result.value },
+			schema: editorSchemaFor(selectedCollection),
+			capabilities,
+			getPreviewUrl,
+		});
 		view = "editor";
 	} catch (e) {
 		error = errMsg(e);
-		entry = null;
+		disposeSession();
 	} finally {
 		loading = false;
 	}
@@ -142,10 +142,16 @@ async function openEntry(id: string) {
 
 function startCreate() {
 	if (!selectedCollection) return;
+	disposeSession();
 	selectedEntryId = null;
-	entry = null;
-	previewEligibleId = null;
-	editorMountKey += 1;
+	session = createAuthoringSession({
+		client,
+		collection: selectedCollection,
+		mode: { kind: "create" },
+		schema: editorSchemaFor(selectedCollection),
+		capabilities,
+		getPreviewUrl,
+	});
 	view = "create";
 	error = null;
 }
@@ -158,74 +164,39 @@ async function refreshEntries() {
 
 async function onSaved(saved: ContentEntry) {
 	selectedEntryId = saved.id;
-	previewEligibleId = saved.id;
-	if (view === "create") {
-		entry = saved;
-		editorMountKey += 1;
-		view = "editor";
-	}
-	// Existing editor: do not replace entry.data — form holds browser state;
-	// EntryEditor already stores the new revision for the next guarded write.
+	if (view === "create") view = "editor";
 	await refreshEntries();
 }
 
-/** Re-fetch current entry so editor gets canonical data + revision after conflict. */
-async function reloadEntry() {
-	if (!selectedCollection || !selectedEntryId) return;
-	loading = true;
-	error = null;
-	try {
-		const result = await client.getEntry(selectedCollection, selectedEntryId);
-		if (!result.ok) {
-			error = `${result.code}: ${result.message}`;
-			return;
-		}
-		entry = result.value;
-		editorMountKey += 1;
-	} catch (e) {
-		error = errMsg(e);
-	} finally {
-		loading = false;
-	}
-}
-
 async function onDeleted() {
-	entry = null;
+	disposeSession();
 	selectedEntryId = null;
-	previewEligibleId = null;
 	view = "entries";
 	await refreshEntries();
 }
 
 function backToEntries() {
-	entry = null;
+	disposeSession();
 	selectedEntryId = null;
-	previewEligibleId = null;
 	view = "entries";
 	error = null;
 }
 
 function backToCollections() {
+	disposeSession();
 	selectedCollection = null;
 	selectedEntryId = null;
-	entry = null;
 	entries = [];
-	previewEligibleId = null;
 	view = "collections";
 	error = null;
 }
 
-/** Site URL only after successful write-back; identity only — no draft payload. */
-function previewUrlFor(collection: string, id: string): string | null {
-	if (!getPreviewUrl || previewEligibleId !== id) return null;
-	const url = getPreviewUrl(collection, id);
-	if (typeof url !== "string") return null;
-	const trimmed = url.trim();
-	return trimmed.length > 0 ? trimmed : null;
-}
-
 onMount(() => {
 	void loadCollections();
+});
+
+onDestroy(() => {
+	disposeSession();
 });
 </script>
 
@@ -296,38 +267,14 @@ onMount(() => {
 				{/each}
 			</ul>
 		</section>
-	{:else if view === "editor" && selectedCollection && entry}
-		{#key `${entry.id}:${editorMountKey}`}
-			<EntryEditor
-				{client}
-				collection={selectedCollection}
-				entryId={entry.id}
-				revision={entry.revision}
-				schema={activeSchema}
-				value={entry.data}
-				{canDelete}
-				{canUploadAssets}
-				{maxUploadBytes}
-				previewUrl={previewUrlFor(selectedCollection, entry.id)}
-				onSaved={(saved) => void onSaved(saved)}
-				onDeleted={() => void onDeleted()}
-				onCancel={backToEntries}
-				onReload={() => void reloadEntry()}
-			/>
-		{/key}
-	{:else if view === "create" && selectedCollection}
+	{:else if (view === "editor" || view === "create") && selectedCollection && session}
 		<EntryEditor
+			{session}
 			{client}
 			collection={selectedCollection}
-			entryId=""
 			schema={activeSchema}
-			value={{}}
-			creating={true}
-			{canDelete}
-			{canUploadAssets}
-			{maxUploadBytes}
-			previewUrl={null}
 			onSaved={(saved) => void onSaved(saved)}
+			onDeleted={() => void onDeleted()}
 			onCancel={backToEntries}
 		/>
 	{/if}

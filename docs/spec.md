@@ -49,7 +49,7 @@ Host project
                     | Vite module graph
                     v
 Authoring UI
-  shell UI + form shell + SJSF + authoring state
+  shell UI + form shell + SJSF + authoring session
                     |
                     | serializable CMS protocol
                     v

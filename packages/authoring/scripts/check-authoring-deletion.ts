@@ -8,7 +8,7 @@ import {
 	type ContentEntry,
 	resolveCmsCapabilities,
 } from "@cms/crud/fetch-client";
-import { offersEntryDeletion } from "../src/capabilities";
+import { offersEntryDeletion } from "../src/session";
 import { createCheckRecorder } from "./check-helpers";
 import { createFakeClient } from "./fake-client";
 

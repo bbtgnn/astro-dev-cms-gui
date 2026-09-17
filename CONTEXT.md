@@ -20,6 +20,13 @@ _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
 The Svelte interface rendered inside the Astro-hosted authoring shell.
 _Avoid_: admin SPA, CMS frontend
 
+**Authoring session**:
+The in-browser module that owns one content-entry edit against the CMS protocol:
+statuses, guarded write-back (revision chaining), preview eligibility after
+successful save, and form remount rules (create→edit, conflict reload). Debounced
+autosave is an internal seam. The Shell UI is a thin view over the session.
+_Avoid_: autosave controller (as the public face), editor store, form state manager
+
 **Field schema**:
 The per-field definition that pairs a validation/type schema with UI metadata used to generate editors. In this product, usually a Zod schema with FieldUi on `.meta()` (builders return Zod for Astro).
 _Avoid_: Astro schema alone, Zod schema alone, form config

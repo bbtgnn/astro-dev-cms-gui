@@ -4,15 +4,17 @@
  */
 
 export { default as AuthoringApp } from "./AuthoringApp.svelte";
-export {
-	type AuthoringStatus,
-	type AutosaveController,
-	type AutosaveControllerOptions,
-	type AutosaveSaveResult,
-	createAutosaveController,
-} from "./autosave";
-export { offersAssetUpload, offersEntryDeletion } from "./capabilities";
+export type { AuthoringStatus } from "./autosave";
 export { default as EntryEditor } from "./EntryEditor.svelte";
+export {
+	type AuthoringSession,
+	type AuthoringSessionMode,
+	type AuthoringSessionOptions,
+	type AuthoringSessionSnapshot,
+	createAuthoringSession,
+	offersAssetUpload,
+	offersEntryDeletion,
+} from "./session";
 export type {
 	AuthoringClient,
 	EditorCollections,
