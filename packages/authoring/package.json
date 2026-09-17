@@ -22,6 +22,7 @@
 	},
 	"scripts": {
 		"check": "svelte-check --tsconfig ./tsconfig.json",
-		"check:layers": "bun run ./scripts/check-layer-boundaries.ts"
+		"check:layers": "bun run ./scripts/check-layer-boundaries.ts",
+		"check:allowlist": "bun test ./scripts/authoring-deletion.test.ts ./scripts/authoring-assets.test.ts ./scripts/authoring-autosave.test.ts ./scripts/authoring-session.test.ts"
 	}
 }

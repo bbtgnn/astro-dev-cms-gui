@@ -1,5 +1,5 @@
 /**
- * Configurable fake AuthoringClient for authoring check scripts.
+ * Configurable fake AuthoringClient for authoring contract tests.
  * Scenario-specific behavior stays in options — not one opaque mega-fake.
  */
 import {
