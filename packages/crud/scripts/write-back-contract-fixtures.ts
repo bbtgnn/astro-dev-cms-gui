@@ -1,0 +1,123 @@
+/**
+ * Shared fixtures for write-back + CMS protocol contract tests.
+ * Memory and filesystem backends only — no pass/fail recording.
+ */
+
+import { expect } from "bun:test";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { z } from "zod";
+import { createCmsProtocol } from "../src/create-cms-protocol";
+import type { DiscoveredCollection } from "../src/discovery";
+import { memoryWriter } from "../src/memory-writer";
+import { nodeFsWriter } from "../src/node-fs-writer";
+import type { CmsProtocol } from "../src/protocol";
+import type { WriteMode, Writer } from "../src/types";
+import { createWriteMode } from "../src/write-mode";
+
+export type WriterBackend = "memory" | "filesystem";
+
+export type BackendFixture = {
+	backend: WriterBackend;
+	root: string;
+	writer: Writer;
+	cleanup: () => Promise<void>;
+	/** Seed a relative path under root (for collision / pre-existing files). */
+	seedFile: (relPath: string, contents: string) => Promise<void>;
+};
+
+export const postsSchema = z.object({
+	title: z.string(),
+});
+
+export const postsCollection: DiscoveredCollection = {
+	name: "posts",
+	label: "Posts",
+	schema: postsSchema,
+	base: "posts",
+	config: { label: "Posts", base: "posts" },
+};
+
+export const WRITER_BACKENDS: WriterBackend[] = ["memory", "filesystem"];
+
+export function discoveryMode(
+	root: string,
+	writer: Writer,
+	extras?: Partial<Parameters<typeof createWriteMode>[0]>,
+): WriteMode {
+	return createWriteMode({
+		root,
+		allowPaths: ["posts"],
+		writer,
+		collections: [postsCollection],
+		...extras,
+	});
+}
+
+export function discoveryProtocol(
+	root: string,
+	writer: Writer,
+	extras?: Partial<Parameters<typeof createCmsProtocol>[0]>,
+): CmsProtocol {
+	return createCmsProtocol({
+		root,
+		allowPaths: ["posts"],
+		writer,
+		collections: [postsCollection],
+		...extras,
+	});
+}
+
+/** Assert serialized protocol payloads do not leak filesystem paths (ADR-0005). */
+export function expectNoFilesystemPaths(value: unknown): void {
+	const encoded = JSON.stringify(value);
+	const leaks =
+		encoded.includes("\\\\") ||
+		/"(?:\/|file:|[A-Za-z]:\\)/.test(encoded) ||
+		encoded.includes('"root"') ||
+		encoded.includes('"absolutePath"') ||
+		encoded.includes('"pathMap"');
+	expect(leaks).toBe(false);
+}
+
+export async function createMemoryFixture(): Promise<BackendFixture> {
+	// Synthetic root — memoryWriter keys paths; no real directory is created.
+	const root = path.resolve("/cms-write-back-contract-memory");
+	const writer = memoryWriter();
+	return {
+		backend: "memory",
+		root,
+		writer,
+		cleanup: async () => {},
+		seedFile: async (relPath, contents) => {
+			await writer.writeText(path.join(root, relPath), contents);
+		},
+	};
+}
+
+export async function createFilesystemFixture(): Promise<BackendFixture> {
+	const root = await mkdtemp(path.join(tmpdir(), "cms-write-back-"));
+	const writer = nodeFsWriter();
+	return {
+		backend: "filesystem",
+		root,
+		writer,
+		cleanup: async () => {
+			await rm(root, { recursive: true, force: true });
+		},
+		seedFile: async (relPath, contents) => {
+			const abs = path.join(root, relPath);
+			await mkdir(path.dirname(abs), { recursive: true });
+			await writeFile(abs, contents, "utf8");
+		},
+	};
+}
+
+export async function createFixture(
+	backend: WriterBackend,
+): Promise<BackendFixture> {
+	return backend === "memory"
+		? createMemoryFixture()
+		: createFilesystemFixture();
+}
