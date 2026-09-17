@@ -46,6 +46,7 @@ let {
 	entryId = "",
 	assets = null,
 	onSubmit,
+	onChange,
 }: {
 	/** JSON Schema (preferred across Astro islands) or live Zod when same-bundle. */
 	schema?: z.ZodType | Record<string, unknown> | null;
@@ -63,6 +64,11 @@ let {
 	/** Capability-aware image upload seam (omit / null → upload disabled). */
 	assets?: CmsAssetsFieldContext | null;
 	onSubmit?: (data: Record<string, unknown>) => void;
+	/**
+	 * Fired when the author edits form state (Bind setter), not on initial bind.
+	 * Used by authoring autosave — values update immediately; write-back is separate.
+	 */
+	onChange?: (data: Record<string, unknown>) => void;
 } = $props();
 
 const entryBox: CmsEntryContext = $state({
@@ -120,7 +126,10 @@ const form = untrack(() => {
 		value: [
 			() => liveValue,
 			(v) => {
-				liveValue = v as Record<string, unknown>;
+				const record = v as Record<string, unknown>;
+				liveValue = record;
+				// Author edits only — initialValue assignment above does not use this setter.
+				onChange?.(record);
 			},
 		],
 		onSubmit: (data) => {

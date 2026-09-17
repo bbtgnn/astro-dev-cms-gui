@@ -50,6 +50,11 @@ let entry = $state.raw<ContentEntry | null>(null);
  * Preview opens the site route for persisted content only (not form state).
  */
 let previewEligibleId = $state<string | null>(null);
+/**
+ * Bumps when the editor must remount (open / conflict reload / create→edit).
+ * Successful autosave does not bump — keeps browser form state (issue #19).
+ */
+let editorMountKey = $state(0);
 
 const canDelete = $derived(offersEntryDeletion(capabilities));
 const canUploadAssets = $derived(offersAssetUpload(capabilities));
@@ -125,6 +130,7 @@ async function openEntry(id: string) {
 			return;
 		}
 		entry = result.value;
+		editorMountKey += 1;
 		view = "editor";
 	} catch (e) {
 		error = errMsg(e);
@@ -139,6 +145,7 @@ function startCreate() {
 	selectedEntryId = null;
 	entry = null;
 	previewEligibleId = null;
+	editorMountKey += 1;
 	view = "create";
 	error = null;
 }
@@ -151,9 +158,14 @@ async function refreshEntries() {
 
 async function onSaved(saved: ContentEntry) {
 	selectedEntryId = saved.id;
-	entry = saved;
 	previewEligibleId = saved.id;
-	view = "editor";
+	if (view === "create") {
+		entry = saved;
+		editorMountKey += 1;
+		view = "editor";
+	}
+	// Existing editor: do not replace entry.data — form holds browser state;
+	// EntryEditor already stores the new revision for the next guarded write.
 	await refreshEntries();
 }
 
@@ -169,6 +181,7 @@ async function reloadEntry() {
 			return;
 		}
 		entry = result.value;
+		editorMountKey += 1;
 	} catch (e) {
 		error = errMsg(e);
 	} finally {
@@ -288,7 +301,7 @@ onMount(() => {
 			</ul>
 		</section>
 	{:else if view === "editor" && selectedCollection && entry}
-		{#key entry.revision}
+		{#key `${entry.id}:${editorMountKey}`}
 			<EntryEditor
 				{client}
 				collection={selectedCollection}

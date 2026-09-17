@@ -1,6 +1,7 @@
 <!--
-  PROTOTYPE — entry editor: form shell + guarded upsert / delete via protocol client.
+  PROTOTYPE — entry editor: form shell + debounced guarded autosave via protocol.
   Host injects the client; no Astro / Node / write-back imports (ADR-0008).
+  Invalid values stay in browser form state only (ADR-0014); no reload recovery (#10).
 -->
 <script lang="ts">
 import {
@@ -8,9 +9,15 @@ import {
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
 import { type CmsAssetsFieldContext, CmsForm } from "@cms/form";
-import { untrack } from "svelte";
+import { onDestroy, untrack } from "svelte";
 import type { z } from "zod";
+import {
+	type AuthoringStatus,
+	createAutosaveController,
+} from "./autosave";
 import type { AuthoringClient } from "./types";
+
+const AUTOSAVE_DEBOUNCE_MS = 400;
 
 let {
 	client,
@@ -57,14 +64,13 @@ let {
 /** Create-flow id field; default matches tracer pathMap `new-post`. */
 let idDraft = $state("new-post");
 /**
- * Local opaque revision; seeded from prop (parent remounts via `{#key}` on reload).
- * Updated after successful save.
+ * Local opaque revision; seeded from prop (parent remounts via mount key on reload).
+ * Updated after every successful write-back for the next guarded write.
  */
 let revision = $state<string | null>(untrack(() => revisionProp));
 let busy = $state(false);
-let saveStatus = $state<
-	"idle" | "saving" | "saved" | "validation_failed" | "conflict"
->("idle");
+let deleteBusy = $state(false);
+let saveStatus = $state<AuthoringStatus>("idle");
 let error = $state<string | null>(null);
 let issues = $state.raw<unknown>(null);
 let lastSaved = $state.raw<ContentEntry | null>(null);
@@ -91,58 +97,89 @@ function clearErrors() {
 	issues = null;
 }
 
-async function save(data: Record<string, unknown>) {
+function isClientValid(data: Record<string, unknown>): boolean {
+	if (creating && !idDraft.trim()) return false;
+	if (!schema) return true;
+	return schema.safeParse(data).success;
+}
+
+async function writeBack(
+	data: Record<string, unknown>,
+): Promise<
+	| { ok: true; entry: ContentEntry }
+	| {
+			ok: false;
+			code: string;
+			message: string;
+			issues?: unknown;
+	  }
+> {
 	const id = creating ? idDraft.trim() : entryId;
 	if (!id) {
-		error = "Entry id is required";
-		issues = null;
-		saveStatus = "idle";
-		return;
+		return { ok: false, code: "error", message: "Entry id is required" };
 	}
-	busy = true;
-	saveStatus = "saving";
-	clearErrors();
-	try {
-		const result = await client.upsertEntry({
-			id,
-			collection,
-			data,
-			expectedRevision: creating ? null : revision,
-		});
-		if (!result.ok) {
-			error = result.message;
-			issues = result.issues ?? null;
-			if (result.code === "validation_failed") {
-				saveStatus = "validation_failed";
-			} else if (result.code === "conflict") {
-				saveStatus = "conflict";
-			} else {
-				saveStatus = "idle";
-			}
-			return;
-		}
-		revision = result.value.revision;
-		lastSaved = result.value;
-		saveStatus = "saved";
-		onSaved?.(result.value);
-	} catch (e) {
-		saveStatus = "idle";
-		if (isCmsFetchError(e)) {
-			error = e.message;
-			issues = e.issues ?? null;
-		} else {
-			error = e instanceof Error ? e.message : String(e);
-			issues = null;
-		}
-	} finally {
-		busy = false;
+	const result = await client.upsertEntry({
+		id,
+		collection,
+		data,
+		expectedRevision: creating ? null : revision,
+	});
+	if (!result.ok) {
+		return {
+			ok: false,
+			code: result.code,
+			message: result.message,
+			issues: result.issues,
+		};
 	}
+	return { ok: true, entry: result.value };
+}
+
+const autosave = createAutosaveController({
+	debounceMs: AUTOSAVE_DEBOUNCE_MS,
+	isClientValid,
+	save: writeBack,
+	onStatus: (status) => {
+		saveStatus = status;
+		busy = status === "saving" || deleteBusy;
+		if (
+			status === "saving" ||
+			status === "client_invalid" ||
+			status === "saved"
+		) {
+			clearErrors();
+		}
+	},
+	onSaved: (entry) => {
+		revision = entry.revision;
+		lastSaved = entry;
+		onSaved?.(entry);
+	},
+	onError: (detail) => {
+		error = detail.message;
+		issues = detail.issues ?? null;
+	},
+});
+
+onDestroy(() => {
+	autosave.dispose();
+});
+
+function onFormChange(data: Record<string, unknown>) {
+	autosave.handleChange(data);
+}
+
+/** Explicit Save — flush pending valid payload immediately. */
+function saveNow(data: Record<string, unknown>) {
+	autosave.handleChange(data);
+	autosave.flushNow();
 }
 
 async function remove() {
 	if (creating || !canDelete) return;
 	if (!confirm(`Delete ${collection}/${entryId}?`)) return;
-	busy = true;
+	deleteBusy = true;
+	busy = saveStatus === "saving" || deleteBusy;
 	clearErrors();
 	saveStatus = "idle";
 	try {
@@ -162,19 +199,51 @@ async function remove() {
 			issues = null;
 		}
 	} finally {
+		deleteBusy = false;
 		busy = false;
 	}
 }
 
-/** Force invalid payload to demo authoritative validation_failed (posts title must be string). */
+/** Force invalid payload to demo authoritative_error (posts title must be string). */
 async function saveInvalid() {
-	await save({
-		title: 123,
-		draft: false,
-		body: "intentionally invalid title type",
-		author: "ada",
-		summary: { en: "x" },
-	} as unknown as Record<string, unknown>);
+	saveStatus = "saving";
+	busy = true;
+	clearErrors();
+	try {
+		const result = await writeBack({
+			title: 123,
+			draft: false,
+			body: "intentionally invalid title type",
+			author: "ada",
+			summary: { en: "x" },
+		} as unknown as Record<string, unknown>);
+		if (!result.ok) {
+			error = result.message;
+			issues = result.issues ?? null;
+			saveStatus =
+				result.code === "conflict"
+					? "conflict"
+					: result.code === "validation_failed"
+						? "authoritative_error"
+						: "idle";
+			return;
+		}
+		revision = result.entry.revision;
+		lastSaved = result.entry;
+		saveStatus = "saved";
+		onSaved?.(result.entry);
+	} catch (e) {
+		saveStatus = "idle";
+		if (isCmsFetchError(e)) {
+			error = e.message;
+			issues = e.issues ?? null;
+		} else {
+			error = e instanceof Error ? e.message : String(e);
+			issues = null;
+		}
+	} finally {
+		busy = false;
+	}
 }
 
 /** Open the real Astro site route for persisted content — no draft transport. */
@@ -182,16 +251,31 @@ function openPreview() {
 	if (!previewUrl) return;
 	window.open(previewUrl, "_blank", "noopener,noreferrer");
 }
+
+function statusLabel(status: AuthoringStatus): string | null {
+	switch (status) {
+		case "saving":
+			return "saving";
+		case "saved":
+			return "saved";
+		case "client_invalid":
+			return "client-invalid";
+		case "authoritative_error":
+			return "authoritative-error";
+		case "conflict":
+			return "conflict";
+		default:
+			return null;
+	}
+}
 </script>
 
 <section>
 	<p>
 		<strong>Editor</strong>
 		— {collection}/{creating ? "(new)" : entryId}
-		{#if saveStatus === "saving"}
-			<span>…saving</span>
-		{:else if saveStatus === "saved"}
-			<span>— saved</span>
+		{#if statusLabel(saveStatus)}
+			<span data-authoring-status={saveStatus}>— {statusLabel(saveStatus)}</span>
 		{:else if busy}
 			<span>…busy</span>
 		{/if}
@@ -207,8 +291,10 @@ function openPreview() {
 		</p>
 	{/if}
 
-	{#if saveStatus === "validation_failed"}
-		<p role="alert">authoritative validation failure: {error}</p>
+	{#if saveStatus === "client_invalid"}
+		<p role="status">client-invalid — kept in browser form only (not written)</p>
+	{:else if saveStatus === "authoritative_error"}
+		<p role="alert">authoritative-error: {error}</p>
 	{:else if saveStatus === "conflict"}
 		<p role="alert">conflict: {error}</p>
 		<p>
@@ -227,7 +313,7 @@ function openPreview() {
 	{/if}
 
 	{#if schema}
-		{#key `${collection}:${creating ? "new" : entryId}:${JSON.stringify(value)}`}
+		{#key `${collection}:${creating ? "new" : entryId}`}
 			<CmsForm
 				title={`${collection} / ${creating ? idDraft || "new" : entryId}`}
 				{schema}
@@ -235,7 +321,8 @@ function openPreview() {
 				{collection}
 				entryId={creating ? idDraft.trim() : entryId}
 				assets={assetsContext}
-				onSubmit={(data) => void save(data)}
+				onChange={onFormChange}
+				onSubmit={(data) => saveNow(data)}
 			/>
 		{/key}
 	{:else}
@@ -259,7 +346,7 @@ function openPreview() {
 			>
 		{/if}
 		<button type="button" disabled={busy} onclick={() => void saveInvalid()}
-			>save invalid (expect validation_failed)</button
+			>save invalid (expect authoritative-error)</button
 		>
 	</p>
 
