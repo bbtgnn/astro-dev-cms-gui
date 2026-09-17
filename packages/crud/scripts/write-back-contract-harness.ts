@@ -475,12 +475,14 @@ async function createFilesystemFixture(): Promise<BackendFixture> {
 	};
 }
 
-/**
- * Run the full contract suite once per backend.
- * Same scenarios for memory and filesystem write-back.
- */
-export async function runWriteBackContract(
-	backends: WriterBackend[] = ["memory", "filesystem"],
+/** Fixture lifecycle shell shared by every exported contract runner. */
+async function runAgainstBackends(
+	backends: WriterBackend[],
+	scenarios: (
+		fixture: BackendFixture,
+		failures: ContractFailure[],
+		passed: ContractRunResult["passed"],
+	) => Promise<void>,
 ): Promise<ContractRunResult> {
 	const failures: ContractFailure[] = [];
 	const passed: ContractRunResult["passed"] = [];
@@ -491,15 +493,27 @@ export async function runWriteBackContract(
 				? await createMemoryFixture()
 				: await createFilesystemFixture();
 		try {
-			await runAllowlistScenarios(fixture, failures, passed);
-			await runListReadSaveScenarios(fixture, failures, passed);
-			await runYamlCollisionScenario(fixture, failures, passed);
+			await scenarios(fixture, failures, passed);
 		} finally {
 			await fixture.cleanup();
 		}
 	}
 
 	return { ok: failures.length === 0, failures, passed };
+}
+
+/**
+ * Run the full contract suite once per backend.
+ * Same scenarios for memory and filesystem write-back.
+ */
+export async function runWriteBackContract(
+	backends: WriterBackend[] = ["memory", "filesystem"],
+): Promise<ContractRunResult> {
+	return runAgainstBackends(backends, async (fixture, failures, passed) => {
+		await runAllowlistScenarios(fixture, failures, passed);
+		await runListReadSaveScenarios(fixture, failures, passed);
+		await runYamlCollisionScenario(fixture, failures, passed);
+	});
 }
 
 function assertNoFilesystemPaths(
@@ -1075,22 +1089,7 @@ async function runDeletionCapabilityScenarios(
 export async function runReadSideProtocolContract(
 	backends: WriterBackend[] = ["memory", "filesystem"],
 ): Promise<ContractRunResult> {
-	const failures: ContractFailure[] = [];
-	const passed: ContractRunResult["passed"] = [];
-
-	for (const kind of backends) {
-		const fixture =
-			kind === "memory"
-				? await createMemoryFixture()
-				: await createFilesystemFixture();
-		try {
-			await runReadSideProtocolScenarios(fixture, failures, passed);
-		} finally {
-			await fixture.cleanup();
-		}
-	}
-
-	return { ok: failures.length === 0, failures, passed };
+	return runAgainstBackends(backends, runReadSideProtocolScenarios);
 }
 
 /**
@@ -1100,22 +1099,7 @@ export async function runReadSideProtocolContract(
 export async function runWriteSideProtocolContract(
 	backends: WriterBackend[] = ["memory", "filesystem"],
 ): Promise<ContractRunResult> {
-	const failures: ContractFailure[] = [];
-	const passed: ContractRunResult["passed"] = [];
-
-	for (const kind of backends) {
-		const fixture =
-			kind === "memory"
-				? await createMemoryFixture()
-				: await createFilesystemFixture();
-		try {
-			await runWriteSideProtocolScenarios(fixture, failures, passed);
-		} finally {
-			await fixture.cleanup();
-		}
-	}
-
-	return { ok: failures.length === 0, failures, passed };
+	return runAgainstBackends(backends, runWriteSideProtocolScenarios);
 }
 
 /**
@@ -1124,22 +1108,7 @@ export async function runWriteSideProtocolContract(
 export async function runDeletionCapabilityContract(
 	backends: WriterBackend[] = ["memory", "filesystem"],
 ): Promise<ContractRunResult> {
-	const failures: ContractFailure[] = [];
-	const passed: ContractRunResult["passed"] = [];
-
-	for (const kind of backends) {
-		const fixture =
-			kind === "memory"
-				? await createMemoryFixture()
-				: await createFilesystemFixture();
-		try {
-			await runDeletionCapabilityScenarios(fixture, failures, passed);
-		} finally {
-			await fixture.cleanup();
-		}
-	}
-
-	return { ok: failures.length === 0, failures, passed };
+	return runAgainstBackends(backends, runDeletionCapabilityScenarios);
 }
 
 /**
@@ -1386,20 +1355,5 @@ async function runAssetsCapabilityScenarios(
 export async function runAssetsCapabilityContract(
 	backends: WriterBackend[] = ["memory", "filesystem"],
 ): Promise<ContractRunResult> {
-	const failures: ContractFailure[] = [];
-	const passed: ContractRunResult["passed"] = [];
-
-	for (const kind of backends) {
-		const fixture =
-			kind === "memory"
-				? await createMemoryFixture()
-				: await createFilesystemFixture();
-		try {
-			await runAssetsCapabilityScenarios(fixture, failures, passed);
-		} finally {
-			await fixture.cleanup();
-		}
-	}
-
-	return { ok: failures.length === 0, failures, passed };
+	return runAgainstBackends(backends, runAssetsCapabilityScenarios);
 }
