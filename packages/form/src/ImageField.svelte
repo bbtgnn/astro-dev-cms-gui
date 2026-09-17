@@ -1,6 +1,6 @@
 <!--
-  Custom sjsf textWidget: image picker → POST /_cms/api/images → path string.
-  Needs cms.entry context from CmsForm (collection + id).
+  Custom sjsf textWidget: image picker → protocol client uploadImage → path string.
+  Needs cms.entry + cms.assets context from CmsForm (collection, id, capability).
 -->
 <script lang="ts">
 	import type { ComponentProps } from "@sjsf/form";
@@ -12,8 +12,25 @@
 		id: string;
 	};
 
+	/** Injected upload seam — no hard-coded transport URL (ADR-0005 / ADR-0008). */
+	export type CmsAssetsFieldContext = {
+		/** From protocol capabilities — false → disabled, no network calls. */
+		uploadEnabled: boolean;
+		maxUploadBytes?: number;
+		uploadImage?: (input: {
+			file: Blob;
+			collection: string;
+			id: string;
+			name?: string;
+			widths?: number[];
+			quality?: number;
+			filename?: string;
+		}) => Promise<{ ok: true; path: string } | { ok: false; message: string }>;
+	};
+
 	const ctx = getFormContext();
 	const entryCtx = getContext<CmsEntryContext>("cms.entry");
+	const assetsCtx = getContext<CmsAssetsFieldContext | null>("cms.assets");
 
 	let {
 		config,
@@ -22,6 +39,12 @@
 
 	let busy = $state(false);
 	let error = $state<string | null>(null);
+
+	const uploadEnabled = $derived(assetsCtx?.uploadEnabled === true);
+	const hasEntry = $derived(
+		Boolean(entryCtx?.collection && entryCtx?.id),
+	);
+	const canUpload = $derived(uploadEnabled && hasEntry && !busy);
 
 	function uiOptions(): Record<string, unknown> {
 		return (config.uiSchema?.["ui:options"] ?? {}) as Record<string, unknown>;
@@ -50,47 +73,39 @@
 
 	const title = $derived(uiTitleOption(ctx, config.uiSchema) ?? "Image");
 
-	async function uploadImage(file: File) {
-		const body = new FormData();
-		body.append("file", file, file.name);
-		body.append("collection", entryCtx.collection);
-		body.append("id", entryCtx.id);
-		body.append("name", folderName());
-		const w = widths();
-		if (w) body.append("widths", JSON.stringify(w));
-		const q = quality();
-		if (q != null) body.append("quality", String(q));
-
-		const res = await fetch("/_cms/api/images", {
-			method: "POST",
-			headers: { accept: "application/json" },
-			body,
-		});
-		const text = await res.text();
-		let parsed: { path?: string; error?: string } = {};
-		try {
-			parsed = JSON.parse(text) as { path?: string; error?: string };
-		} catch {
-			parsed = {};
-		}
-		if (!res.ok) {
-			throw new Error(parsed.error ?? `${res.status} ${res.statusText}`);
-		}
-		if (!parsed.path) throw new Error("Upload response missing path");
-		return parsed.path;
-	}
-
 	async function onFile(files: FileList | null) {
 		const file = files?.[0];
 		if (!file) return;
+		if (!uploadEnabled || !assetsCtx?.uploadImage) {
+			error = "Image upload is not available on this backend";
+			return;
+		}
 		if (!entryCtx?.collection || !entryCtx?.id) {
 			error = "Missing entry context (collection/id) for image upload";
+			return;
+		}
+		const maxBytes = assetsCtx.maxUploadBytes;
+		if (maxBytes != null && file.size > maxBytes) {
+			error = `File exceeds max upload size (${maxBytes} bytes)`;
 			return;
 		}
 		busy = true;
 		error = null;
 		try {
-			value = await uploadImage(file);
+			const result = await assetsCtx.uploadImage({
+				file,
+				collection: entryCtx.collection,
+				id: entryCtx.id,
+				name: folderName(),
+				widths: widths(),
+				quality: quality(),
+				filename: file.name,
+			});
+			if (!result.ok) {
+				error = result.message;
+				return;
+			}
+			value = result.path;
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		} finally {
@@ -105,7 +120,7 @@
 		<input
 			type="file"
 			accept="image/jpeg,image/png,image/webp"
-			disabled={busy || !entryCtx?.id}
+			disabled={!canUpload}
 			onchange={(e) => void onFile(e.currentTarget.files)}
 		/>
 	</label>
@@ -118,7 +133,9 @@
 	{#if error}
 		<p class="cms-image-error" role="alert">{error}</p>
 	{/if}
-	{#if !entryCtx?.id}
+	{#if !uploadEnabled}
+		<p class="cms-image-hint">Image upload is unavailable on this backend.</p>
+	{:else if !hasEntry}
 		<p class="cms-image-hint">Save/open an entry id before uploading.</p>
 	{/if}
 </div>

@@ -4,6 +4,6 @@
  */
 
 export { default as AuthoringApp } from "./AuthoringApp.svelte";
-export { offersEntryDeletion } from "./capabilities";
+export { offersAssetUpload, offersEntryDeletion } from "./capabilities";
 export { default as EntryEditor } from "./EntryEditor.svelte";
 export type { AuthoringClient, EditorCollections } from "./types";

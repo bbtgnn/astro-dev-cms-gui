@@ -1,9 +1,14 @@
 /**
- * Portable check: sharp convert + memoryWriter image assets allowlist.
+ * Portable check: sharp convert + protocol uploadImage + entry save (issue #17).
+ * Also keeps writeImageAssets / srcset / safe-read allowlist coverage.
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createWriteMode, memoryWriter } from "@cms/crud";
+import {
+	adaptWriteModeToProtocol,
+	createWriteMode,
+	memoryWriter,
+} from "@cms/crud";
 import { z } from "zod";
 import {
 	contentAssetPath,
@@ -18,6 +23,7 @@ const root = path.join(
 
 const postsSchema = z.object({
 	title: z.string(),
+	cover: z.string().optional(),
 });
 
 const writer = memoryWriter();
@@ -38,12 +44,19 @@ const wm = createWriteMode({
 	},
 });
 
-await wm.upsertEntry({
+const protocol = adaptWriteModeToProtocol(wm, {
+	processImage: processImageToWebpSizes,
+});
+
+const created = await protocol.upsertEntry({
 	id: "hello",
 	collection: "posts",
 	data: { title: "img check" },
 	expectedRevision: null,
 });
+if (!created.ok) {
+	throw new Error(`create failed: ${JSON.stringify(created)}`);
+}
 
 /** Minimal 1×1 PNG (red). */
 const png = Uint8Array.from(
@@ -115,5 +128,60 @@ try {
 }
 if (!denied) throw new Error("expected unsafe asset 400");
 
+// Protocol uploadImage → field path → content entry save (self-host validation).
+const caps = await protocol.getCapabilities();
+if (!caps.ok || !caps.value.assets.uploadImage) {
+	throw new Error(`expected assets capability: ${JSON.stringify(caps)}`);
+}
+
+const uploaded = await protocol.uploadImage({
+	collection: "posts",
+	id: "hello",
+	name: "hero",
+	bytes: png,
+	filename: "pixel.png",
+	widths: [480, 960, 1600],
+});
+if (!uploaded.ok) {
+	throw new Error(`uploadImage failed: ${JSON.stringify(uploaded)}`);
+}
+if (uploaded.value.path !== "./hello/hero/cover.webp") {
+	throw new Error(`unexpected upload path: ${uploaded.value.path}`);
+}
+
+const saved = await protocol.upsertEntry({
+	id: "hello",
+	collection: "posts",
+	data: { title: "img check", cover: uploaded.value.path },
+	expectedRevision: created.value.revision,
+});
+if (!saved.ok) {
+	throw new Error(`save after upload failed: ${JSON.stringify(saved)}`);
+}
+if (saved.value.data.cover !== uploaded.value.path) {
+	throw new Error(`cover not persisted: ${JSON.stringify(saved.value.data)}`);
+}
+
+const reread = await protocol.getEntry("posts", "hello");
+if (!reread.ok || reread.value.data.cover !== uploaded.value.path) {
+	throw new Error(`reread missing cover: ${JSON.stringify(reread)}`);
+}
+
+// Failed processing must not invent a content reference.
+const bad = await protocol.uploadImage({
+	collection: "posts",
+	id: "hello",
+	name: "nope",
+	bytes: new Uint8Array(0),
+});
+if (bad.ok) {
+	throw new Error("expected empty upload to fail");
+}
+const still = await protocol.getEntry("posts", "hello");
+if (!still.ok || still.value.data.cover !== uploaded.value.path) {
+	throw new Error("failed upload must not change persisted cover");
+}
+
 console.log("ok  image convert + writeImageAssets + srcset helpers");
+console.log("ok  protocol uploadImage + entry save");
 console.log("ok  items", items.map((i) => `${i.file}@${i.width}`).join(", "));

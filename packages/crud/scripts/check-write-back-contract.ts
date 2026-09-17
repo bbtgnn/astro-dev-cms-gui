@@ -1,10 +1,11 @@
 /**
  * Portable check: write-back (#11) + CMS protocol read (#12) + write (#13)
- * + deletion capability (#16).
+ * + deletion capability (#16) + assets capability (#17).
  * Run: bun run check:allowlist
  */
 import {
 	type ContractRunResult,
+	runAssetsCapabilityContract,
 	runDeletionCapabilityContract,
 	runReadSideProtocolContract,
 	runWriteBackContract,
@@ -33,9 +34,18 @@ printResult("write-side protocol contract", writeSide);
 const deletion = await runDeletionCapabilityContract();
 printResult("deletion capability contract", deletion);
 
-if (!writeBack.ok || !readSide.ok || !writeSide.ok || !deletion.ok) {
+const assets = await runAssetsCapabilityContract();
+printResult("assets capability contract", assets);
+
+if (
+	!writeBack.ok ||
+	!readSide.ok ||
+	!writeSide.ok ||
+	!deletion.ok ||
+	!assets.ok
+) {
 	process.exit(1);
 }
 console.log(
-	"write-back + read-side + write-side + deletion capability contract checks passed",
+	"write-back + read-side + write-side + deletion + assets capability contract checks passed",
 );

@@ -53,12 +53,33 @@ export type SaveEntryFailureCode =
 export type SaveEntryResult = CmsResult<ContentEntry, SaveEntryFailureCode>;
 
 /**
+ * Serializable asset / image-upload advertisement (ADR-0005 / ADR-0008).
+ * Limits are advisory for the authoring UI — no transport details.
+ */
+export type CmsAssetsCapability = {
+	/** Whether image upload + write-back is available on this implementation. */
+	uploadImage: boolean;
+	/** Max source upload size in bytes. */
+	maxUploadBytes: number;
+	/** Default width variants when the field does not override. */
+	defaultWidths: number[];
+};
+
+/**
  * Serializable optional-ops advertisement (ADR-0005 / ADR-0008).
- * Booleans only — no implementation or transport details.
+ * No implementation or transport details.
  */
 export type CmsCapabilities = {
 	/** Whether content-entry deletion is available on this implementation. */
 	deleteEntry: boolean;
+	/** Asset upload support and relevant limits. */
+	assets: CmsAssetsCapability;
+};
+
+/** Partial override for {@link resolveCmsCapabilities}. */
+export type CmsCapabilitiesInput = {
+	deleteEntry?: boolean;
+	assets?: Partial<CmsAssetsCapability>;
 };
 
 export type GetCapabilitiesResult = CmsOk<CmsCapabilities>;
@@ -72,6 +93,32 @@ export type DeleteEntryFailureCode =
 
 export type DeleteEntryResult = CmsResult<null, DeleteEntryFailureCode>;
 
+/** Image upload input — raw bytes; processing stays behind the protocol seam. */
+export type UploadImageInput = {
+	collection: string;
+	id: string;
+	/** Folder name under the entry id dir (default `cover`). */
+	name?: string;
+	bytes: Uint8Array;
+	/** Optional original filename for diagnostics / content-type hints. */
+	filename?: string;
+	widths?: number[];
+	quality?: number;
+};
+
+/** Upload failure codes, including capability negotiation. */
+export type UploadImageFailureCode =
+	| "forbidden"
+	| "conflict"
+	| "validation_failed"
+	| "unsupported_capability"
+	| "processing_failed";
+
+export type UploadImageResult = CmsResult<
+	WrittenImageAssets,
+	UploadImageFailureCode
+>;
+
 /**
  * Principal external seam for the authoring shell.
  * Read and guarded-save ops return typed outcomes.
@@ -83,6 +130,11 @@ export type CmsProtocol = {
 	getEntry(collection: string, id: string): Promise<GetEntryResult>;
 	upsertEntry(input: UpsertEntryInput): Promise<SaveEntryResult>;
 	deleteEntry(collection: string, id: string): Promise<DeleteEntryResult>;
+	/**
+	 * Process source bytes and write canonical WebP assets.
+	 * Implementations without asset support return `unsupported_capability`.
+	 */
+	uploadImage(input: UploadImageInput): Promise<UploadImageResult>;
 	writeImageAssets(input: WriteImageAssetsInput): Promise<WrittenImageAssets>;
 	readAsset(relFromRoot: string): Promise<ReadAssetResult>;
 };
@@ -104,16 +156,35 @@ export function cmsErr<C extends string>(
 	};
 }
 
+/** Default asset limits advertised by the filesystem / memory adapter. */
+export const DEFAULT_CMS_ASSETS_CAPABILITY: CmsAssetsCapability = {
+	uploadImage: true,
+	maxUploadBytes: 10 * 1024 * 1024,
+	defaultWidths: [480, 960, 1600],
+};
+
 /** Default capabilities when an implementation does not override. */
 export const DEFAULT_CMS_CAPABILITIES: CmsCapabilities = {
 	deleteEntry: true,
+	assets: { ...DEFAULT_CMS_ASSETS_CAPABILITY },
 };
 
 export function resolveCmsCapabilities(
-	partial?: Partial<CmsCapabilities> | null,
+	partial?: CmsCapabilitiesInput | null,
 ): CmsCapabilities {
+	const assetsPartial = partial?.assets;
 	return {
 		deleteEntry: partial?.deleteEntry ?? DEFAULT_CMS_CAPABILITIES.deleteEntry,
+		assets: {
+			uploadImage:
+				assetsPartial?.uploadImage ?? DEFAULT_CMS_ASSETS_CAPABILITY.uploadImage,
+			maxUploadBytes:
+				assetsPartial?.maxUploadBytes ??
+				DEFAULT_CMS_ASSETS_CAPABILITY.maxUploadBytes,
+			defaultWidths: assetsPartial?.defaultWidths
+				? [...assetsPartial.defaultWidths]
+				: [...DEFAULT_CMS_ASSETS_CAPABILITY.defaultWidths],
+		},
 	};
 }
 
@@ -130,6 +201,8 @@ export function httpStatusForCmsErr(code: string): number {
 			return 400;
 		case "unsupported_capability":
 			return 501;
+		case "processing_failed":
+			return 422;
 		default:
 			return 400;
 	}

@@ -3,7 +3,7 @@
  * Domain behavior stays in write-mode; this only shapes typed outcomes.
  */
 import {
-	type CmsCapabilities,
+	type CmsCapabilitiesInput,
 	type CmsProtocol,
 	cmsErr,
 	cmsOk,
@@ -11,11 +11,15 @@ import {
 	type GetEntryResult,
 	resolveCmsCapabilities,
 	type SaveEntryResult,
+	type UploadImageInput,
+	type UploadImageResult,
 } from "./protocol";
 import type {
 	CreateWriteModeOptions,
 	UpsertEntryInput,
+	WriteImageAssetsInput,
 	WriteMode,
+	WrittenImageAssets,
 } from "./types";
 import { createWriteMode } from "./write-mode";
 
@@ -26,9 +30,23 @@ type ErrLike = {
 	issues?: unknown;
 };
 
+/** Host-injected pixel pipeline (Sharp stays out of this package). */
+export type ProcessImageToWebpSizes = (
+	input: Uint8Array,
+	opts?: { widths?: number[]; quality?: number },
+) => Promise<{
+	files: Array<{ relativeToFolder: string; bytes: Uint8Array; width: number }>;
+	widths: number[];
+}>;
+
 export type AdaptProtocolOptions = {
-	/** Override optional protocol capabilities (defaults: deletion supported). */
-	capabilities?: Partial<CmsCapabilities>;
+	/** Override optional protocol capabilities (defaults: deletion + assets). */
+	capabilities?: CmsCapabilitiesInput;
+	/**
+	 * Image processor used by {@link CmsProtocol.uploadImage}.
+	 * Required when `assets.uploadImage` is true; keep Sharp in the host/routes layer.
+	 */
+	processImage?: ProcessImageToWebpSizes;
 };
 
 export type CreateCmsProtocolOptions = CreateWriteModeOptions &
@@ -91,12 +109,58 @@ function deleteEntryFailure(err: unknown): DeleteEntryResult | null {
 	return null;
 }
 
+function uploadImageFailure(err: unknown): UploadImageResult | null {
+	const e = err as ErrLike;
+	if (e.status === 403 || e.code === "PATH_NOT_ALLOWED") {
+		return cmsErr("forbidden", "Forbidden");
+	}
+	if (
+		e.status === 409 ||
+		e.code === "YAML_EXT_COLLISION" ||
+		e.code === "REVISION_CONFLICT"
+	) {
+		return cmsErr("conflict", e.message || "Conflict");
+	}
+	if (
+		e.status === 400 ||
+		e.code === "VALIDATION_FAILED" ||
+		e.code === "UNSAFE_ASSET" ||
+		e.code === "INVALID_WIDTHS" ||
+		e.code === "MISSING_FILE" ||
+		e.code === "MISSING_ENTRY"
+	) {
+		return cmsErr("validation_failed", e.message || "Validation failed", {
+			issues: e.issues,
+		});
+	}
+	if (e.status === 501 || e.code === "unsupported_capability") {
+		return cmsErr(
+			"unsupported_capability",
+			e.message || "Image upload is not supported",
+		);
+	}
+	return null;
+}
+
 /** Lift an existing WriteMode behind the protocol interface. */
 export function adaptWriteModeToProtocol(
 	wm: WriteMode,
 	options?: AdaptProtocolOptions,
 ): CmsProtocol {
 	const capabilities = resolveCmsCapabilities(options?.capabilities);
+	const processImage = options?.processImage;
+
+	async function writeImageAssetsGuarded(
+		input: WriteImageAssetsInput,
+	): Promise<WrittenImageAssets> {
+		if (!capabilities.assets.uploadImage) {
+			throw Object.assign(new Error("Image assets are not supported"), {
+				status: 501,
+				code: "unsupported_capability",
+			});
+		}
+		return wm.writeImageAssets(input);
+	}
 
 	return {
 		async getCapabilities() {
@@ -156,7 +220,66 @@ export function adaptWriteModeToProtocol(
 			}
 		},
 
-		writeImageAssets: (input) => wm.writeImageAssets(input),
+		async uploadImage(input: UploadImageInput): Promise<UploadImageResult> {
+			if (!capabilities.assets.uploadImage) {
+				return cmsErr(
+					"unsupported_capability",
+					"Image upload is not supported",
+				);
+			}
+			if (!processImage) {
+				return cmsErr(
+					"unsupported_capability",
+					"Image processing is not configured",
+				);
+			}
+			if (!input.collection || !input.id) {
+				return cmsErr("validation_failed", "collection and id are required");
+			}
+			if (
+				!(input.bytes instanceof Uint8Array) ||
+				input.bytes.byteLength === 0
+			) {
+				return cmsErr("validation_failed", "file is required");
+			}
+			if (input.bytes.byteLength > capabilities.assets.maxUploadBytes) {
+				return cmsErr(
+					"validation_failed",
+					`Upload exceeds max size of ${capabilities.assets.maxUploadBytes} bytes`,
+				);
+			}
+
+			const widths =
+				input.widths && input.widths.length > 0
+					? input.widths
+					: capabilities.assets.defaultWidths;
+
+			try {
+				const processed = await processImage(input.bytes, {
+					widths,
+					quality: input.quality,
+				});
+				const written = await writeImageAssetsGuarded({
+					collection: input.collection,
+					id: input.id,
+					name: input.name,
+					widths: processed.widths,
+					files: processed.files.map((f) => ({
+						relativeToFolder: f.relativeToFolder,
+						bytes: f.bytes,
+					})),
+				});
+				return cmsOk(written);
+			} catch (err) {
+				const failure = uploadImageFailure(err);
+				if (failure) return failure;
+				const message =
+					err instanceof Error ? err.message : "Image processing failed";
+				return cmsErr("processing_failed", message);
+			}
+		},
+
+		writeImageAssets: writeImageAssetsGuarded,
 		readAsset: (rel) => wm.readAsset(rel),
 	};
 }
@@ -165,8 +288,9 @@ export function adaptWriteModeToProtocol(
 export function createCmsProtocol(
 	options: CreateCmsProtocolOptions,
 ): CmsProtocol {
-	const { capabilities, ...wmOptions } = options;
+	const { capabilities, processImage, ...wmOptions } = options;
 	return adaptWriteModeToProtocol(createWriteMode(wmOptions), {
 		capabilities,
+		processImage,
 	});
 }

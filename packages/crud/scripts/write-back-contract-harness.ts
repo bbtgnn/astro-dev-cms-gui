@@ -7,6 +7,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import { processImageToWebpSizes } from "../../routes/src/process-image.ts";
 import {
 	adaptWriteModeToProtocol,
 	createCmsProtocol,
@@ -529,7 +530,7 @@ function assertNoFilesystemPaths(
 function discoveryProtocol(
 	root: string,
 	writer: Writer,
-	extras?: Partial<Parameters<typeof createWriteMode>[0]>,
+	extras?: Partial<Parameters<typeof createCmsProtocol>[0]>,
 ): CmsProtocol {
 	return createCmsProtocol({
 		root,
@@ -1133,6 +1134,268 @@ export async function runDeletionCapabilityContract(
 				: await createFilesystemFixture();
 		try {
 			await runDeletionCapabilityScenarios(fixture, failures, passed);
+		} finally {
+			await fixture.cleanup();
+		}
+	}
+
+	return { ok: failures.length === 0, failures, passed };
+}
+
+/**
+ * Asset upload capability — supported upload+save, unsupported outcome, failed
+ * processing leaves no content reference (issue #17).
+ */
+async function runAssetsCapabilityScenarios(
+	fixture: BackendFixture,
+	failures: ContractFailure[],
+	passed: ContractRunResult["passed"],
+): Promise<void> {
+	const { backend, root, writer } = fixture;
+	const postsWithCover: DiscoveredCollection = {
+		...postsCollection,
+		schema: z.object({
+			title: z.string(),
+			cover: z.string().optional(),
+		}),
+	};
+	const protocol = createCmsProtocol({
+		root,
+		allowPaths: ["posts"],
+		writer,
+		collections: [postsWithCover],
+		processImage: processImageToWebpSizes,
+	});
+
+	const caps = await protocol.getCapabilities();
+	if (
+		!caps.ok ||
+		caps.value.assets.uploadImage !== true ||
+		typeof caps.value.assets.maxUploadBytes !== "number" ||
+		!Array.isArray(caps.value.assets.defaultWidths) ||
+		caps.value.assets.defaultWidths.length === 0
+	) {
+		failures.push({
+			backend,
+			label: "protocol reports assets capability + limits",
+			detail: JSON.stringify(caps),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol reports assets capability + limits",
+		});
+		assertNoFilesystemPaths(
+			caps.value,
+			failures,
+			passed,
+			backend,
+			"protocol assets capabilities have no FS paths",
+		);
+	}
+
+	const created = await protocol.upsertEntry({
+		id: "img-entry",
+		collection: "posts",
+		data: { title: "with image" },
+		expectedRevision: null,
+	});
+	if (!created.ok) {
+		failures.push({
+			backend,
+			label: "protocol create before image upload succeeds",
+			detail: JSON.stringify(created),
+		});
+		return;
+	}
+	passed.push({
+		backend,
+		label: "protocol create before image upload succeeds",
+	});
+
+	/** Minimal 1×1 PNG. */
+	const png = Uint8Array.from(
+		atob(
+			"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+		),
+		(c) => c.charCodeAt(0),
+	);
+
+	const uploaded = await protocol.uploadImage({
+		collection: "posts",
+		id: "img-entry",
+		name: "cover",
+		bytes: png,
+		filename: "pixel.png",
+	});
+	if (!uploaded.ok || uploaded.value.path !== "./img-entry/cover/cover.webp") {
+		failures.push({
+			backend,
+			label: "protocol uploadImage returns canonical path",
+			detail: JSON.stringify(uploaded),
+		});
+		return;
+	}
+	passed.push({
+		backend,
+		label: "protocol uploadImage returns canonical path",
+	});
+
+	const saved = await protocol.upsertEntry({
+		id: "img-entry",
+		collection: "posts",
+		data: { title: "with image", cover: uploaded.value.path },
+		expectedRevision: created.value.revision,
+	});
+	if (!saved.ok || saved.value.data.cover !== uploaded.value.path) {
+		failures.push({
+			backend,
+			label: "protocol save persists uploaded asset path",
+			detail: JSON.stringify(saved),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol save persists uploaded asset path",
+		});
+	}
+
+	const reread = await protocol.getEntry("posts", "img-entry");
+	if (!reread.ok || reread.value.data.cover !== uploaded.value.path) {
+		failures.push({
+			backend,
+			label: "protocol reread keeps persisted asset path",
+			detail: JSON.stringify(reread),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol reread keeps persisted asset path",
+		});
+	}
+
+	// Oversized upload → validation_failed; entry cover unchanged.
+	const oversized = await protocol.uploadImage({
+		collection: "posts",
+		id: "img-entry",
+		name: "cover",
+		bytes: new Uint8Array(caps.value.assets.maxUploadBytes + 1),
+		filename: "huge.bin",
+	});
+	if (!oversized.ok && oversized.code === "validation_failed") {
+		passed.push({
+			backend,
+			label: "oversized upload is validation_failed",
+		});
+	} else {
+		failures.push({
+			backend,
+			label: "oversized upload is validation_failed",
+			detail: JSON.stringify(oversized),
+		});
+	}
+
+	const afterOversize = await protocol.getEntry("posts", "img-entry");
+	if (
+		!afterOversize.ok ||
+		afterOversize.value.data.cover !== uploaded.value.path
+	) {
+		failures.push({
+			backend,
+			label: "failed upload does not change persisted cover",
+			detail: JSON.stringify(afterOversize),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "failed upload does not change persisted cover",
+		});
+	}
+
+	// Processing failure (empty bytes after capability check) — no path returned.
+	const empty = await protocol.uploadImage({
+		collection: "posts",
+		id: "img-entry",
+		name: "broken",
+		bytes: new Uint8Array(0),
+		filename: "empty.bin",
+	});
+	if (!empty.ok && empty.code === "validation_failed") {
+		passed.push({
+			backend,
+			label: "empty upload is validation_failed without path",
+		});
+	} else {
+		failures.push({
+			backend,
+			label: "empty upload is validation_failed without path",
+			detail: JSON.stringify(empty),
+		});
+	}
+
+	// Unsupported assets variant.
+	const unsupported = createCmsProtocol({
+		root,
+		allowPaths: ["posts"],
+		writer,
+		collections: [postsWithCover],
+		capabilities: { assets: { uploadImage: false } },
+		processImage: processImageToWebpSizes,
+	});
+	const unsupportedCaps = await unsupported.getCapabilities();
+	if (
+		!unsupportedCaps.ok ||
+		unsupportedCaps.value.assets.uploadImage !== false
+	) {
+		failures.push({
+			backend,
+			label: "protocol variant reports assets unsupported",
+			detail: JSON.stringify(unsupportedCaps),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "protocol variant reports assets unsupported",
+		});
+	}
+
+	const refused = await unsupported.uploadImage({
+		collection: "posts",
+		id: "img-entry",
+		name: "cover",
+		bytes: png,
+		filename: "pixel.png",
+	});
+	if (refused.ok || refused.code !== "unsupported_capability") {
+		failures.push({
+			backend,
+			label: "unsupported upload returns unsupported_capability",
+			detail: JSON.stringify(refused),
+		});
+	} else {
+		passed.push({
+			backend,
+			label: "unsupported upload returns unsupported_capability",
+		});
+	}
+}
+
+/**
+ * Assets capability contract suite (issue #17).
+ */
+export async function runAssetsCapabilityContract(
+	backends: WriterBackend[] = ["memory", "filesystem"],
+): Promise<ContractRunResult> {
+	const failures: ContractFailure[] = [];
+	const passed: ContractRunResult["passed"] = [];
+
+	for (const kind of backends) {
+		const fixture =
+			kind === "memory"
+				? await createMemoryFixture()
+				: await createFilesystemFixture();
+		try {
+			await runAssetsCapabilityScenarios(fixture, failures, passed);
 		} finally {
 			await fixture.cleanup();
 		}

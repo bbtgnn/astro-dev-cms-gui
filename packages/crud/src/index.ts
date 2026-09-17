@@ -6,6 +6,7 @@
 export type {
 	AdaptProtocolOptions,
 	CreateCmsProtocolOptions,
+	ProcessImageToWebpSizes,
 } from "./create-cms-protocol";
 export {
 	adaptWriteModeToProtocol,
@@ -48,7 +49,9 @@ export {
 	writerExists,
 } from "./path-resolve";
 export type {
+	CmsAssetsCapability,
 	CmsCapabilities,
+	CmsCapabilitiesInput,
 	CmsErr,
 	CmsOk,
 	CmsProtocol,
@@ -63,10 +66,14 @@ export type {
 	ListEntriesResult,
 	SaveEntryFailureCode,
 	SaveEntryResult,
+	UploadImageFailureCode,
+	UploadImageInput,
+	UploadImageResult,
 } from "./protocol";
 export {
 	cmsErr,
 	cmsOk,
+	DEFAULT_CMS_ASSETS_CAPABILITY,
 	DEFAULT_CMS_CAPABILITIES,
 	httpStatusForCmsErr,
 	resolveCmsCapabilities,

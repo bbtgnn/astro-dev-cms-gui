@@ -13,7 +13,9 @@ import {
 	type GetCapabilitiesResult,
 	type ListCollectionsResult,
 	type ListEntriesResult,
+	resolveCmsCapabilities,
 	type SaveEntryResult,
+	type UploadImageResult,
 } from "@cms/crud/fetch-client";
 import { offersEntryDeletion } from "../src/capabilities";
 import type { AuthoringClient } from "../src/types";
@@ -80,6 +82,9 @@ function createFakeClient(opts: {
 			store.splice(idx, 1);
 			return cmsOk(null);
 		},
+		async uploadImage(): Promise<UploadImageResult> {
+			return cmsErr("forbidden", "not used in this check");
+		},
 	};
 
 	return { client, deleteCalls };
@@ -93,13 +98,13 @@ const sample: ContentEntry = {
 };
 
 // --- Capability helper ---
-if (offersEntryDeletion({ deleteEntry: true })) {
+if (offersEntryDeletion(resolveCmsCapabilities({ deleteEntry: true }))) {
 	ok("offersEntryDeletion true when capability set");
 } else {
 	fail("offersEntryDeletion true when capability set", "expected true");
 }
 
-if (!offersEntryDeletion({ deleteEntry: false })) {
+if (!offersEntryDeletion(resolveCmsCapabilities({ deleteEntry: false }))) {
 	ok("offersEntryDeletion false when capability unset");
 } else {
 	fail("offersEntryDeletion false when capability unset", "expected false");
@@ -117,7 +122,7 @@ if (!offersEntryDeletion(null) && !offersEntryDeletion(undefined)) {
 // --- Supported: authoring would offer delete, call protocol, refresh list ---
 {
 	const fake = createFakeClient({
-		capabilities: { deleteEntry: true },
+		capabilities: resolveCmsCapabilities({ deleteEntry: true }),
 		entries: [sample],
 	});
 	const caps = await fake.client.getCapabilities();
@@ -160,7 +165,7 @@ if (!offersEntryDeletion(null) && !offersEntryDeletion(undefined)) {
 // --- Unsupported: hide control; no deleteEntry transport call ---
 {
 	const fake = createFakeClient({
-		capabilities: { deleteEntry: false },
+		capabilities: resolveCmsCapabilities({ deleteEntry: false }),
 		entries: [sample],
 	});
 	const caps = await fake.client.getCapabilities();

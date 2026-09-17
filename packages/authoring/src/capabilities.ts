@@ -10,3 +10,10 @@ export function offersEntryDeletion(
 ): boolean {
 	return capabilities?.deleteEntry === true;
 }
+
+/** Whether the authoring application should offer image asset upload. */
+export function offersAssetUpload(
+	capabilities: CmsCapabilities | null | undefined,
+): boolean {
+	return capabilities?.assets?.uploadImage === true;
+}

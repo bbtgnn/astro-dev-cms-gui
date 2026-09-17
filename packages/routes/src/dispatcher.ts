@@ -5,11 +5,6 @@
 import type { CmsProtocol } from "@cms/crud";
 import { httpStatusForCmsErr } from "@cms/crud";
 import { cmsDevOnlyGuard } from "./dev-guard";
-import {
-	DEFAULT_IMAGE_WIDTHS,
-	DEFAULT_WEBP_QUALITY,
-	processImageToWebpSizes,
-} from "./process-image";
 
 export type CmsDispatcherOptions = {
 	protocol: CmsProtocol;
@@ -40,9 +35,14 @@ function protocolErrResponse(result: {
 	ok: false;
 	code: string;
 	message: string;
+	issues?: unknown;
 }): Response {
 	return Response.json(
-		{ error: result.message, code: result.code },
+		{
+			error: result.message,
+			code: result.code,
+			...(result.issues !== undefined ? { issues: result.issues } : {}),
+		},
 		{ status: httpStatusForCmsErr(result.code) },
 	);
 }
@@ -125,7 +125,7 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				const name = String(form.get("name") ?? "cover");
 				if (!(file instanceof File)) {
 					return Response.json(
-						{ error: "file is required", code: "MISSING_FILE" },
+						{ error: "file is required", code: "validation_failed" },
 						{ status: 400 },
 					);
 				}
@@ -133,37 +133,32 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 					return Response.json(
 						{
 							error: "collection and id are required",
-							code: "MISSING_ENTRY",
+							code: "validation_failed",
 						},
 						{ status: 400 },
 					);
 				}
 
 				const buf = new Uint8Array(await file.arrayBuffer());
-				const widths = parseWidths(form.get("widths")) ?? [
-					...DEFAULT_IMAGE_WIDTHS,
-				];
+				const widths = parseWidths(form.get("widths"));
 				const qualityRaw = form.get("quality");
 				const quality =
 					typeof qualityRaw === "string" && qualityRaw.trim()
 						? Number(qualityRaw)
-						: DEFAULT_WEBP_QUALITY;
+						: undefined;
 
-				const processed = await processImageToWebpSizes(buf, {
-					widths,
-					quality: Number.isFinite(quality) ? quality : DEFAULT_WEBP_QUALITY,
-				});
-				const written = await protocol.writeImageAssets({
+				const result = await protocol.uploadImage({
 					collection,
 					id,
 					name,
-					widths: processed.widths,
-					files: processed.files.map((f) => ({
-						relativeToFolder: f.relativeToFolder,
-						bytes: f.bytes,
-					})),
+					bytes: buf,
+					filename: file.name,
+					widths,
+					quality:
+						quality != null && Number.isFinite(quality) ? quality : undefined,
 				});
-				return Response.json(written);
+				if (!result.ok) return protocolErrResponse(result);
+				return Response.json(result.value);
 			}
 
 			// /api/collections/:collection[/:id]

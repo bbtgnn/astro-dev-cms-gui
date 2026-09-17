@@ -5,7 +5,9 @@
 
 /** Discovery + write-mode helpers (implemented in @cms/crud). */
 export type {
+	CmsAssetsCapability,
 	CmsCapabilities,
+	CmsCapabilitiesInput,
 	CmsProtocol,
 	CollectionSummary,
 	ContentEntry,
@@ -20,6 +22,9 @@ export type {
 	LoaderPathHint,
 	SaveEntryFailureCode,
 	SaveEntryResult,
+	UploadImageFailureCode,
+	UploadImageInput,
+	UploadImageResult,
 	UpsertEntryInput,
 } from "@cms/crud";
 export {

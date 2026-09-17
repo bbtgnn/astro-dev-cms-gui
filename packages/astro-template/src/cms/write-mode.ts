@@ -13,6 +13,7 @@ import {
 	nodeFsWriter,
 	type WriteMode,
 } from "@cms/crud";
+import { processImageToWebpSizes } from "../../../routes/src/process-image.ts";
 import { collections } from "../content.config";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -46,5 +47,7 @@ export function createTemplateWriteMode(opts?: {
 export function createTemplateCmsProtocol(opts?: {
 	useMemory?: boolean;
 }): CmsProtocol {
-	return adaptWriteModeToProtocol(createTemplateWriteMode(opts));
+	return adaptWriteModeToProtocol(createTemplateWriteMode(opts), {
+		processImage: processImageToWebpSizes,
+	});
 }

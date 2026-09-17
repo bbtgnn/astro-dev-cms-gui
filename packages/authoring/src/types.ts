@@ -17,6 +17,7 @@ export type AuthoringClient = Pick<
 	| "getEntry"
 	| "upsertEntry"
 	| "deleteEntry"
+	| "uploadImage"
 >;
 
 /** Host-compiled editor schemas (Zod + FieldUi + direct components). */

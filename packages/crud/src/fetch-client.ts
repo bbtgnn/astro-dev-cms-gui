@@ -17,12 +17,17 @@ import type {
 	GetEntryResult,
 	SaveEntryFailureCode,
 	SaveEntryResult,
+	UploadImageFailureCode,
+	UploadImageResult,
 	UpsertEntryInput,
 } from "./protocol";
 import { httpStatusForCmsErr } from "./protocol";
+import type { WrittenImageAssets } from "./types";
 
 export type {
+	CmsAssetsCapability,
 	CmsCapabilities,
+	CmsCapabilitiesInput,
 	CmsErr,
 	CmsOk,
 	CmsProtocol,
@@ -39,16 +44,20 @@ export type {
 	ListEntriesResult,
 	SaveEntryFailureCode,
 	SaveEntryResult,
+	UploadImageFailureCode,
+	UploadImageInput,
+	UploadImageResult,
 	UpsertEntryInput,
 } from "./protocol";
-
 export {
 	cmsErr,
 	cmsOk,
+	DEFAULT_CMS_ASSETS_CAPABILITY,
 	DEFAULT_CMS_CAPABILITIES,
 	httpStatusForCmsErr,
 	resolveCmsCapabilities,
 } from "./protocol";
+export type { WrittenImageAssets } from "./types";
 
 /** Thrown when the CMS JSON API returns a non-OK status outside typed outcomes. */
 export class CmsFetchError extends Error {
@@ -120,8 +129,23 @@ function isDeleteEntryFailureCode(
 	);
 }
 
-export type CmsFetchClient = CmsProtocol & {
-	/** Multipart image upload (Astro transport-specific; not a protocol op). */
+function isUploadImageFailureCode(
+	code: string | undefined,
+): code is UploadImageFailureCode {
+	return (
+		code === "forbidden" ||
+		code === "conflict" ||
+		code === "validation_failed" ||
+		code === "unsupported_capability" ||
+		code === "processing_failed"
+	);
+}
+
+export type CmsFetchClient = Omit<CmsProtocol, "uploadImage"> & {
+	/**
+	 * Multipart image upload over the HTTP transport.
+	 * Prefer this over `writeImageAssets` in the browser; returns typed outcomes.
+	 */
 	uploadImage(input: {
 		file: Blob;
 		collection: string;
@@ -130,7 +154,7 @@ export type CmsFetchClient = CmsProtocol & {
 		widths?: number[];
 		quality?: number;
 		filename?: string;
-	}): Promise<{ path: string; files: string[]; widths: number[] }>;
+	}): Promise<UploadImageResult>;
 };
 
 /**
@@ -363,7 +387,7 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			);
 		},
 
-		uploadImage: async (input) => {
+		uploadImage: async (input): Promise<UploadImageResult> => {
 			const body = new FormData();
 			body.append("file", input.file, input.filename ?? "upload.bin");
 			body.append("collection", input.collection);
@@ -377,16 +401,63 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 				headers: { accept: "application/json" },
 				body,
 			});
-			if (!res.ok) {
-				const bodyText = await res.text();
-				const parsed = await parseErrorBody(bodyText);
-				throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
+			if (res.ok) {
+				return {
+					ok: true,
+					value: (await res.json()) as WrittenImageAssets,
+				};
 			}
-			return (await res.json()) as {
-				path: string;
-				files: string[];
-				widths: number[];
-			};
+			const bodyText = await res.text();
+			const parsed = await parseErrorBody(bodyText);
+			const code = parsed?.code;
+			if (
+				isUploadImageFailureCode(code) &&
+				res.status === httpStatusForCmsErr(code)
+			) {
+				return {
+					ok: false,
+					code,
+					message: parsed?.error ?? (bodyText || res.statusText),
+					...(parsed?.issues !== undefined ? { issues: parsed.issues } : {}),
+				} satisfies CmsErr<UploadImageFailureCode>;
+			}
+			if (res.status === 403) {
+				return {
+					ok: false,
+					code: "forbidden",
+					message: parsed?.error ?? "Forbidden",
+				};
+			}
+			if (res.status === 409) {
+				return {
+					ok: false,
+					code: "conflict",
+					message: parsed?.error ?? "Conflict",
+				};
+			}
+			if (res.status === 400) {
+				return {
+					ok: false,
+					code: "validation_failed",
+					message: parsed?.error ?? "Validation failed",
+					...(parsed?.issues !== undefined ? { issues: parsed.issues } : {}),
+				};
+			}
+			if (res.status === 501) {
+				return {
+					ok: false,
+					code: "unsupported_capability",
+					message: parsed?.error ?? "Image upload is not supported",
+				};
+			}
+			if (res.status === 422 || res.status === 500) {
+				return {
+					ok: false,
+					code: "processing_failed",
+					message: parsed?.error ?? (bodyText || res.statusText),
+				};
+			}
+			throw new CmsFetchError(res.status, res.statusText, bodyText, parsed);
 		},
 	};
 }

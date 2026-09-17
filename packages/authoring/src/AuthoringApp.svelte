@@ -11,7 +11,7 @@ import {
 } from "@cms/crud/fetch-client";
 import { onMount } from "svelte";
 import type { z } from "zod";
-import { offersEntryDeletion } from "./capabilities";
+import { offersAssetUpload, offersEntryDeletion } from "./capabilities";
 import EntryEditor from "./EntryEditor.svelte";
 import type { AuthoringClient, EditorCollections } from "./types";
 
@@ -37,6 +37,8 @@ let selectedEntryId = $state<string | null>(null);
 let entry = $state.raw<ContentEntry | null>(null);
 
 const canDelete = $derived(offersEntryDeletion(capabilities));
+const canUploadAssets = $derived(offersAssetUpload(capabilities));
+const maxUploadBytes = $derived(capabilities?.assets?.maxUploadBytes);
 
 function errMsg(e: unknown): string {
 	if (isCmsFetchError(e)) return e.message;
@@ -194,6 +196,7 @@ onMount(() => {
 		· view: {view}
 		{#if capabilities}
 			· delete: {canDelete ? "supported" : "unsupported"}
+			· assets: {canUploadAssets ? "supported" : "unsupported"}
 		{/if}
 		{#if error}
 			— error: {error}
@@ -262,6 +265,8 @@ onMount(() => {
 				schema={activeSchema}
 				value={entry.data}
 				{canDelete}
+				{canUploadAssets}
+				{maxUploadBytes}
 				onSaved={(saved) => void onSaved(saved)}
 				onDeleted={() => void onDeleted()}
 				onCancel={backToEntries}
@@ -277,6 +282,8 @@ onMount(() => {
 			value={{}}
 			creating={true}
 			{canDelete}
+			{canUploadAssets}
+			{maxUploadBytes}
 			onSaved={(saved) => void onSaved(saved)}
 			onCancel={backToEntries}
 		/>

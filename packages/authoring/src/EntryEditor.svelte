@@ -7,7 +7,7 @@ import {
 	type ContentEntry,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
-import { CmsForm } from "@cms/form";
+import { type CmsAssetsFieldContext, CmsForm } from "@cms/form";
 import { untrack } from "svelte";
 import type { z } from "zod";
 import type { AuthoringClient } from "./types";
@@ -21,6 +21,8 @@ let {
 	creating = false,
 	revision: revisionProp = null,
 	canDelete = false,
+	canUploadAssets = false,
+	maxUploadBytes = undefined,
 	onSaved,
 	onDeleted,
 	onCancel,
@@ -37,6 +39,9 @@ let {
 	revision?: string | null;
 	/** From protocol capabilities — hide delete when unsupported. */
 	canDelete?: boolean;
+	/** From protocol capabilities — disable image upload when unsupported. */
+	canUploadAssets?: boolean;
+	maxUploadBytes?: number;
 	onSaved?: (entry: ContentEntry) => void;
 	onDeleted?: () => void;
 	onCancel?: () => void;
@@ -57,6 +62,23 @@ let saveStatus = $state<
 let error = $state<string | null>(null);
 let issues = $state.raw<unknown>(null);
 let lastSaved = $state.raw<ContentEntry | null>(null);
+
+const assetsContext = $derived.by((): CmsAssetsFieldContext => {
+	if (!canUploadAssets) {
+		return { uploadEnabled: false };
+	}
+	return {
+		uploadEnabled: true,
+		maxUploadBytes,
+		uploadImage: async (input) => {
+			const result = await client.uploadImage(input);
+			if (!result.ok) {
+				return { ok: false, message: result.message };
+			}
+			return { ok: true, path: result.value.path };
+		},
+	};
+});
 
 function clearErrors() {
 	error = null;
@@ -200,6 +222,7 @@ async function saveInvalid() {
 				{value}
 				{collection}
 				entryId={creating ? idDraft.trim() : entryId}
+				assets={assetsContext}
 				onSubmit={(data) => void save(data)}
 			/>
 		{/key}
