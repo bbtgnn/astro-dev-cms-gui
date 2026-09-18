@@ -83,7 +83,6 @@
       "name": "@cms/form",
       "version": "0.0.0",
       "dependencies": {
-        "@cms/components": "workspace:*",
         "@cms/fields": "workspace:*",
         "@sjsf/ajv8-validator": "catalog:",
         "@sjsf/basic-theme": "catalog:",
@@ -104,10 +103,8 @@
       "name": "@cms/routes",
       "version": "0.0.0",
       "dependencies": {
-        "@cms/components": "workspace:*",
         "@cms/crud": "workspace:*",
         "@cms/fields": "workspace:*",
-        "@cms/form": "workspace:*",
         "sharp": "^0.35.4",
       },
       "devDependencies": {

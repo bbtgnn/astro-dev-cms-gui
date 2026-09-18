@@ -8,10 +8,8 @@
 		".": "./src/index.ts"
 	},
 	"dependencies": {
-		"@cms/components": "workspace:*",
 		"@cms/crud": "workspace:*",
 		"@cms/fields": "workspace:*",
-		"@cms/form": "workspace:*",
 		"sharp": "^0.35.4"
 	},
 	"devDependencies": {
