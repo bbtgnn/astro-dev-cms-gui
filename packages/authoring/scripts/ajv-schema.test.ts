@@ -13,7 +13,7 @@ import {
 	stripUiFromJsonSchema,
 	text,
 	toFormSchemas,
-} from "@cms/fields";
+} from "@cms/core/fields";
 import { createFormValidator } from "@sjsf/ajv8-validator";
 
 const posts = object(

@@ -13,7 +13,7 @@ import {
 	createCmsHost,
 	discoverCollections,
 	nodeFsWriter,
-} from "@cms/crud";
+} from "@cms/core";
 
 export function createHost(): CmsHost {
 	const discovered = discoverCollections(collections);

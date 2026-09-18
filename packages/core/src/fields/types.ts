@@ -1,6 +1,6 @@
 /**
  * FieldUi — widget-keyed UI descriptor (no separate id).
- * Direct `meta.ui` Component bindings are typed loosely; `@cms/fields` stays Svelte-free.
+ * Direct `meta.ui` Component bindings are typed loosely; this module stays Svelte-free.
  */
 
 import type { z } from "zod";
@@ -57,7 +57,7 @@ export type ImageOptions = FieldUiOptions & {
 
 /**
  * One available block type for `blocksLayout`.
- * `component` is opaque (Astro/Svelte/etc.) — `@cms/fields` stays framework-free.
+ * `component` is opaque (Astro/Svelte/etc.) — this module stays framework-free.
  * Hosts must keep this map for `resolveBlock` (not serialized into uiSchema).
  */
 export type BlockDefinition<TSchema extends z.ZodType = z.ZodType> = {
@@ -85,7 +85,7 @@ export type FieldUiRegistryEntry = FieldUi & {
 	stub?: boolean;
 	/**
 	 * Optional default component binding for this widget.
-	 * Typed as unknown so `@cms/fields` stays Svelte-free.
+	 * Typed as unknown so this module stays Svelte-free.
 	 */
 	component?: unknown;
 };

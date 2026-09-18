@@ -25,7 +25,7 @@ declare module "virtual:@cms/config" {
 }
 
 declare module "virtual:@cms/host" {
-	import type { CmsHost } from "@cms/crud";
+	import type { CmsHost } from "@cms/core";
 
 	/** Host factory (project override or package default). */
 	export function createHost(): CmsHost;

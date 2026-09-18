@@ -32,7 +32,7 @@ const defaults: Record<BuiltInWidget, FieldUiRegistryEntry> = {
 	i18n: {
 		widget: "i18n",
 		sjsfWidget: "objectField",
-		/** String key → @cms/form I18nField (locale switcher). */
+		/** String key → @cms/authoring I18nField (locale switcher). */
 		component: "i18nField",
 		stub: false,
 	},
@@ -40,7 +40,7 @@ const defaults: Record<BuiltInWidget, FieldUiRegistryEntry> = {
 	blocksLayout: {
 		widget: "blocksLayout",
 		sjsfWidget: "arrayField",
-		/** String key → @cms/form BlocksLayoutField. */
+		/** String key → @cms/authoring BlocksLayoutField. */
 		component: "blocksLayoutField",
 		stub: false,
 	},

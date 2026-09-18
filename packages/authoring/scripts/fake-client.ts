@@ -14,7 +14,7 @@ import {
 	resolveCmsCapabilities,
 	type SaveEntryResult,
 	type UploadImageResult,
-} from "@cms/crud/fetch-client";
+} from "@cms/core/fetch-client";
 import type { AuthoringClient } from "../src/types";
 
 export type FakeClientOptions = {

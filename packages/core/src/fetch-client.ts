@@ -1,6 +1,6 @@
 /**
  * Thin protocol client for shell UI → /_cms transport.
- * Browser-safe: import from `@cms/crud/fetch-client` (not package root —
+ * Browser-safe: import from `@cms/core/fetch-client` (not package root —
  * root re-exports Node FS writers).
  */
 import type {

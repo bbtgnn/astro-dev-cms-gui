@@ -6,7 +6,7 @@
  *
  * ```ts
  * import { defineMiddleware } from "astro:middleware";
- * import { createCmsMiddleware } from "@cms/routes";
+ * import { createCmsMiddleware } from "@cms/astro";
  *
  * export const onRequest = defineMiddleware(
  *   createCmsMiddleware({ protocol, isDev: import.meta.env.DEV, mount: "/_cms" }),

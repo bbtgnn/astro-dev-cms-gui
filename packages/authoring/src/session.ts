@@ -3,14 +3,14 @@
  * Owns statuses, guarded write-back, preview eligibility, and remount rules.
  * Debounce/coalesce lives behind an internal autosave seam.
  */
-import type { CmsCapabilities, ContentEntry } from "@cms/crud/fetch-client";
-import type { CmsAssetsFieldContext } from "@cms/form";
+import type { CmsCapabilities, ContentEntry } from "@cms/core/fetch-client";
 import type { z } from "zod";
 import {
 	type AuthoringStatus,
 	type AutosaveTimers,
 	createAutosaveController,
 } from "./autosave";
+import type { CmsAssetsFieldContext } from "./form";
 import type { AuthoringClient, GetPreviewUrl } from "./types";
 
 const DEFAULT_DEBOUNCE_MS = 400;

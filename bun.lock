@@ -15,8 +15,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@cms/authoring": "workspace:*",
-        "@cms/crud": "workspace:*",
-        "@cms/routes": "workspace:*",
+        "@cms/core": "workspace:*",
       },
       "devDependencies": {
         "astro": "catalog:",
@@ -35,11 +34,8 @@
       "dependencies": {
         "@astrojs/svelte": "catalog:",
         "@cms/astro": "workspace:*",
-        "@cms/components": "workspace:*",
-        "@cms/crud": "workspace:*",
-        "@cms/fields": "workspace:*",
-        "@cms/form": "workspace:*",
-        "@cms/routes": "workspace:*",
+        "@cms/authoring": "workspace:*",
+        "@cms/core": "workspace:*",
         "astro": "catalog:",
         "svelte": "catalog:",
         "zod": "catalog:",
@@ -53,57 +49,7 @@
       "name": "@cms/authoring",
       "version": "0.0.0",
       "dependencies": {
-        "@cms/crud": "workspace:*",
-        "@cms/form": "workspace:*",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "svelte": "catalog:",
-        "svelte-check": "catalog:",
-        "typescript": "catalog:",
-      },
-      "peerDependencies": {
-        "svelte": "catalog:",
-      },
-    },
-    "packages/components": {
-      "name": "@cms/components",
-      "version": "0.0.0",
-      "devDependencies": {
-        "svelte": "catalog:",
-        "svelte-check": "catalog:",
-        "typescript": "catalog:",
-      },
-      "peerDependencies": {
-        "svelte": "catalog:",
-      },
-    },
-    "packages/crud": {
-      "name": "@cms/crud",
-      "version": "0.0.0",
-      "dependencies": {
-        "@cms/fields": "workspace:*",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "typescript": "catalog:",
-      },
-    },
-    "packages/fields": {
-      "name": "@cms/fields",
-      "version": "0.0.0",
-      "dependencies": {
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "typescript": "catalog:",
-      },
-    },
-    "packages/form": {
-      "name": "@cms/form",
-      "version": "0.0.0",
-      "dependencies": {
-        "@cms/fields": "workspace:*",
+        "@cms/core": "workspace:*",
         "@sjsf/ajv8-validator": "catalog:",
         "@sjsf/basic-theme": "catalog:",
         "@sjsf/form": "catalog:",
@@ -118,12 +64,11 @@
         "svelte": "catalog:",
       },
     },
-    "packages/routes": {
-      "name": "@cms/routes",
+    "packages/core": {
+      "name": "@cms/core",
       "version": "0.0.0",
       "dependencies": {
-        "@cms/crud": "workspace:*",
-        "@cms/fields": "workspace:*",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "typescript": "catalog:",
@@ -194,15 +139,7 @@
 
     "@cms/authoring": ["@cms/authoring@workspace:packages/authoring"],
 
-    "@cms/components": ["@cms/components@workspace:packages/components"],
-
-    "@cms/crud": ["@cms/crud@workspace:packages/crud"],
-
-    "@cms/fields": ["@cms/fields@workspace:packages/fields"],
-
-    "@cms/form": ["@cms/form@workspace:packages/form"],
-
-    "@cms/routes": ["@cms/routes@workspace:packages/routes"],
+    "@cms/core": ["@cms/core@workspace:packages/core"],
 
     "@emmetio/abbreviation": ["@emmetio/abbreviation@2.3.3", "", { "dependencies": { "@emmetio/scanner": "^1.0.4" } }, "sha512-mgv58UrU3rh4YgbE/TzgLQwJ3pFsHHhCLqY20aJq+9comytTXUDNGG/SMtSeMJdkpxgXSXunBGLD8Boka3JyVA=="],
 

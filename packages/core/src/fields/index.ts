@@ -1,6 +1,6 @@
 /**
- * @cms/fields — Zod builders, FieldUi registry, Zod→JSON Schema / uiSchema helpers.
- * Svelte-free: components live in consumer schema modules / @cms/form.
+ * Field schemas — Zod builders, FieldUi registry, Zod→JSON Schema / uiSchema.
+ * Svelte-free: components live in consumer schema modules / @cms/authoring.
  */
 
 import type { z as ZodNS } from "zod";

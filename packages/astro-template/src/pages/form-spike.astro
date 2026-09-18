@@ -1,12 +1,11 @@
 ---
 /**
- * Form example — builders + FieldUi → JSON Schema / uiSchema → @cms/form.
+ * Form example — builders + FieldUi → JSON Schema / uiSchema → @cms/authoring.
  * Pass serializable schemas: live Zod meta does not survive Astro island props.
  */
 
-import { PlaceholderChrome } from "@cms/components";
-import { samplePostsSchema, toFormSchemas } from "@cms/fields";
-import { CmsForm } from "@cms/form";
+import { CmsForm, PlaceholderChrome } from "@cms/authoring";
+import { samplePostsSchema, toFormSchemas } from "@cms/core";
 
 const { schema, uiSchema } = toFormSchemas(samplePostsSchema);
 const value = {
@@ -24,7 +23,7 @@ const value = {
 	</head>
 	<body>
 		<p><a href="/">← home</a></p>
-		<PlaceholderChrome label="@cms/components" />
+		<PlaceholderChrome label="@cms/authoring" />
 		<!-- client:only — sjsf templates break under Astro/Vite SSR (Object.defineProperty) -->
 		<CmsForm
 			client:only="svelte"

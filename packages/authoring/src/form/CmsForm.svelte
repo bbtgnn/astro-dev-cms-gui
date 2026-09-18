@@ -1,11 +1,11 @@
-<!-- @cms/form — sjsf wrap; resolves FieldUi + meta.ui Component overrides -->
+<!-- @cms/authoring — sjsf wrap; resolves FieldUi + meta.ui Component overrides -->
 <script lang="ts">
 import {
 	stripUiFromJsonSchema,
 	toFormSchemas,
 	toUiSchema,
 	type UiSchemaNode,
-} from "@cms/fields";
+} from "@cms/core/fields";
 import { createFormValidator } from "@sjsf/ajv8-validator";
 import {
 	BasicForm,
@@ -41,7 +41,7 @@ let {
 	schema = null,
 	uiSchema: uiSchemaProp = undefined,
 	value = {},
-	title = "@cms/form",
+	title = "@cms/authoring",
 	collection = "",
 	entryId = "",
 	assets = null,
@@ -142,7 +142,7 @@ const form = untrack(() => {
 </script>
 
 <section>
-	<p><small>@cms/form — FieldUi → sjsf uiSchema</small></p>
+	<p><small>@cms/authoring — FieldUi → sjsf uiSchema</small></p>
 	<h2>{title}</h2>
 	{#if form === null}
 		<p>form shell — no schema</p>

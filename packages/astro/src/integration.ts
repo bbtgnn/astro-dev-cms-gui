@@ -14,8 +14,8 @@
  * Conventions: `src/cms.config.ts`, `src/content.config.ts`, `src/content/`.
  * Escape hatches: `editorConfig`, `hostModule`, `contentRoot`.
  *
- * Manual middleware (tests / advanced hosts) still lives on `@cms/routes`:
- * `createCmsMiddleware`. Pass `hostModule: false` with `protocol` + `isDev`
+ * Manual middleware (tests / advanced hosts): `createCmsMiddleware` from
+ * `@cms/astro`. Pass `hostModule: false` with `protocol` + `isDev`
  * to expose `integration.middleware` for `defineMiddleware`.
  */
 import { fileURLToPath } from "node:url";
@@ -23,7 +23,7 @@ import {
 	type CmsDispatcherOptions,
 	type CmsMiddlewareHandler,
 	createCmsMiddleware,
-} from "@cms/routes";
+} from "./http";
 import {
 	CMS_CONFIG_CONVENTION,
 	type CmsVitePlugin,

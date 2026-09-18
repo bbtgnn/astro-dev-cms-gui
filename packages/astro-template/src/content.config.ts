@@ -1,13 +1,14 @@
 /**
  * Sample Astro content config — live discovery source for the authoring shell.
- * Builders / `config` / loader path hints / adapt* come from `@cms/routes`.
+ * Builders / `config` / loader path hints from `@cms/core`; `adapt*` from `@cms/astro`.
  *
  * Server registry edge only — browser editor schemas live in `cms.config.ts`
  * and reach the client via `virtual:@cms/config` (ADR-0004 / 0016).
  */
+
 import { reference as astroReference, defineCollection } from "astro:content";
+import { adaptReference } from "@cms/astro";
 import {
-	adaptReference,
 	boolean,
 	config,
 	i18n,
@@ -16,7 +17,7 @@ import {
 	object,
 	text,
 	withLoaderPathHint,
-} from "@cms/routes";
+} from "@cms/core";
 import { glob } from "astro/loaders";
 import type { z as AstroZod } from "astro/zod";
 import type { AuthorsPersistedInput } from "./cms/authors-persisted";

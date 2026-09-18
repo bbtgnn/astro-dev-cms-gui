@@ -100,8 +100,8 @@ The conceptual modules are:
 - Astro dev integration;
 - filesystem write-back implementation.
 
-These are responsibilities, not locked package names. The existing `@cms/*`
-graph approximates them while the migration proceeds.
+These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
+`@cms/astro` ([ADR-0018](adr/0018-three-packages-for-adr-0008-layers.md)).
 
 ## Durable decisions
 
@@ -109,8 +109,10 @@ graph approximates them while the migration proceeds.
 
 - [ADR-0008](adr/0008-backend-agnostic-ui-fs-first-adapter.md) — backend-agnostic
   authoring UI; filesystem first.
-- [ADR-0009](adr/0009-conceptual-layers-before-package-extraction.md) — stabilize
-  conceptual layers before extracting packages.
+- [ADR-0018](adr/0018-three-packages-for-adr-0008-layers.md) — three packages for
+  those layers (`authoring`, `core`, `astro` + reference host).
+- [ADR-0009](adr/0009-conceptual-layers-before-package-extraction.md) —
+  superseded by ADR-0018 (historical “stabilize before extract” guidance).
 - [ADR-0016](adr/0016-astro-convention-install-surface.md) — convention-first
   Astro install (`cms()`, `cms.config` + `content.config` + `src/content/`).
 

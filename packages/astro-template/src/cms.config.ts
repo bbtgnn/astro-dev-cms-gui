@@ -16,7 +16,7 @@ import {
 	object,
 	reference,
 	text,
-} from "@cms/fields";
+} from "@cms/core";
 import type { z } from "zod";
 import type { AuthorsPersistedInput } from "./cms/authors-persisted";
 import AuthorNameEditor from "./cms/fields/AuthorNameEditor.svelte";

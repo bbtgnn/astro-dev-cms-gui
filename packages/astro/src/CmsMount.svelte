@@ -6,7 +6,7 @@
 import { collections, getPreviewUrl } from "virtual:@cms/config";
 import { mount } from "virtual:@cms/integration-options";
 import { AuthoringApp } from "@cms/authoring";
-import { createFetchClient } from "@cms/crud/fetch-client";
+import { createFetchClient } from "@cms/core/fetch-client";
 
 const client = createFetchClient(mount);
 </script>

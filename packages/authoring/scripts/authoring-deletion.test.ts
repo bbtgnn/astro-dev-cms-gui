@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { resolveCmsCapabilities } from "@cms/crud/fetch-client";
+import { resolveCmsCapabilities } from "@cms/core/fetch-client";
 import { offersEntryDeletion } from "../src/session";
 import { sampleEntry } from "./authoring-test-fixtures";
 import { createFakeClient } from "./fake-client";

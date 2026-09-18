@@ -14,11 +14,8 @@
 	"dependencies": {
 		"@astrojs/svelte": "catalog:",
 		"@cms/astro": "workspace:*",
-		"@cms/components": "workspace:*",
-		"@cms/crud": "workspace:*",
-		"@cms/fields": "workspace:*",
-		"@cms/form": "workspace:*",
-		"@cms/routes": "workspace:*",
+		"@cms/authoring": "workspace:*",
+		"@cms/core": "workspace:*",
 		"astro": "catalog:",
 		"svelte": "catalog:",
 		"zod": "catalog:"

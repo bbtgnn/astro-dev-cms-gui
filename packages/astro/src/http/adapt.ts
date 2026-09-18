@@ -1,10 +1,10 @@
 /**
- * Astro → FieldUi bridges. Keep `@cms/fields` Astro-free: hosts wrap
+ * Astro → FieldUi bridges. Keep `@cms/core` Astro-free: hosts wrap
  * `reference()` / `image()` Zod from Astro and attach CMS UI meta here.
  *
  * Astro's `astro:content` helpers are built on `astro/zod` (Zod 3 API without
  * `.meta()`). When the passed schema cannot take FieldUi via `.meta()`, we
- * fall back to portable `@cms/fields` builders so content.config stays one
+ * fall back to portable `@cms/core` builders so content.config stays one
  * editable Zod tree.
  */
 import {
@@ -14,7 +14,7 @@ import {
 	reference as referenceField,
 	withFieldUi,
 	type z,
-} from "@cms/fields";
+} from "@cms/core";
 
 export type AdaptReferenceOptions = FieldUiOptions & {
 	/** Target collection id — shown in FieldUi options / label hint. */

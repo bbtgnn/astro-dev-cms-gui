@@ -39,11 +39,11 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 | `PUT /_cms/api/collections/posts/new-post` | Upsert (allowlisted) |
 | `DELETE /_cms/api/collections/posts/new-post` | Delete (204) |
 | `PUT` invalid posts body | Zod fail → 400 |
-| `/form-spike` | Example: Zod → JSON Schema → `@cms/form` (`client:only`) |
+| `/form-spike` | Example: Zod → JSON Schema → `@cms/authoring` (`client:only`) |
 
 ## Allowlist check
 
-From the repo root: `bun run check:allowlist` (crud write-back contracts + authoring layer/session tests).
+From the repo root: `bun run check:allowlist` (core write-back contracts + authoring layer/session tests).
 
 Default host allowlists discovered collection bases under `src/content/`.
 Allowlist deny is covered by the write-back contract tests, not the template host.

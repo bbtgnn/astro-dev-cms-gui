@@ -2,8 +2,8 @@
  * Single /_cms/[...path] JSON dispatcher.
  * Thin Astro transport: maps CMS protocol outcomes ↔ HTTP; no domain rules.
  */
-import type { CmsProtocol, ReadAssetResult } from "@cms/crud";
-import { httpStatusForCmsErr } from "@cms/crud";
+import type { CmsProtocol, ReadAssetResult } from "@cms/core";
+import { httpStatusForCmsErr } from "@cms/core";
 import { cmsDevOnlyGuard } from "./dev-guard";
 
 export type CmsDispatcherOptions = {

@@ -3,7 +3,7 @@
  * Fake protocol client + deterministic timers — no pass/fail recording.
  */
 
-import type { ContentEntry } from "@cms/crud/fetch-client";
+import type { ContentEntry } from "@cms/core/fetch-client";
 
 export const sampleEntry: ContentEntry = {
 	id: "hello",

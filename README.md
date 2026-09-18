@@ -40,16 +40,15 @@ bun run dev
 ## Package graph
 
 ```
-@cms/fields → @cms/components → @cms/form → @cms/crud → @cms/routes
-                                                      ↘
-                                         @cms/astro → @cms/astro-template
+@cms/authoring  →  @cms/core  ←  @cms/astro  →  @cms/astro-template
 ```
 
-`@cms/astro` is the consumer install surface (`cms()`). `@cms/routes` is the
-HTTP dispatcher + fields/protocol barrel. The graph approximates the current
-layout, not a locked extraction target — see
-[ADR-0009](docs/adr/0009-conceptual-layers-before-package-extraction.md) and
-[ADR-0016](docs/adr/0016-astro-convention-install-surface.md).
+Three product packages match ADR-0008 layers
+([ADR-0018](docs/adr/0018-three-packages-for-adr-0008-layers.md)):
+
+- `@cms/authoring` — shell UI + form shell
+- `@cms/core` — field schemas + CMS protocol + FS adapters
+- `@cms/astro` — `cms()` host mount + `/_cms` transport
 
 Checks: `bun run check && bun run check:allowlist && bun run lint`.
 

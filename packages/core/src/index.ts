@@ -1,6 +1,6 @@
 /**
- * @cms/crud — CMS protocol + Writer injection. Filesystem write-back is
- * implementation behind createCmsProtocol / createCmsHost (ADR-0005).
+ * @cms/core — field schemas, CMS protocol, and FS write-back adapters.
+ * Filesystem write-back sits behind createCmsProtocol / createCmsHost (ADR-0005).
  */
 
 export type {
@@ -32,6 +32,60 @@ export {
 	createFetchClient,
 	isCmsFetchError,
 } from "./fetch-client";
+/** Field schemas / FieldUi (Svelte-free). */
+export {
+	array,
+	type BlockDefinition,
+	type BlocksLayoutItem,
+	type BlocksLayoutOptions,
+	type BuiltInWidget,
+	blocksLayout,
+	boolean,
+	type CollectionConfig,
+	config,
+	contentAssetPath,
+	date,
+	datetime,
+	enumeration,
+	type FieldMeta,
+	type FieldUi,
+	type FieldUiOptions,
+	type FieldUiRegistryEntry,
+	field,
+	fieldUiFromOptions,
+	fieldUiRegistry,
+	getFieldUiDefault,
+	type I18nOptions,
+	type ImageOptions,
+	i18n,
+	image,
+	imageFolderFromCanonical,
+	isFieldUi,
+	isUiComponent,
+	markdown,
+	number,
+	object,
+	type ResolvedBlock,
+	type ResolveLocaleOptions,
+	readFieldMeta,
+	reference,
+	registerFieldUi,
+	resolveBlock,
+	resolveFieldUi,
+	resolveLocale,
+	type SamplePostsInput,
+	samplePostsSchema,
+	select,
+	string,
+	stripUiFromJsonSchema,
+	text,
+	toFormSchemas,
+	toJsonSchema,
+	toUiSchema,
+	type UiSchemaNode,
+	withFieldUi,
+	z,
+} from "./fields";
 export { memoryWriter } from "./memory-writer";
 export { nodeFsWriter } from "./node-fs-writer";
 export type {

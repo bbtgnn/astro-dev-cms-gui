@@ -1,6 +1,20 @@
 /**
  * @cms/astro — Astro host integration (dev-mode shell + protocol transport).
  */
+
+export {
+	type AdaptImageOptions,
+	type AdaptReferenceOptions,
+	adaptImage,
+	adaptReference,
+	type CmsDispatcherOptions,
+	type CmsMiddlewareContext,
+	type CmsMiddlewareHandler,
+	type CmsMiddlewareNext,
+	cmsDevOnlyGuard,
+	createCmsDispatcher,
+	createCmsMiddleware,
+} from "./http";
 export {
 	type CmsIntegration,
 	type CmsIntegrationOptions,

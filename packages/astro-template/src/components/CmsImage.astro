@@ -4,7 +4,7 @@
  * Site pages that need Astro optimization should use Astro `<Image>` / `image()`
  * on the host projection (ADR-0015).
  */
-import { contentAssetPath } from "@cms/routes";
+import { contentAssetPath } from "@cms/core";
 
 type Props = {
 	/** Entry-relative path, e.g. `./hello/cover/photo.jpg`. */

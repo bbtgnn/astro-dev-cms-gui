@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { resolveCmsCapabilities } from "@cms/crud/fetch-client";
+import { resolveCmsCapabilities } from "@cms/core/fetch-client";
 import { z } from "zod";
 import { createAuthoringSession } from "../src/session";
 import {

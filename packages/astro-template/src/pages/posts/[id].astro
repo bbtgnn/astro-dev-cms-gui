@@ -5,7 +5,7 @@
  * renderer bindings (ADR-0012). No duplicate inline preview registry.
  */
 import { getCollection, getEntry } from "astro:content";
-import { resolveBlock } from "@cms/routes";
+import { resolveBlock } from "@cms/core";
 import type { AstroComponentFactory } from "astro/runtime/server/index.js";
 import { postBlocks } from "../../cms/post-blocks-render";
 import CmsImage from "../../components/CmsImage.astro";

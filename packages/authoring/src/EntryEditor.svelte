@@ -3,11 +3,11 @@
   Session owns write-back and asset upload context (ADR-0008 / 0014).
 -->
 <script lang="ts">
-import type { ContentEntry } from "@cms/crud/fetch-client";
-import { CmsForm } from "@cms/form";
+import type { ContentEntry } from "@cms/core/fetch-client";
 import { onMount } from "svelte";
 import type { z } from "zod";
 import type { AuthoringStatus } from "./autosave";
+import { CmsForm } from "./form";
 import type { AuthoringSession } from "./session";
 
 let {

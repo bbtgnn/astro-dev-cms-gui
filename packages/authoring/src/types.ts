@@ -2,7 +2,7 @@
  * Host-injected seams for the reusable authoring application.
  * Package name / graph are provisional (ADR-0009).
  */
-import type { CmsFetchClient } from "@cms/crud/fetch-client";
+import type { CmsFetchClient } from "@cms/core/fetch-client";
 import type { z } from "zod";
 
 /**

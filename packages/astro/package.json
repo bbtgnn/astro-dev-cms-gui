@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "Astro dev integration — /cms shell injectRoute + /_cms protocol middleware",
+	"description": "Astro host — cms() integration, /cms shell, /_cms protocol transport",
 	"exports": {
 		".": "./src/index.ts",
 		"./middleware-entry": "./src/middleware-entry.ts",
@@ -12,8 +12,7 @@
 	},
 	"dependencies": {
 		"@cms/authoring": "workspace:*",
-		"@cms/crud": "workspace:*",
-		"@cms/routes": "workspace:*"
+		"@cms/core": "workspace:*"
 	},
 	"peerDependencies": {
 		"astro": "catalog:",

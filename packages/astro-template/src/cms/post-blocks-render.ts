@@ -2,7 +2,7 @@
  * Host render map for posts blocks — schemas + Astro components for resolveBlock.
  * Do not import this from content.config (Astro components break the content layer).
  */
-import type { BlockDefinition } from "@cms/routes";
+import type { BlockDefinition } from "@cms/core";
 import Cta from "../components/blocks/Cta.astro";
 import Hero from "../components/blocks/Hero.astro";
 import { postBlockSchemas } from "./post-blocks";

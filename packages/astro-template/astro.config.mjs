@@ -14,15 +14,7 @@ export default defineConfig({
 		},
 		optimizeDeps: {
 			// Include transitive workspace packages (@cms/authoring via @cms/astro).
-			exclude: [
-				"@cms/astro",
-				"@cms/authoring",
-				"@cms/components",
-				"@cms/crud",
-				"@cms/fields",
-				"@cms/form",
-				"@cms/routes",
-			],
+			exclude: ["@cms/astro", "@cms/authoring", "@cms/core"],
 		},
 	},
 });

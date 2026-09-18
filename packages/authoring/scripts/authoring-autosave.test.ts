@@ -10,8 +10,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { createCmsProtocol } from "../../crud/src/create-cms-protocol.ts";
-import { nodeFsWriter } from "../../crud/src/node-fs-writer.ts";
+import { createCmsProtocol } from "../../core/src/create-cms-protocol.ts";
+import { nodeFsWriter } from "../../core/src/node-fs-writer.ts";
 import {
 	type AuthoringStatus,
 	createAutosaveController,

@@ -4,8 +4,8 @@
  * and/or set `config({ base })` on the root schema.
  */
 import path from "node:path";
-import { type CollectionConfig, readFieldMeta } from "@cms/fields";
 import { z } from "zod";
+import { type CollectionConfig, readFieldMeta } from "./fields";
 import { idFromRelPath } from "./path-resolve";
 import type { Writer } from "./types";
 

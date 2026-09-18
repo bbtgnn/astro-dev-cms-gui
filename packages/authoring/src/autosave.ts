@@ -6,7 +6,7 @@
  * One in-flight write; latest valid payload is queued; stale responses ignored.
  */
 
-import type { ContentEntry } from "@cms/crud/fetch-client";
+import type { ContentEntry } from "@cms/core/fetch-client";
 
 /** Distinct authoring UI states for autosave (ADR-0014). */
 export type AuthoringStatus =

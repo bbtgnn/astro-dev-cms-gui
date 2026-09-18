@@ -3,13 +3,15 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "Reusable authoring application (list/editor shell). Package name is provisional (ADR-0009).",
+	"description": "Authoring UI — shell, form shell, and chrome (ADR-0008 layer 1)",
 	"exports": {
 		".": "./src/index.ts"
 	},
 	"dependencies": {
-		"@cms/crud": "workspace:*",
-		"@cms/form": "workspace:*",
+		"@cms/core": "workspace:*",
+		"@sjsf/ajv8-validator": "catalog:",
+		"@sjsf/basic-theme": "catalog:",
+		"@sjsf/form": "catalog:",
 		"zod": "catalog:"
 	},
 	"peerDependencies": {
@@ -21,7 +23,7 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "svelte-check --tsconfig ./tsconfig.json",
+		"check": "svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/ajv-schema.test.ts",
 		"check:layers": "bun run ./scripts/check-layer-boundaries.ts",
 		"check:allowlist": "bun test ./scripts/authoring-deletion.test.ts ./scripts/authoring-assets.test.ts ./scripts/authoring-autosave.test.ts ./scripts/authoring-session.test.ts"
 	}

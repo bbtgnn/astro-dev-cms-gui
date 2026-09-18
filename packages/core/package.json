@@ -1,16 +1,16 @@
 {
-	"name": "@cms/crud",
+	"name": "@cms/core",
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "CMS protocol + writers (filesystem write-back behind createCmsHost)",
+	"description": "Field schemas + CMS protocol + FS write-back adapters",
 	"exports": {
 		".": "./src/index.ts",
 		"./fetch-client": "./src/fetch-client.ts",
-		"./protocol": "./src/protocol.ts"
+		"./protocol": "./src/protocol.ts",
+		"./fields": "./src/fields/index.ts"
 	},
 	"dependencies": {
-		"@cms/fields": "workspace:*",
 		"zod": "catalog:"
 	},
 	"devDependencies": {

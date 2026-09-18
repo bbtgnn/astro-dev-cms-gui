@@ -5,12 +5,8 @@
 	"packageManager": "bun@1.3.12",
 	"workspaces": {
 		"packages": [
-			"packages/fields",
-			"packages/components",
-			"packages/form",
-			"packages/crud",
+			"packages/core",
 			"packages/authoring",
-			"packages/routes",
 			"packages/astro",
 			"packages/astro-template"
 		],
@@ -29,8 +25,8 @@
 	"scripts": {
 		"dev": "bun run --filter @cms/astro-template dev",
 		"build": "bun run --filter @cms/astro-template build",
-		"check": "bun run --filter @cms/fields check && bun run --filter @cms/crud check && bun run --filter @cms/routes check && bun run --filter @cms/astro check && bun run --filter @cms/form check && bun run --filter @cms/components check && bun run --filter @cms/authoring check && bun run --filter @cms/astro-template check",
-		"check:allowlist": "bun run --filter @cms/crud check:allowlist && bun run --filter @cms/authoring check:layers && bun run --filter @cms/authoring check:allowlist",
+		"check": "bun run --filter @cms/core check && bun run --filter @cms/authoring check && bun run --filter @cms/astro check && bun run --filter @cms/astro-template check",
+		"check:allowlist": "bun run --filter @cms/core check:allowlist && bun run --filter @cms/authoring check:layers && bun run --filter @cms/authoring check:allowlist",
 		"check:image": "bun run --filter @cms/astro-template check:image",
 		"lint": "biome check .",
 		"format": "biome check --write ."

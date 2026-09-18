@@ -9,7 +9,7 @@ import {
 	type ContentEntry,
 	type EntryIdentity,
 	isCmsFetchError,
-} from "@cms/crud/fetch-client";
+} from "@cms/core/fetch-client";
 import { onDestroy, onMount } from "svelte";
 import type { z } from "zod";
 import EntryEditor from "./EntryEditor.svelte";

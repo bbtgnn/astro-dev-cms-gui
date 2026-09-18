@@ -15,7 +15,7 @@ Running the authoring shell on a real local Astro project (especially the refere
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: `src/cms.config.ts`, `src/content.config.ts`, content under `src/content/`. `@cms/routes` remains the HTTP dispatcher + fields/protocol barrel.
+How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: `src/cms.config.ts`, `src/content.config.ts`, content under `src/content/`. Field schemas and the CMS protocol live in `@cms/core`; the authoring UI lives in `@cms/authoring`.
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
 
 **Editor configuration**:

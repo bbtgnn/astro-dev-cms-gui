@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR-0018
 ---
 
 # Conceptual layers before package extraction
@@ -26,3 +26,6 @@ preemptively.
 the migration destination. The Astro host integration now lives in `@cms/astro`
 (`cms` / `createCmsIntegration`); `@cms/routes` keeps the HTTP dispatcher and
 fields/protocol barrel.
+
+See [ADR-0018](0018-three-packages-for-adr-0008-layers.md) for the locked
+three-package graph.

@@ -1,9 +1,6 @@
 /**
- * Architecture check (ADR-0008 / ADR-0005): the authoring application must not
- * import Astro, Node, filesystem, serializers, image-processing, or Git.
- *
- * Package path is illustrative — do not treat `@cms/authoring` as a final
- * extraction contract (ADR-0009).
+ * Architecture check (ADR-0008 / ADR-0018): the authoring UI must not import
+ * Astro, Node, filesystem, serializers, image-processing, or Git.
  *
  * Run: bun run packages/authoring/scripts/check-layer-boundaries.ts
  */
@@ -28,13 +25,13 @@ const FORBIDDEN: Array<{ id: string; pattern: RegExp }> = [
 		id: "git",
 		pattern: /^(?:simple-git|isomorphic-git|@isomorphic-git\/)/,
 	},
-	/** Host write-back / transport package — not for browser authoring UI. */
-	{ id: "host-routes", pattern: /^@cms\/routes(?:\/|$)/ },
+	/** Host package — not for browser authoring UI. */
+	{ id: "host-astro", pattern: /^@cms\/astro(?:\/|$)/ },
 	/**
-	 * Crud package root re-exports Node FS writers; browser code must use
-	 * `@cms/crud/fetch-client` or `@cms/crud/protocol` only.
+	 * `@cms/core` root re-exports Node FS writers; browser code must use
+	 * `@cms/core/fetch-client`, `@cms/core/protocol`, or `@cms/core/fields`.
 	 */
-	{ id: "crud-root", pattern: /^@cms\/crud$/ },
+	{ id: "core-root", pattern: /^@cms\/core$/ },
 ];
 
 const IMPORT_RE =

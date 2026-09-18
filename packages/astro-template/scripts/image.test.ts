@@ -5,9 +5,8 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createCmsHost, memoryWriter } from "@cms/crud";
+import { contentAssetPath, createCmsHost, memoryWriter } from "@cms/core";
 import { z } from "zod";
-import { contentAssetPath } from "../../fields/src/resolve-image.ts";
 
 const root = path.join(
 	path.dirname(fileURLToPath(import.meta.url)),

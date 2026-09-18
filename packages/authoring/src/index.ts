@@ -1,11 +1,16 @@
 /**
- * Reusable authoring application — collection list + entry editor composition.
- * Package name is provisional (ADR-0009); do not treat as final extraction contract.
+ * Authoring UI — shell, form shell, and chrome (ADR-0008 / ADR-0018).
  */
 
 export { default as AuthoringApp } from "./AuthoringApp.svelte";
 export type { AuthoringStatus } from "./autosave";
+export { default as PlaceholderChrome } from "./components/PlaceholderChrome.svelte";
 export { default as EntryEditor } from "./EntryEditor.svelte";
+export { default as CmsForm } from "./form/CmsForm.svelte";
+export type {
+	CmsAssetsFieldContext,
+	CmsEntryContext,
+} from "./form/ImageField.svelte";
 export {
 	type AuthoringSession,
 	type AuthoringSessionMode,
