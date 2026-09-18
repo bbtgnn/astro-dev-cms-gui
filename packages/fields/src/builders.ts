@@ -111,14 +111,12 @@ export function reference(collection: string, opts?: FieldUiOptions) {
 	});
 }
 
-/** Image path string — authoring convert+sizes via `/_cms` + host CmsImage. */
+/** Image path string — authoring upload via `/_cms` stores the original file. */
 export function image(opts?: ImageOptions) {
-	const { widths, quality, folder, label, options } = opts ?? {};
+	const { folder, label, options } = opts ?? {};
 	return attach(z.string(), "image", {
 		label,
 		options: {
-			...(widths ? { widths } : {}),
-			...(quality != null ? { quality } : {}),
 			...(folder ? { folder } : {}),
 			...options,
 		},

@@ -17,5 +17,5 @@ blocks:
     content:
       label: Open CMS
       href: /cms
-cover: ./hello/cover/cover.webp
+cover: ./hello/cover/pixel.png
 author: ada

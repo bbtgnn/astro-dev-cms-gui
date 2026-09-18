@@ -59,8 +59,6 @@ export type CmsAssetsCapability = {
 	uploadImage: boolean;
 	/** Max source upload size in bytes. */
 	maxUploadBytes: number;
-	/** Default width variants when the field does not override. */
-	defaultWidths: number[];
 };
 
 /**
@@ -91,17 +89,15 @@ export type DeleteEntryFailureCode =
 
 export type DeleteEntryResult = CmsResult<null, DeleteEntryFailureCode>;
 
-/** Image upload input — raw bytes; processing stays behind the protocol seam. */
+/** Image upload input — original bytes stored as-is (ADR-0015). */
 export type UploadImageInput = {
 	collection: string;
 	id: string;
 	/** Folder name under the entry id dir (default `cover`). */
 	name?: string;
 	bytes: Uint8Array;
-	/** Optional original filename for diagnostics / content-type hints. */
+	/** Original filename; sanitized basename is written under the field folder. */
 	filename?: string;
-	widths?: number[];
-	quality?: number;
 };
 
 /** Upload failure codes, including capability negotiation. */
@@ -109,8 +105,7 @@ export type UploadImageFailureCode =
 	| "forbidden"
 	| "conflict"
 	| "validation_failed"
-	| "unsupported_capability"
-	| "processing_failed";
+	| "unsupported_capability";
 
 export type UploadImageResult = CmsResult<
 	WrittenImageAssets,
@@ -129,7 +124,7 @@ export type CmsProtocol = {
 	upsertEntry(input: UpsertEntryInput): Promise<SaveEntryResult>;
 	deleteEntry(collection: string, id: string): Promise<DeleteEntryResult>;
 	/**
-	 * Process source bytes and write canonical WebP assets.
+	 * Store original upload bytes beside the entry and return the YAML-relative path.
 	 * Implementations without asset support return `unsupported_capability`.
 	 */
 	uploadImage(input: UploadImageInput): Promise<UploadImageResult>;
@@ -156,7 +151,6 @@ export function cmsErr<C extends string>(
 export const DEFAULT_CMS_ASSETS_CAPABILITY: CmsAssetsCapability = {
 	uploadImage: true,
 	maxUploadBytes: 10 * 1024 * 1024,
-	defaultWidths: [480, 960, 1600],
 };
 
 /** Default capabilities when an implementation does not override. */
@@ -177,9 +171,6 @@ export function resolveCmsCapabilities(
 			maxUploadBytes:
 				assetsPartial?.maxUploadBytes ??
 				DEFAULT_CMS_ASSETS_CAPABILITY.maxUploadBytes,
-			defaultWidths: assetsPartial?.defaultWidths
-				? [...assetsPartial.defaultWidths]
-				: [...DEFAULT_CMS_ASSETS_CAPABILITY.defaultWidths],
 		},
 	};
 }
@@ -191,7 +182,6 @@ export const CMS_ERR_DEFAULT_MESSAGE: Record<string, string> = {
 	conflict: "Conflict",
 	validation_failed: "Validation failed",
 	unsupported_capability: "Capability is not supported",
-	processing_failed: "Image processing failed",
 };
 
 /** Op-scoped failure vocabularies — single source for adapters and HTTP clients. */
@@ -220,7 +210,6 @@ export const UPLOAD_IMAGE_FAILURE_CODES = [
 	"conflict",
 	"validation_failed",
 	"unsupported_capability",
-	"processing_failed",
 ] as const satisfies readonly UploadImageFailureCode[];
 
 /** Map protocol failure codes to HTTP status for thin transports. */
@@ -236,8 +225,6 @@ export function httpStatusForCmsErr(code: string): number {
 			return 400;
 		case "unsupported_capability":
 			return 501;
-		case "processing_failed":
-			return 422;
 		default:
 			return 400;
 	}

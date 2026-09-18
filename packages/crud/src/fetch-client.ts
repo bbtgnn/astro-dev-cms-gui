@@ -177,8 +177,6 @@ export type CmsFetchClient = Omit<CmsProtocol, "uploadImage"> & {
 		collection: string;
 		id: string;
 		name?: string;
-		widths?: number[];
-		quality?: number;
 		filename?: string;
 	}): Promise<UploadImageResult>;
 };
@@ -300,8 +298,6 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			body.append("collection", input.collection);
 			body.append("id", input.id);
 			if (input.name) body.append("name", input.name);
-			if (input.widths) body.append("widths", JSON.stringify(input.widths));
-			if (input.quality != null) body.append("quality", String(input.quality));
 
 			const res = await fetch(`${root}/api/images`, {
 				method: "POST",
@@ -317,14 +313,7 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			return outcomeFromResponse(
 				res,
 				UPLOAD_IMAGE_FAILURE_CODES,
-				{
-					...legacyStatusMapForCodes(UPLOAD_IMAGE_FAILURE_CODES),
-					// Transport quirk: some hosts still report processor crashes as 500.
-					500: {
-						code: "processing_failed",
-						defaultMessage: defaultMessageForCmsErr("processing_failed"),
-					},
-				},
+				legacyStatusMapForCodes(UPLOAD_IMAGE_FAILURE_CODES),
 				{ includeIssues: true },
 			);
 		},

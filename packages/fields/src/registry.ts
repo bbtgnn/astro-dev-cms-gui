@@ -21,7 +21,7 @@ const defaults: Record<BuiltInWidget, FieldUiRegistryEntry> = {
 	},
 	/** Minimum text until live listEntries select (still stub). */
 	reference: { widget: "reference", sjsfWidget: "textWidget", stub: true },
-	/** Path string; form uses ImageField (upload → sharp sizes API). */
+	/** Path string; form uses ImageField (upload → original asset path). */
 	image: {
 		widget: "image",
 		sjsfWidget: "textWidget",

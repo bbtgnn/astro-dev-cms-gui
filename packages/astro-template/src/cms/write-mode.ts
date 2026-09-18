@@ -11,7 +11,6 @@ import {
 	memoryWriter,
 	nodeFsWriter,
 } from "@cms/crud";
-import { processImageToWebpSizes } from "../../../routes/src/process-image.ts";
 import { collections } from "../content.config";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -31,6 +30,5 @@ export function createTemplateCmsHost(opts?: { useMemory?: boolean }): CmsHost {
 		allowPaths,
 		writer,
 		collections: discovered,
-		processImage: processImageToWebpSizes,
 	});
 }

@@ -119,9 +119,8 @@ export function createFakeClient(opts: FakeClientOptions): FakeClient {
 				);
 			}
 			return cmsOk({
-				path: `./${input.id}/cover/cover.webp`,
-				files: [`posts/${input.id}/cover/cover.webp`],
-				widths: capabilities.assets.defaultWidths,
+				path: `./${input.id}/cover/${input.filename ?? "upload.bin"}`,
+				files: [`posts/${input.id}/cover/${input.filename ?? "upload.bin"}`],
 			});
 		},
 	};

@@ -22,7 +22,7 @@
 			<a href="/blocks-demo">/blocks-demo</a> — resolveBlock render (hero/cta)
 		</li>
 		<li>
-			<a href="/image-demo">/image-demo</a> — CmsImage srcset (cover folder)
+			<a href="/image-demo">/image-demo</a> — cover image (original asset)
 		</li>
 		<li>
 			<code>PUT</code> invalid → 400; <code>DELETE</code> → 204 (allowlist deny

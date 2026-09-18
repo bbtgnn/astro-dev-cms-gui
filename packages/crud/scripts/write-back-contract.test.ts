@@ -7,7 +7,6 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { processImageToWebpSizes } from "../../routes/src/process-image.ts";
 import {
 	adaptWriteModeToProtocol,
 	createCmsProtocol,
@@ -539,7 +538,6 @@ forEachBackend("assets capability contract", (backend) => {
 				allowPaths: ["posts"],
 				writer,
 				collections: [postsWithCover],
-				processImage: processImageToWebpSizes,
 			});
 
 			const caps = await protocol.getCapabilities();
@@ -547,8 +545,9 @@ forEachBackend("assets capability contract", (backend) => {
 			if (!caps.ok) return;
 			expect(caps.value.assets.uploadImage).toBe(true);
 			expect(typeof caps.value.assets.maxUploadBytes).toBe("number");
-			expect(Array.isArray(caps.value.assets.defaultWidths)).toBe(true);
-			expect(caps.value.assets.defaultWidths.length).toBeGreaterThan(0);
+			expect(
+				"defaultWidths" in (caps.value.assets as Record<string, unknown>),
+			).toBe(false);
 			expectNoFilesystemPaths(caps.value);
 
 			const created = await protocol.upsertEntry({
@@ -577,7 +576,7 @@ forEachBackend("assets capability contract", (backend) => {
 			});
 			expect(uploaded.ok).toBe(true);
 			if (!uploaded.ok) return;
-			expect(uploaded.value.path).toBe("./img-entry/cover/cover.webp");
+			expect(uploaded.value.path).toBe("./img-entry/cover/pixel.png");
 
 			const saved = await protocol.upsertEntry({
 				id: "img-entry",
@@ -627,7 +626,6 @@ forEachBackend("assets capability contract", (backend) => {
 				writer,
 				collections: [postsWithCover],
 				capabilities: { assets: { uploadImage: false } },
-				processImage: processImageToWebpSizes,
 			});
 			const unsupportedCaps = await unsupported.getCapabilities();
 			expect(unsupportedCaps.ok).toBe(true);

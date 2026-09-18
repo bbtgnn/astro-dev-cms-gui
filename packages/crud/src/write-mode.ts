@@ -319,6 +319,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 		): Promise<WrittenImageAssets> {
 			assertSafeEntryId(input.id);
 			const folderName = sanitizeAssetFolderName(input.name ?? "cover");
+			const fileName = sanitizeAssetFileName(input.filename);
 			const entryPath = await resolvePath(input.collection, input.id, true);
 			assertAllowed(entryPath);
 
@@ -329,46 +330,38 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			const folderAbs = joinRoot(root, folderRel);
 			assertAllowed(folderAbs);
 
-			const entryDir = path.dirname(entryPath);
-			const written: string[] = [];
-
-			for (const file of input.files) {
-				const relName = file.relativeToFolder.replace(/^\/+/, "");
-				if (
-					!relName ||
-					relName.includes("..") ||
-					relName.includes("\\") ||
-					path.isAbsolute(relName)
-				) {
-					throw Object.assign(new Error(`Unsafe asset name: ${relName}`), {
-						status: 400,
-						code: "UNSAFE_ASSET",
-					});
-				}
-				const abs = normalizeFs(path.join(folderAbs, relName));
-				if (!abs.startsWith(`${folderAbs}/`) && abs !== folderAbs) {
-					throw Object.assign(new Error(`Unsafe asset path: ${relName}`), {
-						status: 400,
-						code: "UNSAFE_ASSET",
-					});
-				}
+			let existing: string[] = [];
+			try {
+				existing = await writer.list(folderAbs);
+			} catch {
+				existing = [];
+			}
+			for (const name of existing) {
+				const abs = normalizeFs(path.join(folderAbs, name));
+				if (!abs.startsWith(`${folderAbs}/`)) continue;
 				assertAllowed(abs);
-				await writer.writeBytes(abs, file.bytes);
-				written.push(path.relative(root, abs).replace(/\\/g, "/"));
+				await writer.remove(abs);
 			}
 
-			const canonicalAbs = normalizeFs(path.join(folderAbs, "cover.webp"));
-			const relForYaml = path
-				.relative(entryDir, canonicalAbs)
-				.replace(/\\/g, "/");
+			const fileAbs = normalizeFs(path.join(folderAbs, fileName));
+			if (!fileAbs.startsWith(`${folderAbs}/`)) {
+				throw Object.assign(new Error(`Unsafe asset path: ${fileName}`), {
+					status: 400,
+					code: "UNSAFE_ASSET",
+				});
+			}
+			assertAllowed(fileAbs);
+			await writer.writeBytes(fileAbs, input.bytes);
+
+			const entryDir = path.dirname(entryPath);
+			const relForYaml = path.relative(entryDir, fileAbs).replace(/\\/g, "/");
 			const yamlPath = relForYaml.startsWith(".")
 				? relForYaml
 				: `./${relForYaml}`;
 
 			return {
 				path: yamlPath,
-				files: written,
-				widths: [...input.widths].sort((a, b) => a - b),
+				files: [path.relative(root, fileAbs).replace(/\\/g, "/")],
 			};
 		},
 
@@ -401,6 +394,24 @@ function sanitizeAssetFolderName(name: string): string {
 		});
 	}
 	return name;
+}
+
+/** Basename only; alphanumeric / `.` / `_` / `-`; no leading dots. */
+function sanitizeAssetFileName(name: string): string {
+	const base = path.basename(name.replace(/\\/g, "/"));
+	const cleaned = base.replace(/[^a-zA-Z0-9._-]/g, "_");
+	if (
+		!cleaned ||
+		cleaned === "." ||
+		cleaned === ".." ||
+		cleaned.startsWith(".")
+	) {
+		throw Object.assign(new Error(`Unsafe asset name: ${name}`), {
+			status: 400,
+			code: "UNSAFE_ASSET",
+		});
+	}
+	return cleaned;
 }
 
 function contentTypeFor(rel: string): string {

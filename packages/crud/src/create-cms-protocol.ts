@@ -38,23 +38,9 @@ type ErrLike = {
 	issues?: unknown;
 };
 
-/** Host-injected pixel pipeline (Sharp stays out of this package). */
-export type ProcessImageToWebpSizes = (
-	input: Uint8Array,
-	opts?: { widths?: number[]; quality?: number },
-) => Promise<{
-	files: Array<{ relativeToFolder: string; bytes: Uint8Array; width: number }>;
-	widths: number[];
-}>;
-
 export type AdaptProtocolOptions = {
 	/** Override optional protocol capabilities (defaults: deletion + assets). */
 	capabilities?: CmsCapabilitiesInput;
-	/**
-	 * Image processor used by {@link CmsProtocol.uploadImage}.
-	 * Required when `assets.uploadImage` is true; keep Sharp in the host/routes layer.
-	 */
-	processImage?: ProcessImageToWebpSizes;
 };
 
 export type CreateCmsProtocolOptions = CreateCmsHostOptions &
@@ -73,7 +59,6 @@ const CONFLICT_IMPL_CODES = new Set([
 const UPLOAD_VALIDATION_IMPL_CODES = new Set([
 	"VALIDATION_FAILED",
 	"UNSAFE_ASSET",
-	"INVALID_WIDTHS",
 	"MISSING_FILE",
 	"MISSING_ENTRY",
 ]);
@@ -182,7 +167,6 @@ export function adaptWriteModeToProtocol(
 	options?: AdaptProtocolOptions,
 ): CmsProtocol {
 	const capabilities = resolveCmsCapabilities(options?.capabilities);
-	const processImage = options?.processImage;
 
 	async function writeImageAssetsGuarded(
 		input: WriteImageAssetsInput,
@@ -261,12 +245,6 @@ export function adaptWriteModeToProtocol(
 					"Image upload is not supported",
 				);
 			}
-			if (!processImage) {
-				return cmsErr(
-					"unsupported_capability",
-					"Image processing is not configured",
-				);
-			}
 			if (!input.collection || !input.id) {
 				return cmsErr("validation_failed", "collection and id are required");
 			}
@@ -283,25 +261,13 @@ export function adaptWriteModeToProtocol(
 				);
 			}
 
-			const widths =
-				input.widths && input.widths.length > 0
-					? input.widths
-					: capabilities.assets.defaultWidths;
-
 			try {
-				const processed = await processImage(input.bytes, {
-					widths,
-					quality: input.quality,
-				});
 				const written = await writeImageAssetsGuarded({
 					collection: input.collection,
 					id: input.id,
 					name: input.name,
-					widths: processed.widths,
-					files: processed.files.map((f) => ({
-						relativeToFolder: f.relativeToFolder,
-						bytes: f.bytes,
-					})),
+					filename: input.filename ?? "upload.bin",
+					bytes: input.bytes,
 				});
 				return cmsOk(written);
 			} catch (err) {
@@ -310,8 +276,8 @@ export function adaptWriteModeToProtocol(
 				const message =
 					err instanceof Error
 						? err.message
-						: defaultMessageForCmsErr("processing_failed");
-				return cmsErr("processing_failed", message);
+						: defaultMessageForCmsErr("validation_failed");
+				return cmsErr("validation_failed", message);
 			}
 		},
 	};
@@ -328,13 +294,10 @@ export type CmsHost = {
  * Prefer this when the dispatcher needs GET /api/assets/*.
  */
 export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
-	const { capabilities, processImage, ...wmOptions } = options;
+	const { capabilities, ...wmOptions } = options;
 	const writeMode = createWriteMode(wmOptions);
 	return {
-		protocol: adaptWriteModeToProtocol(writeMode, {
-			capabilities,
-			processImage,
-		}),
+		protocol: adaptWriteModeToProtocol(writeMode, { capabilities }),
 		readAsset: (rel) => writeMode.readAsset(rel),
 	};
 }

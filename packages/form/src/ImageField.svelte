@@ -22,8 +22,6 @@
 			collection: string;
 			id: string;
 			name?: string;
-			widths?: number[];
-			quality?: number;
 			filename?: string;
 		}) => Promise<{ ok: true; path: string } | { ok: false; message: string }>;
 	};
@@ -58,19 +56,6 @@
 		return leaf && /^[a-zA-Z0-9_-]+$/.test(leaf) ? leaf : "cover";
 	}
 
-	function widths(): number[] | undefined {
-		const fromUi = uiOptions().widths;
-		if (Array.isArray(fromUi) && fromUi.every((n) => typeof n === "number")) {
-			return fromUi as number[];
-		}
-		return undefined;
-	}
-
-	function quality(): number | undefined {
-		const fromUi = uiOptions().quality;
-		return typeof fromUi === "number" ? fromUi : undefined;
-	}
-
 	const title = $derived(uiTitleOption(ctx, config.uiSchema) ?? "Image");
 
 	async function onFile(files: FileList | null) {
@@ -97,8 +82,6 @@
 				collection: entryCtx.collection,
 				id: entryCtx.id,
 				name: folderName(),
-				widths: widths(),
-				quality: quality(),
 				filename: file.name,
 			});
 			if (!result.ok) {
@@ -128,7 +111,7 @@
 		<p class="cms-image-path"><code>{value}</code></p>
 	{/if}
 	{#if busy}
-		<p class="cms-image-status">converting…</p>
+		<p class="cms-image-status">uploading…</p>
 	{/if}
 	{#if error}
 		<p class="cms-image-error" role="alert">{error}</p>

@@ -35,13 +35,12 @@ export type Writer = {
 	list(dir: string): Promise<string[]>;
 };
 
-/** Result of writing an entry-adjacent image folder (canonical WebP + width variants). */
+/** Result of writing one original asset beside an entry (ADR-0015). */
 export type WrittenImageAssets = {
-	/** Path relative to the entry YAML file (Astro `image()` input), e.g. `./hello/cover/cover.webp`. */
+	/** Path relative to the entry YAML file (Astro `image()` input), e.g. `./hello/cover/photo.jpg`. */
 	path: string;
 	/** Paths written, relative to content root. */
 	files: string[];
-	widths: number[];
 };
 
 export type WriteImageAssetsInput = {
@@ -49,10 +48,9 @@ export type WriteImageAssetsInput = {
 	id: string;
 	/** Folder name under the entry id dir (default `cover`). */
 	name?: string;
-	/** Configured widths (canonical = max). */
-	widths: number[];
-	/** Absolute filesystem paths already produced (canonical + variants). */
-	files: Array<{ relativeToFolder: string; bytes: Uint8Array }>;
+	/** Sanitized basename is applied by write-mode. */
+	filename: string;
+	bytes: Uint8Array;
 };
 
 export type ReadAssetResult = {
@@ -73,8 +71,8 @@ export type WriteMode = {
 	upsertEntry(input: UpsertEntryInput): Promise<ContentEntry>;
 	deleteEntry(collection: string, id: string): Promise<void>;
 	/**
-	 * Write WebP files into `{base}/{id}/{name}/` beside the entry YAML.
-	 * Returns Astro-relative canonical path for YAML `data`.
+	 * Write one original file into `{base}/{id}/{name}/` beside the entry YAML.
+	 * Clears prior files in that folder, then returns the YAML-relative path.
 	 */
 	writeImageAssets(input: WriteImageAssetsInput): Promise<WrittenImageAssets>;
 	/** Read an allowlisted file under the content root (dev asset serving). */

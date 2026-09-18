@@ -1,21 +1,17 @@
 ---
 /**
- * Host CmsImage — srcset from authored folder convention (cover.webp = max width).
+ * Dev preview of a persisted image path via the allowlisted CMS asset route.
+ * Site pages that need Astro optimization should use Astro `<Image>` / `image()`
+ * on the host projection (ADR-0015).
  */
-import {
-	contentAssetPath,
-	formatSrcset,
-	resolveImageSrcsetItems,
-} from "@cms/routes";
+import { contentAssetPath } from "@cms/routes";
 
 type Props = {
-	/** YAML-relative canonical path, e.g. `./hello/cover/cover.webp`. */
+	/** YAML-relative path, e.g. `./hello/cover/photo.jpg`. */
 	src: string;
 	/** Collection content base (allowlisted folder under content-sandbox). */
 	base?: string;
 	alt?: string;
-	widths?: number[];
-	sizes?: string;
 	/** Asset URL prefix (dev CMS asset route). */
 	assetBase?: string;
 };
@@ -24,17 +20,10 @@ const {
 	src,
 	base = "posts",
 	alt = "",
-	widths,
-	sizes = "100vw",
 	assetBase = "/_cms/api/assets",
 } = Astro.props as Props;
 
-const items = resolveImageSrcsetItems(src, widths);
-const urlFor = (file: string) =>
-	`${assetBase.replace(/\/+$/, "")}/${contentAssetPath(base, src, file)}`;
-const srcset = formatSrcset(items, (file) => urlFor(file));
-const canonicalFile = items.find((i) => i.file === "cover.webp")?.file ?? "cover.webp";
-const imgSrc = urlFor(canonicalFile);
+const imgSrc = `${assetBase.replace(/\/+$/, "")}/${contentAssetPath(base, src)}`;
 ---
 
-<img src={imgSrc} srcset={srcset} sizes={sizes} alt={alt} loading="lazy" />
+<img src={imgSrc} alt={alt} loading="lazy" />

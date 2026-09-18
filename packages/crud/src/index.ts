@@ -8,7 +8,6 @@ export type {
 	CmsHost,
 	CreateCmsHostOptions,
 	CreateCmsProtocolOptions,
-	ProcessImageToWebpSizes,
 } from "./create-cms-protocol";
 export {
 	createCmsHost,

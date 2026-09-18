@@ -52,23 +52,6 @@ function protocolErrResponse(result: {
 	);
 }
 
-function parseWidths(raw: FormDataEntryValue | null): number[] | undefined {
-	if (typeof raw !== "string" || !raw.trim()) return undefined;
-	try {
-		const parsed = JSON.parse(raw) as unknown;
-		if (
-			Array.isArray(parsed) &&
-			parsed.every((n) => typeof n === "number" && Number.isFinite(n))
-		) {
-			return parsed;
-		}
-	} catch {
-		const parts = raw.split(",").map((s) => Number(s.trim()));
-		if (parts.every((n) => Number.isFinite(n) && n > 0)) return parts;
-	}
-	return undefined;
-}
-
 /**
  * Handle a request whose pathname is under the CMS mount.
  * `path` is the rest after `/_cms/` (e.g. `api/collections/posts/hello`).
@@ -127,7 +110,7 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				});
 			}
 
-			// POST /api/images — multipart: file, collection, id, name?, widths?, quality?
+			// POST /api/images — multipart: file, collection, id, name?
 			if (path === "api/images" && method === "POST") {
 				const form = await request.formData();
 				const file = form.get("file");
@@ -151,12 +134,6 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				}
 
 				const buf = new Uint8Array(await file.arrayBuffer());
-				const widths = parseWidths(form.get("widths"));
-				const qualityRaw = form.get("quality");
-				const quality =
-					typeof qualityRaw === "string" && qualityRaw.trim()
-						? Number(qualityRaw)
-						: undefined;
 
 				const result = await protocol.uploadImage({
 					collection,
@@ -164,9 +141,6 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 					name,
 					bytes: buf,
 					filename: file.name,
-					widths,
-					quality:
-						quality != null && Number.isFinite(quality) ? quality : undefined,
 				});
 				if (!result.ok) return protocolErrResponse(result);
 				return Response.json(result.value);

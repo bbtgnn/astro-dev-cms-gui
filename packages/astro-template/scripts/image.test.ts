@@ -1,6 +1,5 @@
 /**
- * Portable check: sharp convert + protocol uploadImage + entry save (issue #17).
- * Also keeps srcset / safe-read allowlist coverage via createCmsHost.
+ * Portable check: original-byte uploadImage + entry save (ADR-0015 / #21).
  */
 
 import { describe, expect, test } from "bun:test";
@@ -8,11 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createCmsHost, memoryWriter } from "@cms/crud";
 import { z } from "zod";
-import {
-	contentAssetPath,
-	resolveImageSrcsetItems,
-} from "../../fields/src/resolve-image.ts";
-import { processImageToWebpSizes } from "../../routes/src/process-image.ts";
+import { contentAssetPath } from "../../fields/src/resolve-image.ts";
 
 const root = path.join(
 	path.dirname(fileURLToPath(import.meta.url)),
@@ -32,7 +27,7 @@ const png = Uint8Array.from(
 	(c) => c.charCodeAt(0),
 );
 
-describe("image convert + uploadImage + srcset helpers", () => {
+describe("original asset uploadImage + safe-read", () => {
 	const writer = memoryWriter();
 	const host = createCmsHost({
 		root,
@@ -46,21 +41,10 @@ describe("image convert + uploadImage + srcset helpers", () => {
 				config: { base: "posts", extension: "yaml" },
 			},
 		],
-		processImage: processImageToWebpSizes,
 	});
 	const { protocol } = host;
 
-	test("sharp emits cover + width variants", async () => {
-		const processed = await processImageToWebpSizes(png, {
-			widths: [480, 960, 1600],
-			quality: 80,
-		});
-		expect(processed.files).toHaveLength(3);
-		const names = processed.files.map((f) => f.relativeToFolder).sort();
-		expect(names).toEqual(["480.webp", "960.webp", "cover.webp"]);
-	});
-
-	test("protocol uploadImage + entry save + srcset + safe-read", async () => {
+	test("protocol uploadImage stores original + entry save + safe-read", async () => {
 		const created = await protocol.upsertEntry({
 			id: "hello",
 			collection: "posts",
@@ -74,6 +58,9 @@ describe("image convert + uploadImage + srcset helpers", () => {
 		expect(caps.ok).toBe(true);
 		if (!caps.ok) return;
 		expect(caps.value.assets.uploadImage).toBe(true);
+		expect(
+			"defaultWidths" in (caps.value.assets as Record<string, unknown>),
+		).toBe(false);
 
 		const uploaded = await protocol.uploadImage({
 			collection: "posts",
@@ -81,33 +68,44 @@ describe("image convert + uploadImage + srcset helpers", () => {
 			name: "cover",
 			bytes: png,
 			filename: "pixel.png",
-			widths: [480, 960, 1600],
 		});
 		expect(uploaded.ok).toBe(true);
 		if (!uploaded.ok) return;
-		expect(uploaded.value.path).toBe("./hello/cover/cover.webp");
+		expect(uploaded.value.path).toBe("./hello/cover/pixel.png");
+		expect(uploaded.value.files).toEqual(["posts/hello/cover/pixel.png"]);
 
-		let found480 = false;
+		let foundOriginal = false;
 		for (const [k, v] of writer.store.entries()) {
 			if (
-				k.replace(/\\/g, "/").endsWith("posts/hello/cover/480.webp") &&
+				k.replace(/\\/g, "/").endsWith("posts/hello/cover/pixel.png") &&
 				v instanceof Uint8Array
 			) {
-				found480 = true;
+				foundOriginal = true;
+				expect([...v]).toEqual([...png]);
 				break;
 			}
 		}
-		expect(found480).toBe(true);
+		expect(foundOriginal).toBe(true);
 
-		const items = resolveImageSrcsetItems(
-			uploaded.value.path,
-			[480, 960, 1600],
+		expect(contentAssetPath("posts", uploaded.value.path)).toBe(
+			"posts/hello/cover/pixel.png",
 		);
-		expect(contentAssetPath("posts", uploaded.value.path, "960.webp")).toBe(
-			"posts/hello/cover/960.webp",
+
+		const replaced = await protocol.uploadImage({
+			collection: "posts",
+			id: "hello",
+			name: "cover",
+			bytes: png,
+			filename: "other.png",
+		});
+		expect(replaced.ok).toBe(true);
+		if (!replaced.ok) return;
+		expect(replaced.value.path).toBe("./hello/cover/other.png");
+
+		const leftover = [...writer.store.keys()].filter((k) =>
+			k.replace(/\\/g, "/").includes("posts/hello/cover/pixel.png"),
 		);
-		expect(items[2]?.file).toBe("cover.webp");
-		expect(items[2]?.width).toBe(1600);
+		expect(leftover).toEqual([]);
 
 		let denied = false;
 		try {
@@ -120,17 +118,17 @@ describe("image convert + uploadImage + srcset helpers", () => {
 		const saved = await protocol.upsertEntry({
 			id: "hello",
 			collection: "posts",
-			data: { title: "img check", cover: uploaded.value.path },
+			data: { title: "img check", cover: replaced.value.path },
 			expectedRevision: created.value.revision,
 		});
 		expect(saved.ok).toBe(true);
 		if (!saved.ok) return;
-		expect(saved.value.data.cover).toBe(uploaded.value.path);
+		expect(saved.value.data.cover).toBe(replaced.value.path);
 
 		const reread = await protocol.getEntry("posts", "hello");
 		expect(reread.ok).toBe(true);
 		if (!reread.ok) return;
-		expect(reread.value.data.cover).toBe(uploaded.value.path);
+		expect(reread.value.data.cover).toBe(replaced.value.path);
 
 		const bad = await protocol.uploadImage({
 			collection: "posts",
@@ -143,6 +141,6 @@ describe("image convert + uploadImage + srcset helpers", () => {
 		const still = await protocol.getEntry("posts", "hello");
 		expect(still.ok).toBe(true);
 		if (!still.ok) return;
-		expect(still.value.data.cover).toBe(uploaded.value.path);
+		expect(still.value.data.cover).toBe(replaced.value.path);
 	});
 });

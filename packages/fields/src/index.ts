@@ -54,11 +54,7 @@ export {
 } from "./resolve-block";
 export {
 	contentAssetPath,
-	DEFAULT_IMAGE_SRCSET_WIDTHS,
-	formatSrcset,
-	type ImageSrcsetItem,
 	imageFolderFromCanonical,
-	resolveImageSrcsetItems,
 } from "./resolve-image";
 export {
 	type ResolveLocaleOptions,
@@ -91,6 +87,5 @@ export const samplePostsSchema = object(
 ).meta(config({ label: "Posts" }));
 
 export type SamplePostsInput = ZodNS.input<typeof samplePostsSchema>;
-
 
 export { z } from "zod";
