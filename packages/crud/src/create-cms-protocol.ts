@@ -50,10 +50,7 @@ export type CreateCmsProtocolOptions = CreateCmsHostOptions &
 export type { CreateCmsHostOptions };
 
 /** WriteMode throw codes that surface as protocol `conflict`. */
-const CONFLICT_IMPL_CODES = new Set([
-	"YAML_EXT_COLLISION",
-	"REVISION_CONFLICT",
-]);
+const CONFLICT_IMPL_CODES = new Set(["REVISION_CONFLICT"]);
 
 /** WriteMode throw codes that surface as protocol `validation_failed` on upload. */
 const UPLOAD_VALIDATION_IMPL_CODES = new Set([

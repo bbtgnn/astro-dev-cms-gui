@@ -50,10 +50,10 @@ void _authorsServerInputParity;
 const authors = defineCollection({
 	loader: withLoaderPathHint(
 		glob({
-			pattern: "**/*.{yaml,yml}",
+			pattern: "**/*.json",
 			base: "./src/content/authors",
 		}),
-		{ base: "authors", pattern: "**/*.{yaml,yml}" },
+		{ base: "authors", pattern: "**/*.json" },
 	),
 	schema: asAstroSchema(authorsShape),
 });
@@ -61,10 +61,10 @@ const authors = defineCollection({
 const posts = defineCollection({
 	loader: withLoaderPathHint(
 		glob({
-			pattern: "**/*.{yaml,yml}",
+			pattern: "**/*.json",
 			base: "./src/content/posts",
 		}),
-		{ base: "posts", pattern: "**/*.{yaml,yml}" },
+		{ base: "posts", pattern: "**/*.json" },
 	),
 	schema: asAstroSchema(
 		object(

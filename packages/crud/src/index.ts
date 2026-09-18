@@ -22,7 +22,7 @@ export {
 	CMS_LOADER_HINT,
 	discoverCollections,
 	resolveCollectionSchema,
-	scanYamlEntryIds,
+	scanEntryIds,
 	withLoaderPathHint,
 } from "./discovery";
 export { parseEntryFile, serializeEntryFile } from "./entry-file";
@@ -35,18 +35,17 @@ export {
 export { memoryWriter } from "./memory-writer";
 export { nodeFsWriter } from "./node-fs-writer";
 export type {
-	ResolvedYamlEntry,
-	ResolveYamlEntryOptions,
-	YamlExtension,
+	EntryExtension,
+	ResolvedEntry,
+	ResolveEntryOptions,
 } from "./path-resolve";
 export {
 	applyPathTemplate,
-	assertNoYamlExtCollision,
 	assertSafeEntryId,
-	DEFAULT_YAML_EXTENSION,
+	DEFAULT_ENTRY_EXTENSION,
 	entryRelPath,
 	idFromRelPath,
-	resolveYamlEntryPath,
+	resolveEntryPath,
 	writerExists,
 } from "./path-resolve";
 export type {

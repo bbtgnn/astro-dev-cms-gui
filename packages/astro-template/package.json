@@ -21,7 +21,6 @@
 		"@cms/routes": "workspace:*",
 		"astro": "catalog:",
 		"svelte": "catalog:",
-		"yaml": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {

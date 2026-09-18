@@ -76,7 +76,7 @@ _Avoid_: form builder (sjsf demo sense), content editor
 
 **Write mode**:
 Internal filesystem write-back implementation (list/get/upsert/delete, path
-rules, YAML, revisions) constructed with an injected **writer**. Not a second
+rules, JSON, revisions) constructed with an injected **writer**. Not a second
 public face beside the CMS protocol; hosts use `createCmsProtocol` /
 `createCmsHost`.
 _Avoid_: storage backend, persistence driver, parallel public write-back API

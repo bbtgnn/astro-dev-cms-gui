@@ -19,7 +19,7 @@ export type CollectionConfig = {
 	base?: string;
 	/** Reserved — not implemented in v1. */
 	kind?: "singleton";
-	extension?: "yaml" | "yml";
+	extension?: "json";
 };
 
 /**

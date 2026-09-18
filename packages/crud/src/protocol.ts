@@ -124,7 +124,7 @@ export type CmsProtocol = {
 	upsertEntry(input: UpsertEntryInput): Promise<SaveEntryResult>;
 	deleteEntry(collection: string, id: string): Promise<DeleteEntryResult>;
 	/**
-	 * Store original upload bytes beside the entry and return the YAML-relative path.
+	 * Store original upload bytes beside the entry and return the entry-relative path.
 	 * Implementations without asset support return `unsupported_capability`.
 	 */
 	uploadImage(input: UploadImageInput): Promise<UploadImageResult>;

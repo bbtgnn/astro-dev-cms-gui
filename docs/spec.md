@@ -137,8 +137,8 @@ graph approximates them while the migration proceeds.
 
 - [ADR-0005](adr/0005-write-back-contract.md) — the CMS protocol is the
   write-back seam; `/_cms` is an Astro transport.
-- [ADR-0006](adr/0006-yaml-only-entry-serialization-v1.md) — YAML-only
-  serialization in the v1 filesystem implementation.
+- [ADR-0017](adr/0017-json-only-entry-serialization-v1.md) — JSON-only
+  serialization in the v1 filesystem implementation (supersedes ADR-0006).
 - [ADR-0007](adr/0007-entry-id-path-conventions.md) — filesystem entry IDs,
   paths, discovery fallback, and allowlisting.
 - [ADR-0014](adr/0014-working-tree-is-the-local-draft.md) — valid changes write

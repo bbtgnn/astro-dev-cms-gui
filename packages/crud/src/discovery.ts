@@ -174,10 +174,10 @@ export function discoverCollections(
 }
 
 /**
- * FS-scan YAML entry ids under `baseDir` (`id` = relpath without extension).
+ * FS-scan JSON entry ids under `baseDir` (`id` = relpath without extension).
  * Prefers listing via `writer.list` (works for memory + node writers).
  */
-export async function scanYamlEntryIds(
+export async function scanEntryIds(
 	writer: Writer,
 	baseDir: string,
 ): Promise<string[]> {

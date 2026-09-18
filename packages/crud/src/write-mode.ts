@@ -6,14 +6,13 @@
 import path from "node:path";
 import { z } from "zod";
 import type { DiscoveredCollection } from "./discovery";
-import { scanYamlEntryIds } from "./discovery";
+import { scanEntryIds } from "./discovery";
 import { parseEntryFile, serializeEntryFile } from "./entry-file";
 import {
 	applyPathTemplate,
-	assertNoYamlExtCollision,
 	assertSafeEntryId,
-	DEFAULT_YAML_EXTENSION,
-	resolveYamlEntryPath,
+	DEFAULT_ENTRY_EXTENSION,
+	resolveEntryPath,
 	writerExists,
 } from "./path-resolve";
 import { opaqueRevision } from "./revision";
@@ -129,7 +128,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			assertSafeEntryId(id);
 			const baseRel = discovered.config?.base ?? discovered.base;
 			const baseAbs = joinRoot(root, baseRel);
-			const preferred = discovered.config?.extension ?? DEFAULT_YAML_EXTENSION;
+			const preferred = discovered.config?.extension ?? DEFAULT_ENTRY_EXTENSION;
 
 			if (discovered.config?.pathTemplate) {
 				const rel = applyPathTemplate(discovered.config.pathTemplate, {
@@ -140,7 +139,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 				return joinRoot(root, rel);
 			}
 
-			const resolved = await resolveYamlEntryPath(exists, baseAbs, id, {
+			const resolved = await resolveEntryPath(exists, baseAbs, id, {
 				preferredExt: preferred,
 				forCreate,
 			});
@@ -185,7 +184,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 					root,
 					discovered.config?.base ?? discovered.base,
 				);
-				const ids = await scanYamlEntryIds(writer, baseAbs);
+				const ids = await scanEntryIds(writer, baseAbs);
 				return ids.map((id) => ({ id }));
 			}
 
@@ -223,12 +222,9 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 
 			assertAllowed(absolutePath);
 			try {
-				await assertNoYamlExtCollision(exists, absolutePath);
 				const raw = await writer.readText(absolutePath);
 				return entryFromRaw(id, collection, raw);
-			} catch (err) {
-				const e = err as { code?: string; status?: number };
-				if (e.code === "YAML_EXT_COLLISION") throw err;
+			} catch {
 				return null;
 			}
 		},
@@ -250,7 +246,6 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 
 			const absolutePath = await resolvePath(input.collection, input.id, true);
 			assertAllowed(absolutePath);
-			await assertNoYamlExtCollision(exists, absolutePath);
 
 			let currentRaw: string | null = null;
 			try {
@@ -305,7 +300,6 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 		async deleteEntry(collection: string, id: string) {
 			const absolutePath = await resolvePath(collection, id, false);
 			assertAllowed(absolutePath);
-			await assertNoYamlExtCollision(exists, absolutePath);
 			await writer.remove(absolutePath);
 			if (!useDiscovery) {
 				catalog[collection] = (catalog[collection] ?? []).filter(
@@ -354,13 +348,13 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			await writer.writeBytes(fileAbs, input.bytes);
 
 			const entryDir = path.dirname(entryPath);
-			const relForYaml = path.relative(entryDir, fileAbs).replace(/\\/g, "/");
-			const yamlPath = relForYaml.startsWith(".")
-				? relForYaml
-				: `./${relForYaml}`;
+			const relForEntry = path.relative(entryDir, fileAbs).replace(/\\/g, "/");
+			const entryRelativePath = relForEntry.startsWith(".")
+				? relForEntry
+				: `./${relForEntry}`;
 
 			return {
-				path: yamlPath,
+				path: entryRelativePath,
 				files: [path.relative(root, fileAbs).replace(/\\/g, "/")],
 			};
 		},

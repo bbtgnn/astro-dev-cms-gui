@@ -38,7 +38,7 @@ describe("original asset uploadImage + safe-read", () => {
 				name: "posts",
 				base: "posts",
 				schema: postsSchema,
-				config: { base: "posts", extension: "yaml" },
+				config: { base: "posts", extension: "json" },
 			},
 		],
 	});

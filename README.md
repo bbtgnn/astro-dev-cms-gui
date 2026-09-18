@@ -13,7 +13,7 @@ Most “CMS for a static/git site” tools pull you into one of two traps:
 
 We want the useful middle:
 
-1. **Your Astro repo is the source of truth.** Content lives in the working tree (YAML today; markdown collections later). Write-back is allowlisted filesystem ops during authoring.
+1. **Your Astro repo is the source of truth.** Content lives in the working tree (JSON today; markdown collections later). Write-back is allowlisted filesystem ops during authoring.
 2. **Schemas you already write drive the UI.** Collection Zod (+ FieldUi on `.meta()`) becomes the form. Editors don’t maintain a parallel `config.yml`.
 3. **Dev integration is thin.** `cms()` from `@cms/astro` mounts the shell at `/cms` and the protocol at `/_cms`. Conventions: `src/cms.config.ts`, `src/content.config.ts`, content under `src/content/`. Dev-only by default.
 

@@ -21,7 +21,7 @@ Conventions (ADR-0016):
 
 - `src/cms.config.ts` — browser editor projection
 - `src/content.config.ts` — Astro + server discovery
-- `src/content/` — YAML entries (`posts`, `authors`)
+- `src/content/` — JSON entries (`posts`, `authors`)
 
 Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 
@@ -35,7 +35,7 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 | `/_cms/api/collections` | List discovered collections (`authors`, `posts`) |
 | `/_cms/api/collections/posts` | FS-scan entries under `src/content/posts` |
 | `/_cms/api/collections/authors` | FS-scan entries under `src/content/authors` |
-| `/_cms/api/collections/posts/hello` | Get YAML entry (includes `author` string id) |
+| `/_cms/api/collections/posts/hello` | Get JSON entry (includes `author` string id) |
 | `PUT /_cms/api/collections/posts/new-post` | Upsert (allowlisted) |
 | `DELETE /_cms/api/collections/posts/new-post` | Delete (204) |
 | `PUT` invalid posts body | Zod fail → 400 |
@@ -50,14 +50,14 @@ Allowlist deny is covered by the write-back contract tests, not the template hos
 
 ## Curl smoke (with `bun run dev` running)
 
-On-disk entries under `src/content/` are **YAML** (`.yaml`; `.yml` accepted on read).
+On-disk entries under `src/content/` are **JSON** (`.json`).
 
 ```bash
-# round-trip upsert → posts/new-post.yaml
+# round-trip upsert → posts/new-post.json
 curl -sS -X PUT \
   http://127.0.0.1:4321/_cms/api/collections/posts/new-post \
   -H 'content-type: application/json' \
-  -d '{"id":"new-post","collection":"posts","data":{"title":"Fresh","draft":false,"body":"yaml v1","summary":{"en":"Fresh"},"author":"ada"}}'
+  -d '{"id":"new-post","collection":"posts","data":{"title":"Fresh","draft":false,"body":"json v1","summary":{"en":"Fresh"},"author":"ada"}}'
 
 # 400 — Zod validation failure
 curl -sS -o /tmp/cms-400.json -w "%{http_code}\n" -X PUT \

@@ -37,7 +37,7 @@ export type Writer = {
 
 /** Result of writing one original asset beside an entry (ADR-0015). */
 export type WrittenImageAssets = {
-	/** Path relative to the entry YAML file (Astro `image()` input), e.g. `./hello/cover/photo.jpg`. */
+	/** Path relative to the entry JSON file (Astro `image()` input), e.g. `./hello/cover/photo.jpg`. */
 	path: string;
 	/** Paths written, relative to content root. */
 	files: string[];
@@ -71,8 +71,8 @@ export type WriteMode = {
 	upsertEntry(input: UpsertEntryInput): Promise<ContentEntry>;
 	deleteEntry(collection: string, id: string): Promise<void>;
 	/**
-	 * Write one original file into `{base}/{id}/{name}/` beside the entry YAML.
-	 * Clears prior files in that folder, then returns the YAML-relative path.
+	 * Write one original file into `{base}/{id}/{name}/` beside the entry JSON.
+	 * Clears prior files in that folder, then returns the entry-relative path.
 	 */
 	writeImageAssets(input: WriteImageAssetsInput): Promise<WrittenImageAssets>;
 	/** Read an allowlisted file under the content root (dev asset serving). */

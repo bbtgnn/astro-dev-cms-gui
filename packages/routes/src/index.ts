@@ -43,7 +43,7 @@ export {
 	nodeFsWriter,
 	resolveCmsCapabilities,
 	resolveCollectionSchema,
-	scanYamlEntryIds,
+	scanEntryIds,
 	withLoaderPathHint,
 } from "@cms/crud";
 /** Light re-export of authoring builders / FieldUi (implemented in @cms/fields). */

@@ -67,8 +67,8 @@ forEachBackend("write-back contract", (backend) => {
 			writer,
 			pathMap: {
 				posts: {
-					ok: "posts/ok.yaml",
-					evil: "../evil.yaml",
+					ok: "posts/ok.json",
+					evil: "../evil.json",
 				},
 				secrets: {
 					env: "../../.env",
@@ -93,8 +93,8 @@ forEachBackend("write-back contract", (backend) => {
 			writer,
 			pathMap: {
 				posts: {
-					ok: "posts/ok.yaml",
-					evil: "../evil.yaml",
+					ok: "posts/ok.json",
+					evil: "../evil.json",
 				},
 				secrets: {
 					env: "../../.env",
@@ -119,8 +119,8 @@ forEachBackend("write-back contract", (backend) => {
 			writer,
 			pathMap: {
 				posts: {
-					ok: "posts/ok.yaml",
-					evil: "../evil.yaml",
+					ok: "posts/ok.json",
+					evil: "../evil.json",
 				},
 				secrets: {
 					env: "../../.env",
@@ -135,16 +135,6 @@ forEachBackend("write-back contract", (backend) => {
 				expectedRevision: null,
 			}),
 		).rejects.toMatchObject({ status: 400 });
-	});
-
-	test("yaml+yml collision", async () => {
-		const fixture = fx.get();
-		await fixture.seedFile("posts/both.yaml", "title: a\n");
-		await fixture.seedFile("posts/both.yml", "title: b\n");
-		const collideMode = discoveryMode(fixture.root, fixture.writer);
-		await expect(collideMode.getEntry("posts", "both")).rejects.toMatchObject({
-			status: 409,
-		});
 	});
 
 	test("list/read/save + revision guards", async () => {
@@ -222,7 +212,10 @@ forEachBackend("write-back contract", (backend) => {
 			}),
 		).rejects.toMatchObject({ status: 409 });
 
-		await fixture.seedFile("posts/ok.yaml", "title: external\n");
+		await fixture.seedFile(
+			"posts/ok.json",
+			`${JSON.stringify({ title: "external" }, null, "\t")}\n`,
+		);
 		const afterExternal = await wm.getEntry("posts", "ok");
 		expect(afterExternal?.data.title).toBe("external");
 		expect(afterExternal?.revision).not.toBe(updated.revision);
@@ -306,7 +299,7 @@ forEachBackend("read-side protocol contract", (backend) => {
 				writer,
 				pathMap: {
 					posts: {
-						blocked: "../blocked.yaml",
+						blocked: "../blocked.json",
 					},
 				},
 			}),
@@ -315,16 +308,6 @@ forEachBackend("read-side protocol contract", (backend) => {
 		expect(forbidden.ok).toBe(false);
 		if (forbidden.ok) return;
 		expect(forbidden.code).toBe("forbidden");
-
-		await fixture.seedFile("posts/both.yaml", "title: a\n");
-		await fixture.seedFile("posts/both.yml", "title: b\n");
-		const collide = await discoveryProtocol(root, writer).getEntry(
-			"posts",
-			"both",
-		);
-		expect(collide.ok).toBe(false);
-		if (collide.ok) return;
-		expect(collide.code).toBe("conflict");
 	});
 });
 
@@ -417,12 +400,15 @@ forEachBackend("write-side protocol contract", (backend) => {
 		expect(reread.value.data.title).toBe("mixedCase");
 
 		if (backend === "filesystem") {
-			const abs = path.join(root, "posts/guard.yaml");
+			const abs = path.join(root, "posts/guard.json");
 			const raw = await readFile(abs, "utf8");
-			expect(raw).toBe("title: second\n");
+			expect(raw).toBe(`${JSON.stringify({ title: "second" }, null, "\t")}\n`);
 		}
 
-		await fixture.seedFile("posts/guard.yaml", "title: external\n");
+		await fixture.seedFile(
+			"posts/guard.json",
+			`${JSON.stringify({ title: "external" }, null, "\t")}\n`,
+		);
 		const afterExternal = await protocol.getEntry("posts", "guard");
 		const conflictExternal = await protocol.upsertEntry({
 			id: "guard",

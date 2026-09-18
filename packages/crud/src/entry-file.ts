@@ -1,19 +1,17 @@
 /**
- * YAML ↔ entry `data` (ticket 10).
+ * JSON ↔ entry `data` (ADR-0017).
  */
-import { parse, stringify } from "yaml";
 
 /** Parse an on-disk entry file body into `data`. */
 export function parseEntryFile(raw: string): Record<string, unknown> {
-	const data = parse(raw);
+	const data = JSON.parse(raw) as unknown;
 	if (data === null || typeof data !== "object" || Array.isArray(data)) {
-		throw new Error("Entry file must be a YAML mapping");
+		throw new Error("Entry file must be a JSON object");
 	}
 	return data as Record<string, unknown>;
 }
 
-/** Serialize `data` as a YAML document (prefer `.yaml` on write). */
+/** Serialize `data` as a JSON document (`.json` on write). */
 export function serializeEntryFile(data: Record<string, unknown>): string {
-	const body = stringify(data, { lineWidth: 0 }).trimEnd();
-	return `${body}\n`;
+	return `${JSON.stringify(data, null, "\t")}\n`;
 }

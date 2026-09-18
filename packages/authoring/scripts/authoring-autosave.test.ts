@@ -317,7 +317,7 @@ describe("authoring autosave", () => {
 	});
 });
 
-describe("authoring autosave self-host yaml", () => {
+describe("authoring autosave self-host json", () => {
 	let root: string;
 	let ctrl: ReturnType<typeof createAutosaveController> | undefined;
 
@@ -326,8 +326,8 @@ describe("authoring autosave self-host yaml", () => {
 		const postsDir = path.join(root, "posts");
 		await mkdir(postsDir, { recursive: true });
 		await writeFile(
-			path.join(postsDir, "hello.yaml"),
-			"title: Hello tracer\n",
+			path.join(postsDir, "hello.json"),
+			`${JSON.stringify({ title: "Hello tracer" }, null, "\t")}\n`,
 			"utf8",
 		);
 	});
@@ -338,7 +338,7 @@ describe("authoring autosave self-host yaml", () => {
 		await rm(root, { recursive: true, force: true });
 	});
 
-	test("valid title autosave updates YAML; preview identity matches host route", async () => {
+	test("valid title autosave updates JSON; preview identity matches host route", async () => {
 		const postsDir = path.join(root, "posts");
 		const protocol = createCmsProtocol({
 			root,
@@ -396,7 +396,7 @@ describe("authoring autosave self-host yaml", () => {
 		ctrl.handleChange({ title: "Autosaved title" });
 		await waitUntil(() => status === "saved", "self-host autosave settle", 200);
 
-		const yaml = await readFile(path.join(postsDir, "hello.yaml"), "utf8");
+		const json = await readFile(path.join(postsDir, "hello.json"), "utf8");
 		/** Same contract as host `getPreviewUrl("posts", id)` (ADR-0013). */
 		const preview = `/posts/${encodeURIComponent("hello")}`;
 
@@ -409,7 +409,7 @@ describe("authoring autosave self-host yaml", () => {
 			"utf8",
 		);
 
-		expect(yaml).toContain("Autosaved title");
+		expect(json).toContain("Autosaved title");
 		expect(preview).toBe("/posts/hello");
 		expect(reread.ok).toBe(true);
 		if (reread.ok) {

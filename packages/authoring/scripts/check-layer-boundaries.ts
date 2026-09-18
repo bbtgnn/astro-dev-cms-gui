@@ -22,7 +22,7 @@ const FORBIDDEN: Array<{ id: string; pattern: RegExp }> = [
 	{ id: "astro", pattern: /^astro(?:\/|$|:)/ },
 	{ id: "node", pattern: /^node:/ },
 	{ id: "filesystem", pattern: /^(?:fs|fs\/promises|path|node:fs|node:path)$/ },
-	{ id: "serializer", pattern: /^(?:yaml|js-yaml)$/ },
+	{ id: "serializer", pattern: /^(?:js-yaml)$/ },
 	{ id: "image-processing", pattern: /^sharp$/ },
 	{
 		id: "git",
