@@ -1,0 +1,30 @@
+{
+	"name": "@cms/astro",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Astro dev integration — /cms shell injectRoute + /_cms protocol middleware",
+	"exports": {
+		".": "./src/index.ts",
+		"./middleware-entry": "./src/middleware-entry.ts",
+		"./shell-page.astro": "./src/shell-page.astro",
+		"./CmsMount.svelte": "./src/CmsMount.svelte"
+	},
+	"dependencies": {
+		"@cms/authoring": "workspace:*",
+		"@cms/crud": "workspace:*",
+		"@cms/routes": "workspace:*"
+	},
+	"peerDependencies": {
+		"astro": "catalog:",
+		"svelte": "catalog:"
+	},
+	"devDependencies": {
+		"astro": "catalog:",
+		"svelte": "catalog:",
+		"typescript": "catalog:"
+	},
+	"scripts": {
+		"check": "tsc -p ."
+	}
+}

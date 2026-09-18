@@ -2,16 +2,7 @@
 	"extends": "astro/tsconfigs/strict",
 	"compilerOptions": {
 		"baseUrl": ".",
-		"customConditions": ["svelte"],
-		"paths": {
-			"@cms/fields": ["../fields/src/index.ts"],
-			"@cms/components": ["../components/src/index.ts"],
-			"@cms/components/*": ["../components/src/*"],
-			"@cms/form": ["../form/src/index.ts"],
-			"@cms/crud": ["../crud/src/index.ts"],
-			"@cms/crud/fetch-client": ["../crud/src/fetch-client.ts"],
-			"@cms/routes": ["../routes/src/index.ts"]
-		}
+		"customConditions": ["svelte"]
 	},
 	"include": [".astro/types.d.ts", "**/*"],
 	"exclude": ["dist"]

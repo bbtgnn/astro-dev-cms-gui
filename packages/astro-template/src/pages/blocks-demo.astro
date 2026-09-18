@@ -1,7 +1,7 @@
 ---
 /**
  * Host render of posts/hello blocks via resolveBlock + postBlocks map.
- * Reads YAML directly (same sandbox file as the CMS) so the demo does not depend on
+ * Reads YAML directly (same content file as the CMS) so the demo does not depend on
  * Astro Content Layer ingest of the posts schema.
  */
 import { readFileSync } from "node:fs";
@@ -19,7 +19,7 @@ type HelloDoc = {
 
 const yamlPath = join(
 	dirname(fileURLToPath(import.meta.url)),
-	"../../content-sandbox/posts/hello.yaml",
+	"../content/posts/hello.yaml",
 );
 const doc = parse(readFileSync(yamlPath, "utf8")) as HelloDoc;
 const blocks = Array.isArray(doc.blocks) ? doc.blocks : [];

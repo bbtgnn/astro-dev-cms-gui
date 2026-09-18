@@ -15,8 +15,12 @@ Running the authoring shell on a real local Astro project (especially the refere
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer code imports the public API from `@cms/routes` (re-exports builders/`config`/integration).
+How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: `src/cms.config.ts`, `src/content.config.ts`, content under `src/content/`. `@cms/routes` remains the HTTP dispatcher + fields/protocol barrel.
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
+
+**Editor configuration**:
+The browser-safe project module (`src/cms.config.ts` by convention) that exports editor field schemas (Zod + FieldUi / direct Svelte components) and optional preview URL mapping. Compiled through the host Vite graph as `virtual:@cms/config`; never mixed into the CMS protocol.
+_Avoid_: cms.config as a server discovery registry, content.config (for the browser edge)
 
 **Reference host**:
 The in-repo Astro app (`@cms/astro-template`) used to exercise and validate the product. It is a sample consumer, not the product identity.

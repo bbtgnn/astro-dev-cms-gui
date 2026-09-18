@@ -1,6 +1,6 @@
 /**
- * @cms/routes — consumer install root.
- * Dispatcher + middleware / integration seam + light fields barrel + discovery.
+ * @cms/routes — HTTP dispatcher + fields/protocol barrel.
+ * Astro host integration lives in `@cms/astro`.
  */
 
 /** Discovery + CMS protocol helpers (implemented in @cms/crud). */
@@ -99,18 +99,8 @@ export {
 	createCmsDispatcher,
 } from "./dispatcher";
 export {
-	type CmsIntegration,
-	type CmsIntegrationOptions,
 	type CmsMiddlewareContext,
 	type CmsMiddlewareHandler,
 	type CmsMiddlewareNext,
-	createCmsIntegration,
 	createCmsMiddleware,
 } from "./middleware";
-export {
-	CMS_CONFIG_VIRTUAL_ID,
-	type CmsConfigVitePluginOptions,
-	type CmsVitePlugin,
-	cmsConfigVitePlugin,
-	resolveEditorConfigEntry,
-} from "./vite-config-plugin";

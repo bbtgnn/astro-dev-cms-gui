@@ -1,9 +1,9 @@
 /**
- * Sample Astro content config — live discovery source for the authoring shell (P2/P5).
+ * Sample Astro content config — live discovery source for the authoring shell.
  * Builders / `config` / loader path hints / adapt* come from `@cms/routes`.
  *
- * Server registry edge only — browser editor schemas live in `cms/editor-config.ts`
- * and reach the client via `virtual:@cms/config` (ADR-0004).
+ * Server registry edge only — browser editor schemas live in `cms.config.ts`
+ * and reach the client via `virtual:@cms/config` (ADR-0004 / 0016).
  */
 import { reference as astroReference, defineCollection } from "astro:content";
 import {
@@ -51,7 +51,7 @@ const authors = defineCollection({
 	loader: withLoaderPathHint(
 		glob({
 			pattern: "**/*.{yaml,yml}",
-			base: "./content-sandbox/authors",
+			base: "./src/content/authors",
 		}),
 		{ base: "authors", pattern: "**/*.{yaml,yml}" },
 	),
@@ -62,7 +62,7 @@ const posts = defineCollection({
 	loader: withLoaderPathHint(
 		glob({
 			pattern: "**/*.{yaml,yml}",
-			base: "./content-sandbox/posts",
+			base: "./src/content/posts",
 		}),
 		{ base: "posts", pattern: "**/*.{yaml,yml}" },
 	),

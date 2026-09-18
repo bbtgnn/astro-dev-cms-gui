@@ -15,7 +15,7 @@ type HelloDoc = {
 
 const yamlPath = join(
 	dirname(fileURLToPath(import.meta.url)),
-	"../../content-sandbox/posts/hello.yaml",
+	"../content/posts/hello.yaml",
 );
 const doc = parse(readFileSync(yamlPath, "utf8")) as HelloDoc;
 const cover = typeof doc.cover === "string" ? doc.cover : null;
