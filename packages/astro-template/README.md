@@ -15,7 +15,9 @@ bun run dev
 Happy path: `http://127.0.0.1:4321/cms` (shell via `injectRoute`) and `/_cms`
 (JSON API via default host middleware — Astro ignores `_`-prefixed pages).
 
-`astro.config.mjs` is just `cms()`. Conventions (ADR-0016):
+`astro.config.mjs` uses `cms()` plus a monorepo-only Vite tweak so workspace
+`@cms/*` TypeScript source loads (not part of the published `@cms/astro` API).
+Conventions (ADR-0016):
 
 - `src/cms.config.ts` — browser editor projection
 - `src/content.config.ts` — Astro + server discovery

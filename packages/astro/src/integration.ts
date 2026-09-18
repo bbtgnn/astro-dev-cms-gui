@@ -68,8 +68,6 @@ type AstroConfigSetupParams = {
 	updateConfig: (config: {
 		vite?: {
 			plugins?: unknown[];
-			ssr?: { noExternal?: Array<string | RegExp> };
-			optimizeDeps?: { exclude?: string[] };
 		};
 	}) => void;
 	addMiddleware: (middleware: {
@@ -236,27 +234,13 @@ export function createCmsIntegration(
 				});
 			}
 
-			updateConfig({
-				vite: {
-					...(plugins.length > 0 ? { plugins } : {}),
-					// Workspace @cms/* packages export TypeScript with extensionless
-					// relatives. Node ESM cannot load those; Vite must process them.
-					ssr: {
-						noExternal: [/^@cms\//],
+			if (plugins.length > 0) {
+				updateConfig({
+					vite: {
+						plugins,
 					},
-					optimizeDeps: {
-						exclude: [
-							"@cms/astro",
-							"@cms/authoring",
-							"@cms/components",
-							"@cms/crud",
-							"@cms/fields",
-							"@cms/form",
-							"@cms/routes",
-						],
-					},
-				},
-			});
+				});
+			}
 		},
 	};
 

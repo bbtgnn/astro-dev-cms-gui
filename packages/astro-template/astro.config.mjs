@@ -5,4 +5,23 @@ import { defineConfig } from "astro/config";
 // https://astro.build/config
 export default defineConfig({
 	integrations: [svelte(), cms()],
+	vite: {
+		// Monorepo only: workspace @cms/* packages export TypeScript with
+		// extensionless relatives. Node ESM cannot load those; Vite must.
+		// Published @cms/* builds would not need this — keep it out of @cms/astro.
+		ssr: {
+			noExternal: [/^@cms\//],
+		},
+		optimizeDeps: {
+			exclude: [
+				"@cms/astro",
+				"@cms/authoring",
+				"@cms/components",
+				"@cms/crud",
+				"@cms/fields",
+				"@cms/form",
+				"@cms/routes",
+			],
+		},
+	},
 });
