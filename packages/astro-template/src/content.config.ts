@@ -1,6 +1,9 @@
 /**
  * Sample Astro content config — live discovery source for the authoring shell (P2/P5).
  * Builders / `config` / loader path hints / adapt* come from `@cms/routes`.
+ *
+ * Server registry edge only — browser editor schemas live in `cms/editor-config.ts`
+ * and reach the client via `virtual:@cms/config` (ADR-0004).
  */
 import { reference as astroReference, defineCollection } from "astro:content";
 import {
@@ -16,12 +19,33 @@ import {
 } from "@cms/routes";
 import { glob } from "astro/loaders";
 import type { z as AstroZod } from "astro/zod";
+import type { AuthorsPersistedInput } from "./cms/authors-persisted";
 import { postsBlocksField } from "./cms/post-blocks";
 
 /** Zod 4 builders → Astro `defineCollection` (still typed against astro/zod). */
 function asAstroSchema<T>(schema: T): AstroZod.ZodTypeAny {
 	return schema as unknown as AstroZod.ZodTypeAny;
 }
+
+/** Compile-time equality without a broad cast (sample authors collection). */
+type AssertEqual<A, B> =
+	(<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+		? true
+		: false;
+
+const authorsShape = object(
+	{
+		name: text({ label: "Name" }),
+	},
+	{ label: "Authors" },
+).meta(config({ label: "Authors", base: "authors" }));
+
+type AuthorsServerInput = import("zod").input<typeof authorsShape>;
+const _authorsServerInputParity: AssertEqual<
+	AuthorsServerInput,
+	AuthorsPersistedInput
+> = true;
+void _authorsServerInputParity;
 
 const authors = defineCollection({
 	loader: withLoaderPathHint(
@@ -31,14 +55,7 @@ const authors = defineCollection({
 		}),
 		{ base: "authors", pattern: "**/*.{yaml,yml}" },
 	),
-	schema: asAstroSchema(
-		object(
-			{
-				name: text({ label: "Name" }),
-			},
-			{ label: "Authors" },
-		).meta(config({ label: "Authors", base: "authors" })),
-	),
+	schema: asAstroSchema(authorsShape),
 });
 
 const posts = defineCollection({

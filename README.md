@@ -2,7 +2,7 @@
 
 A **server-light authoring shell** for Astro content collections — edit content as files in a real project, with a Svelte UI generated from your Zod field schemas. No always-on CMS server, no hosted admin cloud.
 
-This repo is still a **prototype / spike** monorepo, not a polished npm product. The idea below is the destination; the `@cms/*` packages are how we’re proving it.
+**Primary usage:** mount the shell as a **dev-mode route** inside an Astro project. The authoring UI is kept as general as possible behind a serializable CMS protocol; Astro + filesystem write-back is the first host path.
 
 ## The idea
 
@@ -15,7 +15,7 @@ We want the useful middle:
 
 1. **Your Astro repo is the source of truth.** Content lives in the working tree (YAML today; markdown collections later). Write-back is allowlisted filesystem ops during authoring.
 2. **Schemas you already write drive the UI.** Collection Zod (+ FieldUi on `.meta()`) becomes the form. Editors don’t maintain a parallel `config.yml`.
-3. **Dev integration is thin.** Mount one `/_cms` handler from `@cms/routes` into the Astro project; shell UI at `/cms`. Consumer install surface is `@cms/routes`.
+3. **Dev integration is thin.** Mount one `/_cms` handler from `@cms/routes` into the Astro project; shell UI at `/cms`. Consumer install surface is `@cms/routes`. Dev-only by default.
 
 Borrow the good bits from Kirby / Pages / Payload (field registry, blocks, locale fields, local write-back). Reject their control planes as the default.
 
@@ -24,7 +24,7 @@ Borrow the good bits from Kirby / Pages / Payload (field registry, blocks, local
 - Not a production CMS server or SaaS.
 - Not remote git auth, hosted admin, or any desktop packaging story — this monorepo is **`@cms/*` + Astro only**.
 
-## Self-host the shell (happy path)
+## Reference host (happy path)
 
 ```bash
 bun install
@@ -35,16 +35,18 @@ bun run dev
 - Shell UI: `/cms`
 - JSON API: `/_cms` (via middleware — Astro ignores `src/pages/_…`)
 
-## Current prototype package graph
+`@cms/astro-template` is the in-repo reference Astro consumer used for self-host validation.
+
+## Package graph
 
 ```
 @cms/fields → @cms/components → @cms/form → @cms/crud → @cms/routes → @cms/astro-template
 ```
 
-This graph describes the prototype, not the target extraction. See
+This graph approximates the current layout, not a locked extraction target. See
 [ADR-0009](docs/adr/0009-conceptual-layers-before-package-extraction.md).
 
-Portable smoke: `bun run check && bun run check:allowlist && bun run lint`.
+Checks: `bun run check && bun run check:allowlist && bun run lint`.
 
 ## Docs & language
 

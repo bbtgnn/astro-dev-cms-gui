@@ -1,11 +1,12 @@
 /**
- * Template write-mode — live `content.config` discovery (P2).
- * Happy path: no fakeCatalog; pathMap only for Track D allowlist deny smoke.
+ * Template CMS host — live `content.config` discovery behind createCmsHost.
+ * Happy path: discovered collections only (allowlist deny is contract-harness coverage).
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-	createWriteMode,
+	type CmsHost,
+	createCmsHost,
 	discoverCollections,
 	memoryWriter,
 	nodeFsWriter,
@@ -20,19 +21,14 @@ export const allowPaths = ["posts", "authors", "data"];
 
 const discovered = discoverCollections(collections);
 
-export function createTemplateWriteMode(opts?: { useMemory?: boolean }) {
+/** Self-host protocol + host-only asset read for the Astro `/_cms` transport. */
+export function createTemplateCmsHost(opts?: { useMemory?: boolean }): CmsHost {
 	const writer = opts?.useMemory ? memoryWriter() : nodeFsWriter();
 
-	return createWriteMode({
+	return createCmsHost({
 		root: contentRoot,
 		allowPaths,
 		writer,
 		collections: discovered,
-		// Track D: mapped path outside allowPaths → HTTP 403
-		pathMap: {
-			posts: {
-				blocked: "../blocked.yaml",
-			},
-		},
 	});
 }

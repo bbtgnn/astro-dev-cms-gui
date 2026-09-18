@@ -1,16 +1,18 @@
 /**
- * PROTOTYPE / SPIKE — single /_cms/[...path] JSON dispatcher.
+ * Single /_cms/[...path] JSON dispatcher.
+ * Thin Astro transport: maps CMS protocol outcomes ↔ HTTP; no domain rules.
  */
-import type { ContentEntry, WriteMode } from "@cms/crud";
+import type { CmsProtocol, ReadAssetResult } from "@cms/crud";
+import { httpStatusForCmsErr } from "@cms/crud";
 import { cmsDevOnlyGuard } from "./dev-guard";
-import {
-	DEFAULT_IMAGE_WIDTHS,
-	DEFAULT_WEBP_QUALITY,
-	processImageToWebpSizes,
-} from "./process-image";
 
 export type CmsDispatcherOptions = {
-	writeMode: WriteMode;
+	protocol: CmsProtocol;
+	/**
+	 * Host-side asset bytes for GET /api/assets/* (createCmsHost.readAsset).
+	 * Kept off the serializable CMS protocol so paths stay in the adapter.
+	 */
+	readAsset?: (relFromRoot: string) => Promise<ReadAssetResult>;
 	/** import.meta.env.DEV in Astro */
 	isDev: boolean;
 	allowInProd?: boolean;
@@ -33,21 +35,21 @@ function errorResponse(err: unknown): Response {
 	);
 }
 
-function parseWidths(raw: FormDataEntryValue | null): number[] | undefined {
-	if (typeof raw !== "string" || !raw.trim()) return undefined;
-	try {
-		const parsed = JSON.parse(raw) as unknown;
-		if (
-			Array.isArray(parsed) &&
-			parsed.every((n) => typeof n === "number" && Number.isFinite(n))
-		) {
-			return parsed;
-		}
-	} catch {
-		const parts = raw.split(",").map((s) => Number(s.trim()));
-		if (parts.every((n) => Number.isFinite(n) && n > 0)) return parts;
-	}
-	return undefined;
+/** Translate a typed protocol failure into HTTP without inventing domain codes. */
+function protocolErrResponse(result: {
+	ok: false;
+	code: string;
+	message: string;
+	issues?: unknown;
+}): Response {
+	return Response.json(
+		{
+			error: result.message,
+			code: result.code,
+			...(result.issues !== undefined ? { issues: result.issues } : {}),
+		},
+		{ status: httpStatusForCmsErr(result.code) },
+	);
 }
 
 /**
@@ -69,23 +71,36 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 
 		const path = pathSegments.filter(Boolean).join("/");
 		const method = request.method.toUpperCase();
-		const wm = options.writeMode;
+		const protocol = options.protocol;
 
 		try {
-			// Pass 0 heartbeat
+			// Heartbeat
 			if (path === "" || path === "ok") {
-				return Response.json({ ok: true, mount, prototype: true });
+				return Response.json({ ok: true, mount });
+			}
+
+			// GET /api/capabilities
+			if (path === "api/capabilities" && method === "GET") {
+				const result = await protocol.getCapabilities();
+				return Response.json(result.value);
 			}
 
 			// GET /api/collections
 			if (path === "api/collections" && method === "GET") {
-				return Response.json(await wm.listCollections());
+				const result = await protocol.listCollections();
+				return Response.json(result.value);
 			}
 
-			// GET /api/assets/<rel-from-content-root>
+			// GET /api/assets/<rel-from-content-root> — host readAsset, not protocol
 			if (path.startsWith("api/assets/") && method === "GET") {
+				if (!options.readAsset) {
+					return Response.json(
+						{ error: "Asset reads are not configured", code: "not_found" },
+						{ status: 404 },
+					);
+				}
 				const rel = path.slice("api/assets/".length);
-				const asset = await wm.readAsset(decodeURIComponent(rel));
+				const asset = await options.readAsset(decodeURIComponent(rel));
 				return new Response(Buffer.from(asset.bytes), {
 					status: 200,
 					headers: {
@@ -95,7 +110,7 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				});
 			}
 
-			// POST /api/images — multipart: file, collection, id, name?, widths?, quality?
+			// POST /api/images — multipart: file, collection, id, name?
 			if (path === "api/images" && method === "POST") {
 				const form = await request.formData();
 				const file = form.get("file");
@@ -104,7 +119,7 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				const name = String(form.get("name") ?? "cover");
 				if (!(file instanceof File)) {
 					return Response.json(
-						{ error: "file is required", code: "MISSING_FILE" },
+						{ error: "file is required", code: "validation_failed" },
 						{ status: 400 },
 					);
 				}
@@ -112,37 +127,23 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 					return Response.json(
 						{
 							error: "collection and id are required",
-							code: "MISSING_ENTRY",
+							code: "validation_failed",
 						},
 						{ status: 400 },
 					);
 				}
 
 				const buf = new Uint8Array(await file.arrayBuffer());
-				const widths = parseWidths(form.get("widths")) ?? [
-					...DEFAULT_IMAGE_WIDTHS,
-				];
-				const qualityRaw = form.get("quality");
-				const quality =
-					typeof qualityRaw === "string" && qualityRaw.trim()
-						? Number(qualityRaw)
-						: DEFAULT_WEBP_QUALITY;
 
-				const processed = await processImageToWebpSizes(buf, {
-					widths,
-					quality: Number.isFinite(quality) ? quality : DEFAULT_WEBP_QUALITY,
-				});
-				const written = await wm.writeImageAssets({
+				const result = await protocol.uploadImage({
 					collection,
 					id,
 					name,
-					widths: processed.widths,
-					files: processed.files.map((f) => ({
-						relativeToFolder: f.relativeToFolder,
-						bytes: f.bytes,
-					})),
+					bytes: buf,
+					filename: file.name,
 				});
-				return Response.json(written);
+				if (!result.ok) return protocolErrResponse(result);
+				return Response.json(result.value);
 			}
 
 			// /api/collections/:collection[/:id]
@@ -152,35 +153,42 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				const id = collMatch[2] ? decodeURIComponent(collMatch[2]) : undefined;
 
 				if (!id && method === "GET") {
-					return Response.json(await wm.listEntries(collection));
+					const result = await protocol.listEntries(collection);
+					// Transport keeps the prior `{ id }[]` JSON shape for shell compat.
+					return Response.json(
+						result.value.map(({ id: entryId }) => ({ id: entryId })),
+					);
 				}
 
 				if (id && method === "GET") {
-					const entry = await wm.getEntry(collection, id);
-					if (!entry) {
-						return Response.json({ error: "Not found" }, { status: 404 });
-					}
-					return Response.json(entry);
+					const result = await protocol.getEntry(collection, id);
+					if (!result.ok) return protocolErrResponse(result);
+					return Response.json(result.value);
 				}
 
 				if (id && method === "PUT") {
-					const body = (await request.json()) as Partial<ContentEntry>;
-					const entry: ContentEntry = {
-						id,
-						collection,
-						data: (body.data ?? body) as Record<string, unknown>,
+					const body = (await request.json()) as {
+						id?: string;
+						collection?: string;
+						data?: Record<string, unknown>;
+						expectedRevision?: string | null;
 					};
-					// Prefer explicit payload shape when provided
-					if (body.id && body.collection && body.data) {
-						entry.id = body.id;
-						entry.collection = body.collection;
-						entry.data = body.data;
-					}
-					return Response.json(await wm.upsertEntry(entry));
+					const result = await protocol.upsertEntry({
+						id: body.id ?? id,
+						collection: body.collection ?? collection,
+						data: (body.data ?? body) as Record<string, unknown>,
+						expectedRevision:
+							body.expectedRevision === undefined
+								? null
+								: body.expectedRevision,
+					});
+					if (!result.ok) return protocolErrResponse(result);
+					return Response.json(result.value);
 				}
 
 				if (id && method === "DELETE") {
-					await wm.deleteEntry(collection, id);
+					const result = await protocol.deleteEntry(collection, id);
+					if (!result.ok) return protocolErrResponse(result);
 					return new Response(null, { status: 204 });
 				}
 			}

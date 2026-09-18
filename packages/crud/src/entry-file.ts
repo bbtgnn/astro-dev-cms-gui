@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE — YAML ↔ entry `data` (ticket 10).
+ * YAML ↔ entry `data` (ticket 10).
  */
 import { parse, stringify } from "yaml";
 

@@ -23,7 +23,10 @@ import "@sjsf/basic-theme/css/basic.css";
 // Registers textareaWidget for markdown multi-line fields (P5).
 import "@sjsf/basic-theme/extra-widgets/textarea-include";
 import { theme } from "./cms-theme";
-import type { CmsEntryContext } from "./ImageField.svelte";
+import type {
+	CmsAssetsFieldContext,
+	CmsEntryContext,
+} from "./ImageField.svelte";
 
 function isZodSchema(value: unknown): value is z.ZodType {
 	return (
@@ -41,7 +44,9 @@ let {
 	title = "@cms/form",
 	collection = "",
 	entryId = "",
+	assets = null,
 	onSubmit,
+	onChange,
 }: {
 	/** JSON Schema (preferred across Astro islands) or live Zod when same-bundle. */
 	schema?: z.ZodType | Record<string, unknown> | null;
@@ -56,7 +61,14 @@ let {
 	/** Entry context for image upload (and similar). */
 	collection?: string;
 	entryId?: string;
+	/** Capability-aware image upload seam (omit / null → upload disabled). */
+	assets?: CmsAssetsFieldContext | null;
 	onSubmit?: (data: Record<string, unknown>) => void;
+	/**
+	 * Fired when the author edits form state (Bind setter), not on initial bind.
+	 * Used by authoring autosave — values update immediately; write-back is separate.
+	 */
+	onChange?: (data: Record<string, unknown>) => void;
 } = $props();
 
 const entryBox: CmsEntryContext = $state({
@@ -64,12 +76,23 @@ const entryBox: CmsEntryContext = $state({
 	id: "",
 });
 
+const assetsBox: CmsAssetsFieldContext = $state({
+	uploadEnabled: false,
+});
+
 $effect(() => {
 	entryBox.collection = collection;
 	entryBox.id = entryId;
 });
 
+$effect(() => {
+	assetsBox.uploadEnabled = assets?.uploadEnabled === true;
+	assetsBox.maxUploadBytes = assets?.maxUploadBytes;
+	assetsBox.uploadImage = assets?.uploadImage;
+});
+
 setContext("cms.entry", entryBox);
+setContext("cms.assets", assetsBox);
 
 let lastSubmit = $state<Record<string, unknown> | null>(null);
 let liveValue = $state<Record<string, unknown>>({});
@@ -103,7 +126,10 @@ const form = untrack(() => {
 		value: [
 			() => liveValue,
 			(v) => {
-				liveValue = v as Record<string, unknown>;
+				const record = v as Record<string, unknown>;
+				liveValue = record;
+				// Author edits only — initialValue assignment above does not use this setter.
+				onChange?.(record);
 			},
 		],
 		onSubmit: (data) => {

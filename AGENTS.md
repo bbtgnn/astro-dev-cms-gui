@@ -1,9 +1,10 @@
 # Astro Dev CMS — agent notes
 
-Prototype monorepo toward a **backend-agnostic authoring UI** over Astro content
-collections. Editor config (Zod + FieldUi + direct Svelte components) compiles through
-the host Vite graph; the backend speaks a serializable CMS protocol. Filesystem is the
-first adapter, not the product identity. Not a hosted git CMS control plane.
+**Backend-agnostic authoring UI** over Astro content collections, delivered mainly as a
+**dev-mode route** inside an Astro project. Editor config (Zod + FieldUi + direct Svelte
+components) compiles through the host Vite graph; the host speaks a serializable CMS
+protocol. Filesystem is the first write-back path, not the product identity. Not a hosted
+git CMS control plane.
 
 ## Before exploring
 
@@ -23,7 +24,7 @@ first adapter, not the product identity. Not a hosted git CMS control plane.
 - **Blocks / preview:** block schemas stay separate from production renderers; the real Astro page is the default preview (ADR-0012, 0013).
 - **Local draft:** valid changes write atomically to the working tree with revision guards; invalid browser state does not replace canonical content (ADR-0014).
 - **Packages:** current `@cms/*` graph is approximate; do not explode or relock extraction yet (ADR-0009).
-- **Self-host proof:** `@cms/astro-template` on Bun — `bun run dev` → site `:4321`, shell `/cms`, API `/_cms`.
+- **Reference host:** `@cms/astro-template` on Bun — `bun run dev` → site `:4321`, shell `/cms`, API `/_cms`.
 - **Checks:** `bun run check && bun run check:allowlist && bun run lint`.
 
 ## Where work belongs
@@ -34,7 +35,7 @@ first adapter, not the product identity. Not a hosted git CMS control plane.
 - Navigation and system summary → `docs/spec.md` and map issue #1.
 - Session state not captured elsewhere → temporary handoff only; link to durable artifacts rather than duplicating them.
 
-Do not put roadmaps, prototype-gap inventories, or feature requirements in agent instructions.
+Do not put roadmaps, gap inventories, or feature requirements in agent instructions.
 
 ## Out of scope (v1)
 

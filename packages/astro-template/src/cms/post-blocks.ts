@@ -1,6 +1,9 @@
 /**
  * Posts `blocksLayout` schemas (content.config-safe — no .astro imports).
  * Pair with `post-blocks-render.ts` for site `resolveBlock` components.
+ *
+ * Import builders from `@cms/fields` (not `@cms/routes`) so browser editor
+ * config can reuse this module without pulling Node FS / crypto.
  */
 import {
 	type BlockDefinition,
@@ -8,7 +11,7 @@ import {
 	markdown,
 	object,
 	text,
-} from "@cms/routes";
+} from "@cms/fields";
 
 export const postBlockSchemas = {
 	hero: {

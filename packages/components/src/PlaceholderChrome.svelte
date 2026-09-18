@@ -1,4 +1,4 @@
-<!-- PROTOTYPE / SPIKE — placeholder chrome for @cms/components -->
+<!-- Placeholder chrome for @cms/components -->
 <script lang="ts">
 let { label = "@cms/components" }: { label?: string } = $props();
 </script>

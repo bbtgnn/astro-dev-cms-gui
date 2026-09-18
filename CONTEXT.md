@@ -1,6 +1,8 @@
 # Astro Dev CMS
 
-Domain language for a server-light authoring shell over Astro content collections, validated first-party on a real local Astro host.
+Domain language for a server-light authoring shell over Astro content collections.
+Primary usage: a **dev-mode route** inside an Astro project. The authoring UI stays
+backend-agnostic; Astro + filesystem write-back is the first host path.
 
 ## Language
 
@@ -9,16 +11,28 @@ The UI an editor uses at author-time to create and change content entries. Not a
 _Avoid_: CMS server, admin panel, dashboard
 
 **Self-host validation**:
-Proving the authoring shell by running it on a real local Astro project (especially `@cms/astro-template`), not only via docs or demos.
+Running the authoring shell on a real local Astro project (especially the reference host `@cms/astro-template`) to prove integration and write-back — not only via docs or demos.
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (and can be pulled in from GitHub without a polished registry release). Consumer code imports the public API from `@cms/routes` only (re-exports builders/`config`/integration).
+How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer code imports the public API from `@cms/routes` (re-exports builders/`config`/integration).
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
+
+**Reference host**:
+The in-repo Astro app (`@cms/astro-template`) used to exercise and validate the product. It is a sample consumer, not the product identity.
+_Avoid_: dogfood app, prototype template (as the product name)
 
 **Shell UI**:
 The Svelte interface rendered inside the Astro-hosted authoring shell.
 _Avoid_: admin SPA, CMS frontend
+
+**Authoring session**:
+The in-browser module that owns one content-entry edit against the CMS protocol:
+statuses, guarded write-back (revision chaining), preview eligibility after
+successful save, form remount rules (create→edit, conflict reload), and the
+authoring-facing asset upload (file → field path | message). Debounced autosave
+is an internal seam. The Shell UI is a thin view over the session.
+_Avoid_: autosave controller (as the public face), editor store, form state manager
 
 **Field schema**:
 The per-field definition that pairs a validation/type schema with UI metadata used to generate editors. In this product, usually a Zod schema with FieldUi on `.meta()` (builders return Zod for Astro).
@@ -35,6 +49,10 @@ _Avoid_: widget map (Decap-only sense), component library
 **Write-back**:
 The path by which edits from the authoring shell land in project files (or a local store that later syncs to files).
 _Avoid_: persistence, save API, storage backend
+
+**CMS protocol**:
+The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + discovered collections. Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
+_Avoid_: save API, REST CRUD, WriteMode (as a public API)
 
 **Content entry**:
 One unit of content addressed by the shell (a file or logical document in a collection).
@@ -53,14 +71,18 @@ An (open-thread) authoring-shell capability to define or edit field schemas thro
 _Avoid_: form builder (sjsf demo sense), content editor
 
 **Write mode**:
-Domain-level content ops (list/get/upsert/delete…) for the authoring shell; constructed with an injected **writer**, not a runtime string enum.
-_Avoid_: storage backend, persistence driver
+Internal filesystem write-back implementation (list/get/upsert/delete, path
+rules, YAML, revisions) constructed with an injected **writer**. Not a second
+public face beside the CMS protocol; hosts use `createCmsProtocol` /
+`createCmsHost`.
+_Avoid_: storage backend, persistence driver, parallel public write-back API
 
 **Writer**:
-A concrete implementation plugged into **write mode** that performs reads/writes (e.g. local FS, later other backends). Injected as a value, not selected by a runtime string enum.
+A concrete implementation plugged into write-back that performs reads/writes
+(e.g. local FS, in-memory). Injected as a value into protocol/host construction,
+not selected by a runtime string enum.
 _Avoid_: storage backend, adapter (unless naming a specific Astro adapter)
 
 **Open thread**:
 A decision or feature deliberately left unresolved on the map: in scope later, not part of the current destination’s closed route.
 _Avoid_: backlog item, nice-to-have (unless listed as such), out of scope
-

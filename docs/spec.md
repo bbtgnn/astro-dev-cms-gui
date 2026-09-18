@@ -9,8 +9,33 @@ live in GitHub Issues.
 
 ## Product direction
 
-Astro Dev CMS is a local-first authoring shell over Astro content collections:
+**North star:** the best **code-extensible building blocks** for a **tidy**
+content editing experience over Astro content collections.
 
+Steal Kirby’s panel *feel* (composable, calm) and Payload’s *config-in-code*
+habit; reject Kirby’s YAML blueprints and Payload’s Next-shaped admin clunk.
+The job is a local-first **authoring shell**, not a production CMS identity.
+
+- **Building blocks (v1 surface):** Zod + FieldUi / direct Svelte widgets,
+  recursive layouts (tabs, groups, grids), and blocks. Shell-chrome plugins
+  that replace the form shell are out of the star.
+- **Defaults vs custom widgets:** the product owns excellent stock building
+  blocks and tidy default editing. Bad UX from a consumer’s clever custom
+  widget is the consumer’s business.
+- **Tidy** means visual calm, structural calm (one entry, one form, clear
+  sections), and interaction calm (predictable draft / conflict behavior).
+- **Blocks DX:** prefer a declare-time `defineBlock({ schema, render })` (or
+  equivalent) that registers schema and production renderer together for
+  humans; [ADR-0012](adr/0012-block-schema-and-production-renderers-stay-separate.md)
+  remains the invariant (separate registries; no required per-block authoring
+  preview). Facade is intended DX, not a supersession of 0012.
+- **How we judge “best”:** the reference host (`@cms/astro-template`) plus a
+  small set of Kirby-like acceptance scenes (compose an entry, nested blocks,
+  tidy sections). Payload is the config foil, not the UX bar.
+
+Delivery and architecture (unchanged):
+
+- main delivery is a **dev-mode route** inside a consumer Astro project;
 - project content remains the source of truth;
 - the shell UI is a client-side Svelte application;
 - SJSF powers schema-driven forms;
@@ -19,12 +44,20 @@ Astro Dev CMS is a local-first authoring shell over Astro content collections:
 - the shell UI exchanges serializable persisted input through a CMS protocol;
 - Astro is the first host and the filesystem is the first write-back
   implementation;
+- integration is intended for local development (dev-only by default);
 - the real Astro page is the default preview;
 - Git remains outside the CMS protocol.
 
 The portable claim is a backend-agnostic authoring UI with host-compiled editor
-configuration. It is not a hosted Git CMS or a UI that downloads executable
-components from a backend.
+configuration.
+
+**Anti-goals (product identity):**
+
+- YAML/JSON blueprint config as the primary way to define fields;
+- a Next/React admin as the shell;
+- a CSS visual builder / repo-mapped cascade editor as the product;
+- hosted git CMS or an always-on production CMS server as the identity;
+- guaranteeing good UX for every custom widget a consumer ships.
 
 ## Source hierarchy
 
@@ -49,13 +82,13 @@ Host project
                     | Vite module graph
                     v
 Authoring UI
-  shell UI + form shell + SJSF + authoring state
+  shell UI + form shell + SJSF + authoring session
                     |
                     | serializable CMS protocol
                     v
 Host / write-back implementations
   Astro mount + transport + server registry
-  filesystem discovery + validation + atomic write-back + images
+  filesystem discovery + validation + atomic write-back + original assets
 ```
 
 The conceptual modules are:
@@ -108,6 +141,8 @@ graph approximates them while the migration proceeds.
   paths, discovery fallback, and allowlisting.
 - [ADR-0014](adr/0014-working-tree-is-the-local-draft.md) — valid changes write
   to the working tree with atomic, revision-guarded write-back.
+- [ADR-0015](adr/0015-store-original-assets-astro-optimizes.md) — authoring stores
+  original assets; Astro optimizes images at render (no Sharp upload pipeline).
 
 ADR-0001 and ADR-0002 are retained as superseded history.
 
@@ -141,7 +176,7 @@ splitting.
 
 Implementation tickets should be small, reviewable slices with external
 behavior, acceptance criteria, tests, dependencies, and explicit out-of-scope
-work. Prototype gaps and migration phases belong there, not in this index.
+work. Migration phases and open gaps belong there, not in this index.
 
 ## Technical references
 

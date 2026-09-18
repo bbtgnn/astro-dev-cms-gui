@@ -1,12 +1,11 @@
-<!-- PROTOTYPE / SPIKE — dogfood authoring shell home (tracer bullet) -->
+<!-- Reference host home for the authoring shell -->
 
 <main>
-	<h1>Authoring shell (prototype)</h1>
-	<p>Tracer bullet for the dogfood template CMS shell.</p>
+	<h1>Astro Dev CMS</h1>
+	<p>Reference host for the authoring shell (dev route <code>/cms</code>).</p>
 	<ul>
 		<li>
-			<a href="/cms"><strong>/cms</strong></a> — P4 shell loop (collections →
-			entries → editor)
+			<a href="/cms"><strong>/cms</strong></a> — collections → entries → editor
 		</li>
 		<li><a href="/_cms/ok">/_cms/ok</a> — API heartbeat</li>
 		<li><a href="/_cms/api/collections">/_cms/api/collections</a></li>
@@ -14,16 +13,20 @@
 		<li>
 			<a href="/_cms/api/collections/posts/hello">/_cms/api/collections/posts/hello</a>
 		</li>
-		<li><a href="/form-spike">/form-spike</a> — CmsForm spike</li>
+		<li><a href="/form-spike">/form-spike</a> — example form page</li>
+		<li>
+			<a href="/posts/hello"><strong>/posts/hello</strong></a> — real Astro
+			preview route (ADR-0013)
+		</li>
 		<li>
 			<a href="/blocks-demo">/blocks-demo</a> — resolveBlock render (hero/cta)
 		</li>
 		<li>
-			<a href="/image-demo">/image-demo</a> — CmsImage srcset (cover folder)
+			<a href="/image-demo">/image-demo</a> — cover image (original asset)
 		</li>
 		<li>
-			Track D: <code>PUT</code> invalid → 400; <code>posts/blocked</code> → 403;
-			<code>DELETE</code> → 204
+			<code>PUT</code> invalid → 400; <code>DELETE</code> → 204 (allowlist deny
+			covered by contract tests)
 		</li>
 	</ul>
 </main>

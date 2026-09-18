@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE / SPIKE — refuse write API outside DEV unless overridden.
+ * Refuse write API outside DEV unless overridden.
  */
 export function cmsDevOnlyGuard(opts: {
 	isDev: boolean;

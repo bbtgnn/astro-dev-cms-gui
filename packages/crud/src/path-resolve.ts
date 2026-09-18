@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE — id ↔ YAML relpath helpers (ticket 11).
+ * Id ↔ YAML relpath helpers (ticket 11).
  * P1 still resolves via pathMap in write-mode; these helpers are the P2 seam.
  */
 import path from "node:path";

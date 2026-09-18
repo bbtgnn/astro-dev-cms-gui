@@ -1,34 +1,25 @@
 ---
 /**
- * PROTOTYPE / SPIKE — P4/P5 authoring shell loop (collections → entries → editor).
- * UI lives at /cms; JSON API remains middleware-mounted at /_cms.
- * Schemas come from live content.config discovery (P2); uiSchema carries markdown textarea.
+ * Dev route: Astro mount for the reusable authoring application.
+ * UI at /cms; JSON API remains middleware-mounted at /_cms.
+ * Editor schemas + direct Svelte fields come from virtual:@cms/config (Vite),
+ * wired in the client-only mount — not serialized through Astro frontmatter.
  */
 
 import { PlaceholderChrome } from "@cms/components";
-import { discoverCollections, toFormSchemas } from "@cms/routes";
-import ShellList from "../components/ShellList.svelte";
-import { collections } from "../content.config";
-
-const discovered = discoverCollections(collections);
-const schemas = Object.fromEntries(
-	discovered.map((c) => {
-		const { schema, uiSchema } = toFormSchemas(c.schema);
-		return [c.name, { schema, uiSchema }];
-	}),
-);
+import CmsMount from "../components/CmsMount.svelte";
 ---
 
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
-		<title>CMS shell (prototype)</title>
+		<title>CMS shell</title>
 	</head>
 	<body>
 		<p><a href="/">← home</a></p>
 		<PlaceholderChrome label="@cms/components" />
 		<!-- client:only — sjsf templates break under Astro/Vite SSR -->
-		<ShellList client:only="svelte" schemas={schemas} />
+		<CmsMount client:only="svelte" />
 	</body>
 </html>

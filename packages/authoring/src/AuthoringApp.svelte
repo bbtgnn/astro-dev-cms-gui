@@ -1,52 +1,87 @@
-<!-- PROTOTYPE / SPIKE — P4 shell loop: collections → entries → editor -->
+<!--
+  Authoring application: collections → entries → editor.
+  Receives protocol client + host-compiled editor configuration (ADR-0008).
+  Owns AuthoringSession lifecycle; EntryEditor is a thin session view.
+-->
 <script lang="ts">
 import {
+	type CmsCapabilities,
 	type ContentEntry,
-	createFetchClient,
+	type EntryIdentity,
 	isCmsFetchError,
 } from "@cms/crud/fetch-client";
-import type { UiSchemaNode } from "@cms/fields";
-import { onMount } from "svelte";
-import ShellEditor from "./ShellEditor.svelte";
-
-type CollectionFormSchemas = {
-	schema: Record<string, unknown>;
-	uiSchema?: UiSchemaNode;
-};
+import { onDestroy, onMount } from "svelte";
+import type { z } from "zod";
+import EntryEditor from "./EntryEditor.svelte";
+import {
+	type AuthoringSession,
+	createAuthoringSession,
+} from "./session";
+import type {
+	AuthoringClient,
+	EditorCollections,
+	GetPreviewUrl,
+} from "./types";
 
 let {
-	schemas = {},
+	client,
+	collections: editorCollections,
+	getPreviewUrl = undefined,
 }: {
-	/** collection name → JSON Schema (from Astro / @cms/fields) */
-	schemas?: Record<string, CollectionFormSchemas>;
+	client: AuthoringClient;
+	collections: EditorCollections;
+	/**
+	 * Optional host-compiled preview URL builder (ADR-0013).
+	 * Absent / returning null → no preview action (no broken control).
+	 */
+	getPreviewUrl?: GetPreviewUrl;
 } = $props();
 
-const client = createFetchClient("/_cms");
-
-type View = "collections" | "entries" | "editor" | "create";
-
-let view = $state<View>("collections");
+let view = $state<"collections" | "entries" | "editor" | "create">(
+	"collections",
+);
 let loading = $state(false);
 let error = $state<string | null>(null);
 
+let capabilities = $state.raw<CmsCapabilities | null>(null);
 let collections = $state.raw<{ name: string }[]>([]);
-let entries = $state.raw<{ id: string }[]>([]);
+let entries = $state.raw<EntryIdentity[]>([]);
 let selectedCollection = $state<string | null>(null);
 let selectedEntryId = $state<string | null>(null);
-let entry = $state.raw<ContentEntry | null>(null);
+/** Parent-owned session — disposed when leaving editor/create or remounting. */
+let session = $state.raw<AuthoringSession | null>(null);
+
+function disposeSession() {
+	session?.dispose();
+	session = null;
+}
 
 function errMsg(e: unknown): string {
 	if (isCmsFetchError(e)) return e.message;
 	return e instanceof Error ? e.message : String(e);
 }
 
+function editorSchemaFor(name: string | null): z.ZodType | null {
+	if (!name) return null;
+	return (editorCollections[name] as z.ZodType | undefined) ?? null;
+}
+
+const activeSchema = $derived(editorSchemaFor(selectedCollection));
+
+async function loadCapabilities() {
+	const result = await client.getCapabilities();
+	capabilities = result.value;
+}
+
 async function loadCollections() {
 	loading = true;
 	error = null;
 	try {
-		collections = await client.listCollections();
+		disposeSession();
+		await loadCapabilities();
+		const result = await client.listCollections();
+		collections = result.value;
 		entries = [];
-		entry = null;
 		selectedCollection = null;
 		selectedEntryId = null;
 		view = "collections";
@@ -60,11 +95,12 @@ async function loadCollections() {
 async function selectCollection(name: string) {
 	loading = true;
 	error = null;
+	disposeSession();
 	selectedCollection = name;
 	selectedEntryId = null;
-	entry = null;
 	try {
-		entries = await client.listEntries(name);
+		const result = await client.listEntries(name);
+		entries = result.value;
 		view = "entries";
 	} catch (e) {
 		error = errMsg(e);
@@ -80,11 +116,25 @@ async function openEntry(id: string) {
 	error = null;
 	selectedEntryId = id;
 	try {
-		entry = await client.getEntry(selectedCollection, id);
+		const result = await client.getEntry(selectedCollection, id);
+		if (!result.ok) {
+			error = `${result.code}: ${result.message}`;
+			disposeSession();
+			return;
+		}
+		disposeSession();
+		session = createAuthoringSession({
+			client,
+			collection: selectedCollection,
+			mode: { kind: "edit", entry: result.value },
+			schema: editorSchemaFor(selectedCollection),
+			capabilities,
+			getPreviewUrl,
+		});
 		view = "editor";
 	} catch (e) {
 		error = errMsg(e);
-		entry = null;
+		disposeSession();
 	} finally {
 		loading = false;
 	}
@@ -92,60 +142,68 @@ async function openEntry(id: string) {
 
 function startCreate() {
 	if (!selectedCollection) return;
+	disposeSession();
 	selectedEntryId = null;
-	entry = null;
+	session = createAuthoringSession({
+		client,
+		collection: selectedCollection,
+		mode: { kind: "create" },
+		schema: editorSchemaFor(selectedCollection),
+		capabilities,
+		getPreviewUrl,
+	});
 	view = "create";
 	error = null;
 }
 
 async function refreshEntries() {
 	if (!selectedCollection) return;
-	entries = await client.listEntries(selectedCollection);
+	const result = await client.listEntries(selectedCollection);
+	entries = result.value;
 }
 
 async function onSaved(saved: ContentEntry) {
 	selectedEntryId = saved.id;
-	entry = saved;
-	view = "editor";
+	if (view === "create") view = "editor";
 	await refreshEntries();
 }
 
 async function onDeleted() {
-	entry = null;
+	disposeSession();
 	selectedEntryId = null;
 	view = "entries";
 	await refreshEntries();
 }
 
 function backToEntries() {
-	entry = null;
+	disposeSession();
 	selectedEntryId = null;
 	view = "entries";
 	error = null;
 }
 
 function backToCollections() {
+	disposeSession();
 	selectedCollection = null;
 	selectedEntryId = null;
-	entry = null;
 	entries = [];
 	view = "collections";
 	error = null;
 }
 
-const activeSchemas = $derived(
-	selectedCollection ? (schemas[selectedCollection] ?? null) : null,
-);
-
 onMount(() => {
 	void loadCollections();
+});
+
+onDestroy(() => {
+	disposeSession();
 });
 </script>
 
 <main>
 	<p>
-		<strong>PROTOTYPE / SPIKE</strong> — P4 shell loop via
-		<code>@cms/crud/fetch-client</code>
+		Authoring application over the CMS protocol and host-compiled editor
+		configuration.
 	</p>
 
 	<p>
@@ -209,26 +267,13 @@ onMount(() => {
 				{/each}
 			</ul>
 		</section>
-	{:else if view === "editor" && selectedCollection && entry}
-		<ShellEditor
+	{:else if (view === "editor" || view === "create") && selectedCollection && session}
+		<EntryEditor
+			{session}
 			collection={selectedCollection}
-			entryId={entry.id}
-			schema={activeSchemas?.schema ?? null}
-			uiSchema={activeSchemas?.uiSchema}
-			value={entry.data}
+			schema={activeSchema}
 			onSaved={(saved) => void onSaved(saved)}
 			onDeleted={() => void onDeleted()}
-			onCancel={backToEntries}
-		/>
-	{:else if view === "create" && selectedCollection}
-		<ShellEditor
-			collection={selectedCollection}
-			entryId="new-post"
-			schema={activeSchemas?.schema ?? null}
-			uiSchema={activeSchemas?.uiSchema}
-			value={{}}
-			creating={true}
-			onSaved={(saved) => void onSaved(saved)}
 			onCancel={backToEntries}
 		/>
 	{/if}

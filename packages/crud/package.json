@@ -3,10 +3,11 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "PROTOTYPE — write mode + writers (no UI)",
+	"description": "CMS protocol + writers (filesystem write-back behind createCmsHost)",
 	"exports": {
 		".": "./src/index.ts",
-		"./fetch-client": "./src/fetch-client.ts"
+		"./fetch-client": "./src/fetch-client.ts",
+		"./protocol": "./src/protocol.ts"
 	},
 	"dependencies": {
 		"@cms/fields": "workspace:*",
@@ -17,6 +18,7 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p ."
+		"check": "tsc -p .",
+		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts"
 	}
 }

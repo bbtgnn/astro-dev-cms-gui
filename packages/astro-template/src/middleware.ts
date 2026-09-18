@@ -1,15 +1,19 @@
 /**
- * PROTOTYPE / SPIKE — Track C: template consumes createCmsIntegration from @cms/routes.
+ * Reference host: mounts /_cms via createCmsMiddleware from @cms/routes.
  * Astro ignores `_`-prefixed pages, so /_cms is mounted here.
+ * Vite `virtual:@cms/config` is registered via createCmsIntegration in astro.config.
  */
 import { defineMiddleware } from "astro:middleware";
-import { createCmsIntegration } from "@cms/routes";
-import { createTemplateWriteMode } from "./cms/write-mode";
+import { createCmsMiddleware } from "@cms/routes";
+import { createTemplateCmsHost } from "./cms/write-mode";
 
-const cms = createCmsIntegration({
-	writeMode: createTemplateWriteMode(),
-	isDev: true,
-	mount: "/_cms",
-});
+const host = createTemplateCmsHost();
 
-export const onRequest = defineMiddleware(cms.middleware);
+export const onRequest = defineMiddleware(
+	createCmsMiddleware({
+		protocol: host.protocol,
+		readAsset: host.readAsset,
+		isDev: true,
+		mount: "/_cms",
+	}),
+);
