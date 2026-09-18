@@ -32,7 +32,7 @@
 		"build": "bun run --filter @cms/astro-template build",
 		"check": "tsc -p packages/routes && tsc -p packages/crud && tsc -p packages/fields && bun run --filter @cms/form check && bun run --filter @cms/components check && bun run --filter @cms/authoring check",
 		"check:allowlist": "bun test packages/crud/scripts/write-back-contract.test.ts && bun run packages/authoring/scripts/check-layer-boundaries.ts && bun test packages/authoring/scripts/authoring-deletion.test.ts packages/authoring/scripts/authoring-assets.test.ts packages/authoring/scripts/authoring-autosave.test.ts packages/authoring/scripts/authoring-session.test.ts",
-		"check:image": "bun run packages/astro-template/scripts/check-image.ts",
+		"check:image": "bun test packages/astro-template/scripts/image.test.ts",
 		"lint": "biome check .",
 		"format": "biome check --write ."
 	},

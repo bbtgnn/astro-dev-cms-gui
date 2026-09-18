@@ -24,6 +24,6 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "svelte-check --tsconfig ./tsconfig.json && bun ./scripts/check-ajv-schema.ts"
+		"check": "svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/ajv-schema.test.ts"
 	}
 }
