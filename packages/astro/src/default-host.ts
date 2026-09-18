@@ -1,0 +1,30 @@
+/**
+ * Package default CmsHost factory (ADR-0016).
+ * Wired when `cms()` runs without a project `hostModule`.
+ *
+ * Discovers collections from the project's `content.config` and writes under
+ * the configured content root (default `src/content`).
+ */
+
+import { collections } from "virtual:@cms/content-config";
+import { contentRoot } from "virtual:@cms/integration-options";
+import {
+	type CmsHost,
+	createCmsHost,
+	discoverCollections,
+	nodeFsWriter,
+} from "@cms/crud";
+
+export function createHost(): CmsHost {
+	const discovered = discoverCollections(collections);
+	const allowPaths = [
+		...new Set(discovered.map((collection) => collection.base)),
+	];
+
+	return createCmsHost({
+		root: contentRoot,
+		allowPaths,
+		writer: nodeFsWriter(),
+		collections: discovered,
+	});
+}

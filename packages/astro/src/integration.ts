@@ -1,22 +1,22 @@
 /**
  * Astro host integration — consumer mount seam.
  *
+ * Happy path (ADR-0016):
+ *
  * ```ts
  * import { cms } from "@cms/astro";
  *
  * export default defineConfig({
- *   integrations: [
- *     svelte(),
- *     cms({
- *       editorConfig: "./src/cms/editor-config.ts",
- *       hostModule: "./src/cms/host.ts", // exports createHost(): CmsHost
- *     }),
- *   ],
+ *   integrations: [svelte(), cms()],
  * });
  * ```
  *
+ * Conventions: `src/cms.config.ts`, `src/content.config.ts`, `src/content/`.
+ * Escape hatches: `editorConfig`, `hostModule`, `contentRoot`.
+ *
  * Manual middleware (tests / advanced hosts) still lives on `@cms/routes`:
- * `createCmsMiddleware`.
+ * `createCmsMiddleware`. Pass `hostModule: false` with `protocol` + `isDev`
+ * to expose `integration.middleware` for `defineMiddleware`.
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,27 +26,39 @@ import {
 	createCmsMiddleware,
 } from "@cms/routes";
 import {
+	CMS_CONFIG_CONVENTION,
 	type CmsVitePlugin,
+	CONTENT_CONFIG_CONVENTION,
 	cmsConfigVitePlugin,
+	cmsContentConfigVitePlugin,
 	cmsHostVitePlugin,
 	cmsIntegrationOptionsVitePlugin,
+	DEFAULT_CONTENT_ROOT,
+	resolveConventionEntry,
 	resolveProjectEntry,
 } from "./vite-config-plugin";
 
 export type CmsIntegrationOptions = {
 	/**
 	 * Browser-safe editor configuration module (project-relative or absolute).
+	 * Defaults to `src/cms.config.{ts,mjs,js}` when present.
 	 * Exposed to the client as `virtual:@cms/config`.
 	 */
 	editorConfig?: string;
 	/**
 	 * Project module that exports `createHost(): CmsHost`.
-	 * When set, registers Astro middleware that mounts the CMS protocol transport.
+	 * When omitted, uses the package default host from `content.config` +
+	 * `contentRoot`. Pass `false` to skip protocol middleware.
 	 */
-	hostModule?: string;
+	hostModule?: string | false;
+	/**
+	 * Write-back root relative to the project (or absolute).
+	 * Defaults to `src/content`. Used by the package default host only.
+	 */
+	contentRoot?: string;
 	/**
 	 * Browser path for the authoring shell page.
-	 * Defaults to `/cms` when `editorConfig` is set; pass `false` to skip injectRoute.
+	 * Defaults to `/cms` when an editor config is resolved; pass `false` to skip injectRoute.
 	 */
 	shellPath?: string | false;
 } & Partial<CmsDispatcherOptions>;
@@ -80,8 +92,8 @@ export type CmsIntegration = {
 	/** Shell page pattern when injectRoute runs; omitted when skipped. */
 	shellPath?: string;
 	/**
-	 * Pass to `defineMiddleware(...)` when `protocol` was provided without
-	 * `hostModule`. Omitted when the integration auto-mounts via `addMiddleware`.
+	 * Pass to `defineMiddleware(...)` when `hostModule: false` and
+	 * `protocol` / `isDev` were provided. Omitted when auto-mounting.
 	 */
 	middleware?: CmsMiddlewareHandler;
 	hooks?: {
@@ -108,39 +120,30 @@ function workspaceFsAllow(projectRoot: string): string[] {
 	return [projectRoot, packageRoot, packagesDir];
 }
 
+function defaultHostEntry(): string {
+	return fileURLToPath(new URL("./default-host.ts", import.meta.url));
+}
+
 /**
  * Named install object for the Astro host surface.
- * - With `editorConfig`: registers `virtual:@cms/config` and (by default) injects `/cms`.
- * - With `hostModule`: registers host/options virtuals + Astro `addMiddleware`.
- * - With `protocol` (no `hostModule`): exposes `middleware` for manual
- *   `defineMiddleware` (tests / advanced hosts).
+ * - Resolves `src/cms.config.*` (or `editorConfig`) → `virtual:@cms/config` + `/cms`.
+ * - Resolves default or project host → Astro `addMiddleware` for `/_cms`.
+ * - With `hostModule: false` + `protocol`: exposes `middleware` for manual mount.
  */
 export function createCmsIntegration(
 	options: CmsIntegrationOptions = {},
 ): CmsIntegration {
 	const mount = (options.mount ?? "/_cms").replace(/\/+$/, "") || "/_cms";
-	const editorConfig = options.editorConfig;
-	const hostModule = options.hostModule;
 	const allowInProd = options.allowInProd;
-
 	const shellPathOption = options.shellPath;
-	const resolvedShellPath =
-		shellPathOption === false
-			? undefined
-			: shellPathOption != null
-				? normalizeShellPath(shellPathOption)
-				: editorConfig != null
-					? "/cms"
-					: undefined;
 
 	const integration: CmsIntegration = {
 		name: "@cms/astro",
 		mount,
-		...(resolvedShellPath != null ? { shellPath: resolvedShellPath } : {}),
 	};
 
 	if (
-		options.hostModule == null &&
+		options.hostModule === false &&
 		options.protocol != null &&
 		options.isDev != null
 	) {
@@ -153,78 +156,123 @@ export function createCmsIntegration(
 		});
 	}
 
-	if (editorConfig != null || hostModule != null || resolvedShellPath != null) {
-		integration.hooks = {
-			"astro:config:setup"({
-				config,
-				updateConfig,
-				addMiddleware,
-				injectRoute,
-			}) {
-				const root = projectRootFromAstroConfig(config.root);
-				const plugins: CmsVitePlugin[] = [];
+	// Optimistic shellPath before setup resolves convention files (tests / docs).
+	if (shellPathOption === false) {
+		// leave unset
+	} else if (shellPathOption != null) {
+		integration.shellPath = normalizeShellPath(shellPathOption);
+	} else {
+		integration.shellPath = "/cms";
+	}
 
-				if (editorConfig != null) {
-					plugins.push(
-						cmsConfigVitePlugin({
-							entry: resolveProjectEntry(editorConfig, root),
-						}),
-					);
-				}
+	integration.hooks = {
+		"astro:config:setup"({ config, updateConfig, addMiddleware, injectRoute }) {
+			const root = projectRootFromAstroConfig(config.root);
 
-				if (hostModule != null || resolvedShellPath != null) {
-					plugins.push(cmsIntegrationOptionsVitePlugin({ mount, allowInProd }));
-				}
+			const editorConfigEntry =
+				options.editorConfig != null
+					? resolveProjectEntry(options.editorConfig, root)
+					: resolveConventionEntry(root, CMS_CONFIG_CONVENTION);
 
-				if (hostModule != null) {
-					plugins.push(
-						cmsHostVitePlugin({
-							entry: resolveProjectEntry(hostModule, root),
-						}),
-					);
-					addMiddleware({
-						order: "pre",
-						entrypoint: new URL("./middleware-entry.ts", import.meta.url),
-					});
-				}
+			const contentConfigEntry = resolveConventionEntry(
+				root,
+				CONTENT_CONFIG_CONVENTION,
+			);
 
-				if (resolvedShellPath != null) {
-					injectRoute({
-						pattern: resolvedShellPath,
-						entrypoint: new URL("./shell-page.astro", import.meta.url),
-						prerender: false,
-					});
-				}
+			const useProjectHost =
+				typeof options.hostModule === "string" && options.hostModule.length > 0;
+			const useDefaultHost =
+				options.hostModule == null && contentConfigEntry != null;
+			const hostEntry = useProjectHost
+				? resolveProjectEntry(options.hostModule as string, root)
+				: useDefaultHost
+					? defaultHostEntry()
+					: undefined;
 
-				updateConfig({
-					vite: {
-						...(plugins.length > 0 ? { plugins } : {}),
-						// Workspace @cms/* packages ship TypeScript source via exports.
-						// Process them in Vite instead of Node-resolving bare relative imports.
-						ssr: {
-							noExternal: [/^@cms\//],
-						},
-						optimizeDeps: {
-							exclude: [
-								"@cms/astro",
-								"@cms/authoring",
-								"@cms/components",
-								"@cms/crud",
-								"@cms/fields",
-								"@cms/form",
-								"@cms/routes",
-							],
-						},
-						server: {
-							fs: {
-								allow: workspaceFsAllow(root),
-							},
+			const contentRoot = resolveProjectEntry(
+				options.contentRoot ?? DEFAULT_CONTENT_ROOT,
+				root,
+			);
+
+			const resolvedShellPath =
+				shellPathOption === false
+					? undefined
+					: shellPathOption != null
+						? normalizeShellPath(shellPathOption)
+						: editorConfigEntry != null
+							? "/cms"
+							: undefined;
+
+			if (resolvedShellPath != null) {
+				integration.shellPath = resolvedShellPath;
+			} else {
+				delete integration.shellPath;
+			}
+
+			const plugins: CmsVitePlugin[] = [];
+
+			if (editorConfigEntry != null) {
+				plugins.push(cmsConfigVitePlugin({ entry: editorConfigEntry }));
+			}
+
+			if (hostEntry != null || resolvedShellPath != null) {
+				plugins.push(
+					cmsIntegrationOptionsVitePlugin({
+						mount,
+						allowInProd,
+						contentRoot,
+					}),
+				);
+			}
+
+			if (useDefaultHost && contentConfigEntry != null) {
+				plugins.push(cmsContentConfigVitePlugin({ entry: contentConfigEntry }));
+			}
+
+			if (hostEntry != null) {
+				plugins.push(cmsHostVitePlugin({ entry: hostEntry }));
+				addMiddleware({
+					order: "pre",
+					entrypoint: new URL("./middleware-entry.ts", import.meta.url),
+				});
+			}
+
+			if (resolvedShellPath != null) {
+				injectRoute({
+					pattern: resolvedShellPath,
+					entrypoint: new URL("./shell-page.astro", import.meta.url),
+					prerender: false,
+				});
+			}
+
+			updateConfig({
+				vite: {
+					...(plugins.length > 0 ? { plugins } : {}),
+					// Workspace @cms/* packages ship TypeScript source via exports.
+					// Process them in Vite instead of Node-resolving bare relative imports.
+					ssr: {
+						noExternal: [/^@cms\//],
+					},
+					optimizeDeps: {
+						exclude: [
+							"@cms/astro",
+							"@cms/authoring",
+							"@cms/components",
+							"@cms/crud",
+							"@cms/fields",
+							"@cms/form",
+							"@cms/routes",
+						],
+					},
+					server: {
+						fs: {
+							allow: workspaceFsAllow(root),
 						},
 					},
-				});
-			},
-		};
-	}
+				},
+			});
+		},
+	};
 
 	return integration;
 }

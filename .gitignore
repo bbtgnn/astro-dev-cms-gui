@@ -4,9 +4,9 @@ node_modules/
 # local git worktrees
 .worktrees/
 
-# prototype sandbox writes
-packages/astro-template/content-sandbox/posts/*.json
-!packages/astro-template/content-sandbox/posts/.gitkeep
+# prototype content writes
+packages/astro-template/src/content/posts/*.json
+!packages/astro-template/src/content/posts/.gitkeep
 
 # build / cache
 dist/

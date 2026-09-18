@@ -26,14 +26,21 @@ declare module "virtual:@cms/config" {
 declare module "virtual:@cms/host" {
 	import type { CmsHost } from "@cms/crud";
 
-	/** Project factory required by `hostModule`. */
+	/** Host factory (project override or package default). */
 	export function createHost(): CmsHost;
+}
+
+declare module "virtual:@cms/content-config" {
+	/** Live Astro `content.config` collections export for the default host. */
+	export const collections: Record<string, unknown>;
 }
 
 declare module "virtual:@cms/integration-options" {
 	/** Mount prefix without trailing slash (default `/_cms`). */
 	export const mount: string;
 	export const allowInProd: boolean | undefined;
+	/** Absolute write-back root (default `src/content`). */
+	export const contentRoot: string;
 }
 
 declare module "*.svelte" {

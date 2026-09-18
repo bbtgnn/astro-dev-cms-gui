@@ -1,9 +1,10 @@
 /**
  * Browser-safe editor configuration — Zod + FieldUi + direct Svelte components.
  *
- * Loaded through `virtual:@cms/config` (host Vite graph). Must not import
- * Astro server modules, Node builtins, filesystem utilities, or secrets.
- * Server collection registry (`content.config` / write-mode) is a separate edge.
+ * Convention path `src/cms.config.ts` (ADR-0016). Loaded through
+ * `virtual:@cms/config` (host Vite graph). Must not import Astro server modules,
+ * Node builtins, filesystem utilities, or secrets.
+ * Server collection registry (`content.config`) is a separate edge (ADR-0004).
  */
 import {
 	boolean,
@@ -17,9 +18,9 @@ import {
 	text,
 } from "@cms/fields";
 import type { z } from "zod";
-import type { AuthorsPersistedInput } from "./authors-persisted";
-import AuthorNameEditor from "./fields/AuthorNameEditor.svelte";
-import { postsBlocksField } from "./post-blocks";
+import type { AuthorsPersistedInput } from "./cms/authors-persisted";
+import AuthorNameEditor from "./cms/fields/AuthorNameEditor.svelte";
+import { postsBlocksField } from "./cms/post-blocks";
 
 /** Compile-time equality without a broad cast (sample authors collection). */
 type AssertEqual<A, B> =

@@ -111,6 +111,8 @@ graph approximates them while the migration proceeds.
   authoring UI; filesystem first.
 - [ADR-0009](adr/0009-conceptual-layers-before-package-extraction.md) — stabilize
   conceptual layers before extracting packages.
+- [ADR-0016](adr/0016-astro-convention-install-surface.md) — convention-first
+  Astro install (`cms()`, `cms.config` + `content.config` + `src/content/`).
 
 ### Fields and schema projections
 

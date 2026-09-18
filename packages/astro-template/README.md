@@ -13,9 +13,13 @@ bun run dev
 ```
 
 Happy path: `http://127.0.0.1:4321/cms` (shell via `injectRoute`) and `/_cms`
-(JSON API via `hostModule` middleware — Astro ignores `_`-prefixed pages).
+(JSON API via default host middleware — Astro ignores `_`-prefixed pages).
 
-Collections come from a live Vite import of `src/content.config.ts` — sample YAML under `content-sandbox/` (`posts`, `authors`).
+`astro.config.mjs` is just `cms()`. Conventions (ADR-0016):
+
+- `src/cms.config.ts` — browser editor projection
+- `src/content.config.ts` — Astro + server discovery
+- `src/content/` — YAML entries (`posts`, `authors`)
 
 Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 
@@ -27,17 +31,13 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 | `/cms` | Authoring shell (`createFetchClient` + host-compiled editor config) |
 | `/_cms/ok` | API heartbeat (via `createCmsIntegration`) |
 | `/_cms/api/collections` | List discovered collections (`authors`, `posts`) |
-| `/_cms/api/collections/posts` | FS-scan entries under `content-sandbox/posts` |
-| `/_cms/api/collections/authors` | FS-scan entries under `content-sandbox/authors` |
+| `/_cms/api/collections/posts` | FS-scan entries under `src/content/posts` |
+| `/_cms/api/collections/authors` | FS-scan entries under `src/content/authors` |
 | `/_cms/api/collections/posts/hello` | Get YAML entry (includes `author` string id) |
 | `PUT /_cms/api/collections/posts/new-post` | Upsert (allowlisted) |
 | `DELETE /_cms/api/collections/posts/new-post` | Delete (204) |
 | `PUT` invalid posts body | Zod fail → 400 |
 | `/form-spike` | Example: Zod → JSON Schema → `@cms/form` (`client:only`) |
-
-`astro.config.mjs` mounts both surfaces via `cms({ editorConfig, hostModule })`
-from `@cms/astro` (default shell at `/cms`, API at `/_cms`). The host factory
-lives in `src/cms/host.ts` (`createHost`).
 
 ## Allowlist check
 
@@ -45,11 +45,12 @@ lives in `src/cms/host.ts` (`createHost`).
 bun run check:allowlist
 ```
 
-Writes only under `content-sandbox/` prefixes in `allowPaths`. Allowlist deny (mapped path outside roots) is covered by the write-back contract tests, not the template host.
+Default host allowlists discovered collection bases under `src/content/`.
+Allowlist deny is covered by the write-back contract tests, not the template host.
 
 ## Curl smoke (with `bun run dev` running)
 
-On-disk entries under `content-sandbox/` are **YAML** (`.yaml`; `.yml` accepted on read). Paths resolve from loader/`config({ base })` discovery.
+On-disk entries under `src/content/` are **YAML** (`.yaml`; `.yml` accepted on read).
 
 ```bash
 # round-trip upsert → posts/new-post.yaml

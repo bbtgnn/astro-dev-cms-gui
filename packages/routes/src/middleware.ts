@@ -1,7 +1,7 @@
 /**
  * Consumer middleware helper for the `/_cms` protocol transport.
  *
- * Prefer `@cms/astro` `createCmsIntegration({ hostModule })` for auto-mount.
+ * Prefer `@cms/astro` `cms()` for auto-mount (ADR-0016).
  * Use this when composing middleware manually (tests / advanced hosts):
  *
  * ```ts

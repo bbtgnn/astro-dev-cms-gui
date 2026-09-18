@@ -1,9 +1,9 @@
 /**
  * Package-owned Astro middleware entrypoint.
- * Registered via `addMiddleware` when `createCmsIntegration({ hostModule })` is set.
+ * Registered via `addMiddleware` when a host is resolved (project `hostModule`
+ * or package default host from `content.config`).
  *
- * Host construction stays in the consumer project (`createHost` from
- * `virtual:@cms/host`); this file only wires the protocol transport.
+ * Host construction: `createHost` from `virtual:@cms/host`.
  */
 
 // Virtuals are provided by Vite plugins from createCmsIntegration.

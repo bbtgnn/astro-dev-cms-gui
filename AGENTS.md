@@ -24,6 +24,7 @@ git CMS control plane.
 - **Blocks / preview:** block schemas stay separate from production renderers; the real Astro page is the default preview (ADR-0012, 0013).
 - **Local draft:** valid changes write atomically to the working tree with revision guards; invalid browser state does not replace canonical content (ADR-0014).
 - **Packages:** current `@cms/*` graph is approximate; do not explode or relock extraction yet (ADR-0009). Astro host mount lives in `@cms/astro`; `@cms/routes` is dispatcher + barrel.
+- **Install surface:** convention-first `cms()` — `src/cms.config.ts` + `src/content.config.ts` + `src/content/` (ADR-0016). Default host is built by `@cms/astro`.
 - **Reference host:** `@cms/astro-template` on Bun — `bun run dev` → site `:4321`, shell `/cms`, API `/_cms` via `@cms/astro`.
 - **Checks:** `bun run check && bun run check:allowlist && bun run lint`.
 
