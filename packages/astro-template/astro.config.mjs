@@ -20,6 +20,7 @@ export default defineConfig({
 		svelte(),
 		createCmsIntegration({
 			editorConfig: "./src/cms/editor-config.ts",
+			hostModule: "./src/cms/host.ts",
 		}),
 	],
 	vite: {

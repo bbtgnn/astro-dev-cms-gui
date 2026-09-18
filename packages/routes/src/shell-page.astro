@@ -1,0 +1,20 @@
+---
+/**
+ * Package-owned authoring shell page.
+ * Injected via createCmsIntegration({ shellPath }) — not a project src/pages file.
+ * Editor schemas come from virtual:@cms/config; protocol transport stays on mount (/_cms).
+ */
+import CmsMount from "./CmsMount.svelte";
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>CMS shell</title>
+	</head>
+	<body>
+		<!-- client:only — sjsf templates break under Astro/Vite SSR -->
+		<CmsMount client:only="svelte" />
+	</body>
+</html>

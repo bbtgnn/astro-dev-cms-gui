@@ -12,7 +12,8 @@ bun install
 bun run dev
 ```
 
-Happy path: `http://127.0.0.1:4321/cms` (shell) and `/_cms` (JSON API via `src/middleware.ts` — Astro ignores `_`-prefixed pages).
+Happy path: `http://127.0.0.1:4321/cms` (shell via `injectRoute`) and `/_cms`
+(JSON API via `hostModule` middleware — Astro ignores `_`-prefixed pages).
 
 Collections come from a live Vite import of `src/content.config.ts` — sample YAML under `content-sandbox/` (`posts`, `authors`).
 
@@ -34,7 +35,10 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 | `PUT` invalid posts body | Zod fail → 400 |
 | `/form-spike` | Example: Zod → JSON Schema → `@cms/form` (`client:only`) |
 
-`src/middleware.ts` mounts `/_cms` via `createCmsIntegration({ writeMode, isDev, mount })` from `@cms/routes`.
+`astro.config.mjs` mounts both surfaces via
+`createCmsIntegration({ editorConfig, hostModule })` from `@cms/routes`
+(default shell at `/cms`, API at `/_cms`). The host factory lives in
+`src/cms/host.ts` (`createHost`).
 
 ## Allowlist check
 

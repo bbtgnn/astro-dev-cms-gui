@@ -109,8 +109,15 @@ export {
 } from "./middleware";
 export {
 	CMS_CONFIG_VIRTUAL_ID,
+	CMS_HOST_VIRTUAL_ID,
+	CMS_INTEGRATION_OPTIONS_VIRTUAL_ID,
 	type CmsConfigVitePluginOptions,
+	type CmsHostVitePluginOptions,
+	type CmsIntegrationOptionsVitePluginOptions,
 	type CmsVitePlugin,
 	cmsConfigVitePlugin,
+	cmsHostVitePlugin,
+	cmsIntegrationOptionsVitePlugin,
 	resolveEditorConfigEntry,
+	resolveProjectEntry,
 } from "./vite-config-plugin";

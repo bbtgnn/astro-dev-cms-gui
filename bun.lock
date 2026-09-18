@@ -103,12 +103,22 @@
       "name": "@cms/routes",
       "version": "0.0.0",
       "dependencies": {
+        "@cms/authoring": "workspace:*",
         "@cms/crud": "workspace:*",
         "@cms/fields": "workspace:*",
       },
       "devDependencies": {
+        "svelte": "catalog:",
         "typescript": "catalog:",
       },
+      "peerDependencies": {
+        "astro": "catalog:",
+        "svelte": "catalog:",
+      },
+      "optionalPeers": [
+        "astro",
+        "svelte",
+      ],
     },
   },
   "catalog": {
