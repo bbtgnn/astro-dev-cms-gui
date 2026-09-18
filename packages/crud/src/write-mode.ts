@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE / SPIKE — createWriteMode with allowlisted paths.
+ * createWriteMode with allowlisted paths.
  * Prefer discovered collections; pathMap / fakeCatalog are internal test seams.
  * Guarded write-back: opaque revisions + async Zod input validation (ADR-0010, 0014).
  */

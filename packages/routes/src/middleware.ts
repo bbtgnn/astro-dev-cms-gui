@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE / SPIKE — Track C consumer mount seam.
+ * Consumer mount seam.
  *
  * Middleware (protocol transport):
  *

@@ -9,7 +9,7 @@ const root = path.resolve(
 	"../..",
 );
 
-/** PROTOTYPE — alias workspace packages to source for Vite dogfood. */
+/** Alias workspace packages to source for the reference host Vite graph. */
 function pkg(name, entry = "src/index.ts") {
 	return path.join(root, "packages", name, entry);
 }

@@ -78,10 +78,10 @@ export type {
 } from "./types";
 
 /**
- * Sample posts schema for the form spike / write-mode tracer.
+ * Sample posts schema for form / write-back examples.
  * Built with named builders + FieldUi.
  */
-export const prototypePostsSchema = object(
+export const samplePostsSchema = object(
 	{
 		title: text({ label: "Title" }),
 		draft: boolean({ label: "Draft", default: false }),
@@ -90,6 +90,7 @@ export const prototypePostsSchema = object(
 	{ label: "Posts" },
 ).meta(config({ label: "Posts" }));
 
-export type PrototypePostsInput = ZodNS.input<typeof prototypePostsSchema>;
+export type SamplePostsInput = ZodNS.input<typeof samplePostsSchema>;
+
 
 export { z } from "zod";

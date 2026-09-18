@@ -1,5 +1,5 @@
 <!--
-  PROTOTYPE — entry editor: thin view over an AuthoringSession.
+  Entry editor: thin view over an AuthoringSession.
   Session owns write-back and asset upload context (ADR-0008 / 0014).
 -->
 <script lang="ts">

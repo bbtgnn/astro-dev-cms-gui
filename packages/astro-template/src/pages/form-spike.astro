@@ -1,18 +1,18 @@
 ---
 /**
- * Form spike — builders + FieldUi → JSON Schema / uiSchema → @cms/form.
+ * Form example — builders + FieldUi → JSON Schema / uiSchema → @cms/form.
  * Pass serializable schemas: live Zod meta does not survive Astro island props.
  */
 
 import { PlaceholderChrome } from "@cms/components";
-import { prototypePostsSchema, toFormSchemas } from "@cms/fields";
+import { samplePostsSchema, toFormSchemas } from "@cms/fields";
 import { CmsForm } from "@cms/form";
 
-const { schema, uiSchema } = toFormSchemas(prototypePostsSchema);
+const { schema, uiSchema } = toFormSchemas(samplePostsSchema);
 const value = {
-	title: "Hello tracer",
+	title: "Hello",
 	draft: true,
-	body: "Pass 3 form spike value.",
+	body: "Sample form value.",
 };
 ---
 
@@ -20,7 +20,7 @@ const value = {
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
-		<title>Form spike (prototype)</title>
+		<title>Form example</title>
 	</head>
 	<body>
 		<p><a href="/">← home</a></p>
@@ -28,7 +28,7 @@ const value = {
 		<!-- client:only — sjsf templates break under Astro/Vite SSR (Object.defineProperty) -->
 		<CmsForm
 			client:only="svelte"
-			title="Posts form spike"
+			title="Posts form example"
 			schema={schema}
 			uiSchema={uiSchema}
 			value={value}

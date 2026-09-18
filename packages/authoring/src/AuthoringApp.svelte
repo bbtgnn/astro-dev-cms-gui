@@ -1,5 +1,5 @@
 <!--
-  PROTOTYPE — reusable authoring application: collections → entries → editor.
+  Authoring application: collections → entries → editor.
   Receives protocol client + host-compiled editor configuration (ADR-0008).
   Owns AuthoringSession lifecycle; EntryEditor is a thin session view.
 -->
@@ -202,8 +202,8 @@ onDestroy(() => {
 
 <main>
 	<p>
-		<strong>PROTOTYPE / SPIKE</strong> — reusable authoring application via CMS
-		protocol client + host-compiled editor configuration
+		Authoring application over the CMS protocol and host-compiled editor
+		configuration.
 	</p>
 
 	<p>

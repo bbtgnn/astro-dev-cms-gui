@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE / SPIKE — Track C: template consumes createCmsMiddleware from @cms/routes.
+ * Reference host: mounts /_cms via createCmsMiddleware from @cms/routes.
  * Astro ignores `_`-prefixed pages, so /_cms is mounted here.
  * Vite `virtual:@cms/config` is registered via createCmsIntegration in astro.config.
  */

@@ -1,6 +1,7 @@
-# PROTOTYPE @cms/astro-template
+# @cms/astro-template
 
-Bun **self-host** Astro app for the authoring shell (spec P6). Not a shipping product.
+Reference Astro host for **self-host validation** of the authoring shell. Sample
+consumer of `@cms/routes` — not the product identity.
 
 ## Run
 
@@ -13,17 +14,17 @@ bun run dev
 
 Happy path: `http://127.0.0.1:4321/cms` (shell) and `/_cms` (JSON API via `src/middleware.ts` — Astro ignores `_`-prefixed pages).
 
-Collections come from a live Vite import of `src/content.config.ts` (P2 discovery) — sample YAML under `content-sandbox/` (`posts`, `authors`).
+Collections come from a live Vite import of `src/content.config.ts` — sample YAML under `content-sandbox/` (`posts`, `authors`).
 
-Portable package smoke (from root): `bun run check && bun run check:allowlist && bun run lint`.
+Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 
-## Tracer endpoints
+## Useful endpoints
 
 | Path | Purpose |
 |------|---------|
-| `/` | Shell home |
-| `/cms` | Shell loop UI (`createFetchClient` + discovered schemas / uiSchema) |
-| `/_cms/ok` | Pass 0 heartbeat (via `createCmsIntegration`) |
+| `/` | Reference host home |
+| `/cms` | Authoring shell (`createFetchClient` + host-compiled editor config) |
+| `/_cms/ok` | API heartbeat (via `createCmsIntegration`) |
 | `/_cms/api/collections` | List discovered collections (`authors`, `posts`) |
 | `/_cms/api/collections/posts` | FS-scan entries under `content-sandbox/posts` |
 | `/_cms/api/collections/authors` | FS-scan entries under `content-sandbox/authors` |
@@ -31,7 +32,7 @@ Portable package smoke (from root): `bun run check && bun run check:allowlist &&
 | `PUT /_cms/api/collections/posts/new-post` | Upsert (allowlisted) |
 | `DELETE /_cms/api/collections/posts/new-post` | Delete (204) |
 | `PUT` invalid posts body | Zod fail → 400 |
-| `/form-spike` | Zod → JSON Schema → `@cms/form` sjsf (`client:only`) |
+| `/form-spike` | Example: Zod → JSON Schema → `@cms/form` (`client:only`) |
 
 `src/middleware.ts` mounts `/_cms` via `createCmsIntegration({ writeMode, isDev, mount })` from `@cms/routes`.
 
@@ -41,9 +42,9 @@ Portable package smoke (from root): `bun run check && bun run check:allowlist &&
 bun run check:allowlist
 ```
 
-Writes only under `content-sandbox/` prefixes in `allowPaths`. Allowlist deny (mapped path outside roots) is covered by the write-back contract harness, not the template host.
+Writes only under `content-sandbox/` prefixes in `allowPaths`. Allowlist deny (mapped path outside roots) is covered by the write-back contract tests, not the template host.
 
-## Track D curl smoke (with `bun run dev` running)
+## Curl smoke (with `bun run dev` running)
 
 On-disk entries under `content-sandbox/` are **YAML** (`.yaml`; `.yml` accepted on read). Paths resolve from loader/`config({ base })` discovery.
 

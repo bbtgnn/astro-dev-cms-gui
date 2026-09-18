@@ -9,7 +9,9 @@ live in GitHub Issues.
 
 ## Product direction
 
-Astro Dev CMS is a local-first authoring shell over Astro content collections:
+Astro Dev CMS is a local-first authoring shell over Astro content collections.
+The authoring UI aims to stay as general as possible; the main delivery is a
+**dev-mode route** inside a consumer Astro project.
 
 - project content remains the source of truth;
 - the shell UI is a client-side Svelte application;
@@ -19,12 +21,13 @@ Astro Dev CMS is a local-first authoring shell over Astro content collections:
 - the shell UI exchanges serializable persisted input through a CMS protocol;
 - Astro is the first host and the filesystem is the first write-back
   implementation;
+- integration is intended for local development (dev-only by default);
 - the real Astro page is the default preview;
 - Git remains outside the CMS protocol.
 
 The portable claim is a backend-agnostic authoring UI with host-compiled editor
-configuration. It is not a hosted Git CMS or a UI that downloads executable
-components from a backend.
+configuration. It is not a hosted Git CMS, a production CMS server, or a UI that
+downloads executable components from a backend.
 
 ## Source hierarchy
 
@@ -141,7 +144,7 @@ splitting.
 
 Implementation tickets should be small, reviewable slices with external
 behavior, acceptance criteria, tests, dependencies, and explicit out-of-scope
-work. Prototype gaps and migration phases belong there, not in this index.
+work. Migration phases and open gaps belong there, not in this index.
 
 ## Technical references
 

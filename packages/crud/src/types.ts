@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE / SPIKE — shared DTOs for write-back.
+ * Shared DTOs for write-back.
  */
 import type { z } from "zod";
 import type { DiscoveredCollection } from "./discovery";

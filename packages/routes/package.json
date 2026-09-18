@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "PROTOTYPE — /_cms dispatcher + createCmsIntegration mount seam",
+	"description": "/_cms dispatcher + createCmsIntegration mount seam",
 	"exports": {
 		".": "./src/index.ts"
 	},

@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "PROTOTYPE — reusable authoring application (list/editor shell). Package name is provisional (ADR-0009).",
+	"description": "Reusable authoring application (list/editor shell). Package name is provisional (ADR-0009).",
 	"exports": {
 		".": "./src/index.ts"
 	},

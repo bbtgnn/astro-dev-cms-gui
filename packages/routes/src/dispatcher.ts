@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE / SPIKE — single /_cms/[...path] JSON dispatcher.
+ * Single /_cms/[...path] JSON dispatcher.
  * Thin Astro transport: maps CMS protocol outcomes ↔ HTTP; no domain rules.
  */
 import type { CmsProtocol, ReadAssetResult } from "@cms/crud";
@@ -91,9 +91,9 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 		const protocol = options.protocol;
 
 		try {
-			// Pass 0 heartbeat
+			// Heartbeat
 			if (path === "" || path === "ok") {
-				return Response.json({ ok: true, mount, prototype: true });
+				return Response.json({ ok: true, mount });
 			}
 
 			// GET /api/capabilities

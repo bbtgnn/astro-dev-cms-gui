@@ -1,7 +1,6 @@
 /**
- * PROTOTYPE / SPIKE — @cms/crud
- * CMS protocol + Writer injection. Filesystem write-back is implementation
- * behind createCmsProtocol / createCmsHost (ADR-0005).
+ * @cms/crud — CMS protocol + Writer injection. Filesystem write-back is
+ * implementation behind createCmsProtocol / createCmsHost (ADR-0005).
  */
 
 export type {

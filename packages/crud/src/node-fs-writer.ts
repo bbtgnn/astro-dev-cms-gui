@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE / SPIKE — Node FS writer (portable baseline).
+ * Node FS writer (portable baseline).
  * Text writes replace the complete file via temp + rename (ADR-0014).
  */
 

@@ -1,6 +1,8 @@
 # Astro Dev CMS
 
-Domain language for a server-light authoring shell over Astro content collections, validated first-party on a real local Astro host.
+Domain language for a server-light authoring shell over Astro content collections.
+Primary usage: a **dev-mode route** inside an Astro project. The authoring UI stays
+backend-agnostic; Astro + filesystem write-back is the first host path.
 
 ## Language
 
@@ -9,12 +11,16 @@ The UI an editor uses at author-time to create and change content entries. Not a
 _Avoid_: CMS server, admin panel, dashboard
 
 **Self-host validation**:
-Proving the authoring shell by running it on a real local Astro project (especially `@cms/astro-template`), not only via docs or demos.
+Running the authoring shell on a real local Astro project (especially the reference host `@cms/astro-template`) to prove integration and write-back — not only via docs or demos.
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (and can be pulled in from GitHub without a polished registry release). Consumer code imports the public API from `@cms/routes` only (re-exports builders/`config`/integration).
+How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer code imports the public API from `@cms/routes` (re-exports builders/`config`/integration).
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
+
+**Reference host**:
+The in-repo Astro app (`@cms/astro-template`) used to exercise and validate the product. It is a sample consumer, not the product identity.
+_Avoid_: dogfood app, prototype template (as the product name)
 
 **Shell UI**:
 The Svelte interface rendered inside the Astro-hosted authoring shell.
@@ -80,4 +86,3 @@ _Avoid_: storage backend, adapter (unless naming a specific Astro adapter)
 **Open thread**:
 A decision or feature deliberately left unresolved on the map: in scope later, not part of the current destination’s closed route.
 _Avoid_: backlog item, nice-to-have (unless listed as such), out of scope
-

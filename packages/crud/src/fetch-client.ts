@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE / SPIKE — thin protocol client for shell UI → /_cms transport.
+ * Thin protocol client for shell UI → /_cms transport.
  * Browser-safe: import from `@cms/crud/fetch-client` (not package root —
  * root re-exports Node FS writers).
  */

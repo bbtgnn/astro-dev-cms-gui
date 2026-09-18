@@ -1,7 +1,7 @@
 {
 	"name": "astro-dev-cms",
 	"private": true,
-	"description": "PROTOTYPE monorepo — authoring shell tracer bullets",
+	"description": "Astro Dev CMS — authoring shell for Astro content collections (dev-mode route)",
 	"packageManager": "bun@1.3.12",
 	"workspaces": {
 		"packages": [

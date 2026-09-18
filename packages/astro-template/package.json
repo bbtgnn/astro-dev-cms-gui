@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "PROTOTYPE — Bun dogfood Astro host",
+	"description": "Reference Astro host for self-host validation (Bun)",
 	"scripts": {
 		"dev": "astro dev --host 127.0.0.1 --port 4321",
 		"build": "astro build",

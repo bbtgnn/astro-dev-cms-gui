@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE / SPIKE — in-memory writer for tests / Pass 1 without disk.
+ * In-memory writer for tests without disk.
  */
 import type { Writer } from "./types";
 
