@@ -15,7 +15,7 @@ Running the authoring shell on a real local Astro project (especially the refere
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms` / `createCmsIntegration`) with convention defaults: `src/cms.config.ts` (browser editor projection), `src/content.config.ts` (server discovery), content under `src/content/`. Explicit module path overrides remain escape hatches. `@cms/routes` remains the HTTP dispatcher + fields/protocol barrel.
+How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: `src/cms.config.ts`, `src/content.config.ts`, content under `src/content/`. `@cms/routes` remains the HTTP dispatcher + fields/protocol barrel.
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
 
 **Editor configuration**:

@@ -239,8 +239,8 @@ export function createCmsIntegration(
 			updateConfig({
 				vite: {
 					...(plugins.length > 0 ? { plugins } : {}),
-					// Workspace @cms/* packages ship TypeScript source via exports.
-					// Process them in Vite instead of Node-resolving bare relative imports.
+					// Workspace @cms/* packages export TypeScript with extensionless
+					// relatives. Node ESM cannot load those; Vite must process them.
 					ssr: {
 						noExternal: [/^@cms\//],
 					},
