@@ -15,7 +15,7 @@ Running the authoring shell on a real local Astro project (especially the refere
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer code imports the public API from `@cms/routes` (re-exports builders/`config`/integration).
+How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms` / `createCmsIntegration`). `@cms/routes` remains the HTTP dispatcher + fields/protocol barrel.
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
 
 **Reference host**:

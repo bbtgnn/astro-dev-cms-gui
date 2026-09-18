@@ -1,7 +1,7 @@
 # @cms/astro-template
 
 Reference Astro host for **self-host validation** of the authoring shell. Sample
-consumer of `@cms/routes` — not the product identity.
+consumer of `@cms/astro` — not the product identity.
 
 ## Run
 
@@ -35,10 +35,9 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 | `PUT` invalid posts body | Zod fail → 400 |
 | `/form-spike` | Example: Zod → JSON Schema → `@cms/form` (`client:only`) |
 
-`astro.config.mjs` mounts both surfaces via
-`createCmsIntegration({ editorConfig, hostModule })` from `@cms/routes`
-(default shell at `/cms`, API at `/_cms`). The host factory lives in
-`src/cms/host.ts` (`createHost`).
+`astro.config.mjs` mounts both surfaces via `cms({ editorConfig, hostModule })`
+from `@cms/astro` (default shell at `/cms`, API at `/_cms`). The host factory
+lives in `src/cms/host.ts` (`createHost`).
 
 ## Allowlist check
 

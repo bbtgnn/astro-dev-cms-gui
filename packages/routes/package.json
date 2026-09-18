@@ -3,35 +3,17 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "/_cms dispatcher + createCmsIntegration mount seam",
+	"description": "/_cms dispatcher + fields/protocol barrel",
 	"exports": {
-		".": "./src/index.ts",
-		"./astro-middleware": "./src/astro-middleware.ts",
-		"./shell-page.astro": "./src/shell-page.astro",
-		"./CmsMount.svelte": "./src/CmsMount.svelte"
+		".": "./src/index.ts"
 	},
 	"dependencies": {
-		"@cms/authoring": "workspace:*",
 		"@cms/crud": "workspace:*",
 		"@cms/fields": "workspace:*"
 	},
-	"peerDependencies": {
-		"astro": "catalog:",
-		"svelte": "catalog:"
-	},
-	"peerDependenciesMeta": {
-		"astro": {
-			"optional": true
-		},
-		"svelte": {
-			"optional": true
-		}
-	},
 	"devDependencies": {
-		"svelte": "catalog:",
 		"typescript": "catalog:"
 	},
-
 	"scripts": {
 		"check": "tsc -p ."
 	}

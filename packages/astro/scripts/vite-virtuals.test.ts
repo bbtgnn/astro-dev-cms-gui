@@ -3,7 +3,7 @@
  */
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
-import { createCmsIntegration } from "../src/middleware";
+import { createCmsIntegration } from "../src/integration";
 import {
 	CMS_CONFIG_VIRTUAL_ID,
 	CMS_HOST_VIRTUAL_ID,
@@ -75,6 +75,7 @@ describe("createCmsIntegration shellPath", () => {
 			editorConfig: "./src/cms/editor-config.ts",
 		});
 		expect(integration.shellPath).toBe("/cms");
+		expect(integration.name).toBe("@cms/astro");
 	});
 
 	test("shellPath false skips inject", () => {

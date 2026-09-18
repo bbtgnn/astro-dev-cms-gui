@@ -72,7 +72,7 @@ export function cmsConfigVitePlugin(
 	const entryLiteral = JSON.stringify(entry);
 
 	return {
-		name: "@cms/routes:virtual-config",
+		name: "@cms/astro:virtual-config",
 		enforce: "pre",
 		resolveId(id) {
 			if (id === CMS_CONFIG_VIRTUAL_ID) return CMS_CONFIG_RESOLVED_ID;
@@ -99,7 +99,7 @@ export function cmsHostVitePlugin(
 	const entryLiteral = JSON.stringify(entry);
 
 	return {
-		name: "@cms/routes:virtual-host",
+		name: "@cms/astro:virtual-host",
 		enforce: "pre",
 		resolveId(id) {
 			if (id === CMS_HOST_VIRTUAL_ID) return CMS_HOST_RESOLVED_ID;
@@ -122,7 +122,7 @@ export function cmsIntegrationOptionsVitePlugin(
 	const allowInProdLiteral = JSON.stringify(options.allowInProd);
 
 	return {
-		name: "@cms/routes:virtual-integration-options",
+		name: "@cms/astro:virtual-integration-options",
 		enforce: "pre",
 		resolveId(id) {
 			if (id === CMS_INTEGRATION_OPTIONS_VIRTUAL_ID) {

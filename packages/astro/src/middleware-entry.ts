@@ -9,7 +9,7 @@
 // Virtuals are provided by Vite plugins from createCmsIntegration.
 import { createHost } from "virtual:@cms/host";
 import { allowInProd, mount } from "virtual:@cms/integration-options";
-import { createCmsMiddleware } from "./middleware";
+import { createCmsMiddleware } from "@cms/routes";
 
 const host = createHost();
 const handler = createCmsMiddleware({
