@@ -13,7 +13,7 @@
 		"zod": "catalog:"
 	},
 	"peerDependencies": {
-		"svelte": "^5.0.0"
+		"svelte": "catalog:"
 	},
 	"devDependencies": {
 		"svelte": "catalog:",

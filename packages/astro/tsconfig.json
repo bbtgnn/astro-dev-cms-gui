@@ -4,5 +4,5 @@
 		"rootDir": "src",
 		"types": ["node"]
 	},
-	"include": ["src/**/*.ts", "src/**/*.d.ts"]
+	"include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.svelte"]
 }

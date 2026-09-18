@@ -1,6 +1,6 @@
 /**
  * Type-resolution probe for @sjsf/* conditional exports (svelte condition).
- * Kept so `tsc -p packages/form` fails if IDE/build resolution regresses.
+ * Kept so `svelte-check` fails if IDE/build resolution regresses.
  */
 import { createFormValidator } from "@sjsf/ajv8-validator";
 import { theme } from "@sjsf/basic-theme";

@@ -21,6 +21,7 @@
       "devDependencies": {
         "astro": "catalog:",
         "svelte": "catalog:",
+        "svelte-check": "catalog:",
         "typescript": "catalog:",
       },
       "peerDependencies": {
@@ -34,7 +35,6 @@
       "dependencies": {
         "@astrojs/svelte": "catalog:",
         "@cms/astro": "workspace:*",
-        "@cms/authoring": "workspace:*",
         "@cms/components": "workspace:*",
         "@cms/crud": "workspace:*",
         "@cms/fields": "workspace:*",
@@ -42,12 +42,12 @@
         "@cms/routes": "workspace:*",
         "astro": "catalog:",
         "svelte": "catalog:",
-        "typescript": "catalog:",
         "yaml": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
         "@astrojs/check": "^0.9.10",
+        "typescript": "catalog:",
       },
     },
     "packages/authoring": {
@@ -64,7 +64,7 @@
         "typescript": "catalog:",
       },
       "peerDependencies": {
-        "svelte": "^5.0.0",
+        "svelte": "catalog:",
       },
     },
     "packages/components": {
@@ -74,6 +74,9 @@
         "svelte": "catalog:",
         "svelte-check": "catalog:",
         "typescript": "catalog:",
+      },
+      "peerDependencies": {
+        "svelte": "catalog:",
       },
     },
     "packages/crud": {
@@ -106,7 +109,6 @@
         "@sjsf/ajv8-validator": "catalog:",
         "@sjsf/basic-theme": "catalog:",
         "@sjsf/form": "catalog:",
-        "ajv": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -115,7 +117,7 @@
         "typescript": "catalog:",
       },
       "peerDependencies": {
-        "svelte": "^5.0.0",
+        "svelte": "catalog:",
       },
     },
     "packages/routes": {
@@ -135,7 +137,6 @@
     "@sjsf/ajv8-validator": "^3.8.1",
     "@sjsf/basic-theme": "^3.8.1",
     "@sjsf/form": "^3.8.1",
-    "ajv": "^8.17.1",
     "astro": "^5.13.0",
     "svelte": "^5.38.0",
     "svelte-check": "^4.3.1",

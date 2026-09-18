@@ -8,6 +8,9 @@
 		".": "./src/index.ts",
 		"./shadcn": "./src/shadcn/index.ts"
 	},
+	"peerDependencies": {
+		"svelte": "catalog:"
+	},
 	"devDependencies": {
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",

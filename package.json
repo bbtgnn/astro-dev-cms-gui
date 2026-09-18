@@ -23,7 +23,6 @@
 			"@sjsf/ajv8-validator": "^3.8.1",
 			"@sjsf/basic-theme": "^3.8.1",
 			"@sjsf/form": "^3.8.1",
-			"ajv": "^8.17.1",
 			"astro": "^5.13.0",
 			"@astrojs/svelte": "^7.1.0"
 		}
@@ -31,9 +30,9 @@
 	"scripts": {
 		"dev": "bun run --filter @cms/astro-template dev",
 		"build": "bun run --filter @cms/astro-template build",
-		"check": "tsc -p packages/routes && tsc -p packages/astro && tsc -p packages/crud && tsc -p packages/fields && bun run --filter @cms/form check && bun run --filter @cms/components check && bun run --filter @cms/authoring check",
-		"check:allowlist": "bun test packages/crud/scripts/write-back-contract.test.ts && bun run packages/authoring/scripts/check-layer-boundaries.ts && bun test packages/authoring/scripts/authoring-deletion.test.ts packages/authoring/scripts/authoring-assets.test.ts packages/authoring/scripts/authoring-autosave.test.ts packages/authoring/scripts/authoring-session.test.ts",
-		"check:image": "bun test packages/astro-template/scripts/image.test.ts",
+		"check": "bun run --filter @cms/fields check && bun run --filter @cms/crud check && bun run --filter @cms/routes check && bun run --filter @cms/astro check && bun run --filter @cms/form check && bun run --filter @cms/components check && bun run --filter @cms/authoring check && bun run --filter @cms/astro-template check",
+		"check:allowlist": "bun run --filter @cms/crud check:allowlist && bun run --filter @cms/authoring check:layers && bun run --filter @cms/authoring check:allowlist",
+		"check:image": "bun run --filter @cms/astro-template check:image",
 		"lint": "biome check .",
 		"format": "biome check --write ."
 	},
