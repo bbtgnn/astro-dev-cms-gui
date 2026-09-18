@@ -9,12 +9,11 @@
 		"build": "astro build",
 		"preview": "astro preview",
 		"check": "astro check",
-		"check:allowlist": "bun run ./scripts/check-allowlist.ts"
+		"check:image": "bun test ./scripts/image.test.ts"
 	},
 	"dependencies": {
 		"@astrojs/svelte": "catalog:",
 		"@cms/astro": "workspace:*",
-		"@cms/authoring": "workspace:*",
 		"@cms/components": "workspace:*",
 		"@cms/crud": "workspace:*",
 		"@cms/fields": "workspace:*",
@@ -22,11 +21,11 @@
 		"@cms/routes": "workspace:*",
 		"astro": "catalog:",
 		"svelte": "catalog:",
-		"typescript": "catalog:",
 		"yaml": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@astrojs/check": "^0.9.10"
+		"@astrojs/check": "^0.9.10",
+		"typescript": "catalog:"
 	}
 }

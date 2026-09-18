@@ -13,6 +13,7 @@ export default defineConfig({
 			noExternal: [/^@cms\//],
 		},
 		optimizeDeps: {
+			// Include transitive workspace packages (@cms/authoring via @cms/astro).
 			exclude: [
 				"@cms/astro",
 				"@cms/authoring",

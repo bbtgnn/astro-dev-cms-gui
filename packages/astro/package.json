@@ -22,9 +22,10 @@
 	"devDependencies": {
 		"astro": "catalog:",
 		"svelte": "catalog:",
+		"svelte-check": "catalog:",
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p ."
+		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts"
 	}
 }

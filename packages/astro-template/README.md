@@ -43,9 +43,7 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 
 ## Allowlist check
 
-```bash
-bun run check:allowlist
-```
+From the repo root: `bun run check:allowlist` (crud write-back contracts + authoring layer/session tests).
 
 Default host allowlists discovered collection bases under `src/content/`.
 Allowlist deny is covered by the write-back contract tests, not the template host.

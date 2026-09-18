@@ -12,11 +12,10 @@
 		"@sjsf/ajv8-validator": "catalog:",
 		"@sjsf/basic-theme": "catalog:",
 		"@sjsf/form": "catalog:",
-		"ajv": "catalog:",
 		"zod": "catalog:"
 	},
 	"peerDependencies": {
-		"svelte": "^5.0.0"
+		"svelte": "catalog:"
 	},
 	"devDependencies": {
 		"svelte": "catalog:",
