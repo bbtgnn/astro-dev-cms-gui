@@ -18,7 +18,6 @@
  * `createCmsMiddleware`. Pass `hostModule: false` with `protocol` + `isDev`
  * to expose `integration.middleware` for `defineMiddleware`.
  */
-import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
 	type CmsDispatcherOptions,
@@ -69,7 +68,6 @@ type AstroConfigSetupParams = {
 	updateConfig: (config: {
 		vite?: {
 			plugins?: unknown[];
-			server?: { fs?: { allow?: string[] } };
 			ssr?: { noExternal?: Array<string | RegExp> };
 			optimizeDeps?: { exclude?: string[] };
 		};
@@ -111,13 +109,6 @@ function projectRootFromAstroConfig(root: string | URL): string {
 function normalizeShellPath(shellPath: string): string {
 	const trimmed = shellPath.replace(/\/+$/, "");
 	return trimmed.startsWith("/") ? trimmed || "/" : `/${trimmed}`;
-}
-
-/** This package root + sibling workspace packages (Vite FS allowlist). */
-function workspaceFsAllow(projectRoot: string): string[] {
-	const packageRoot = fileURLToPath(new URL("..", import.meta.url));
-	const packagesDir = path.dirname(packageRoot);
-	return [projectRoot, packageRoot, packagesDir];
 }
 
 function defaultHostEntry(): string {
@@ -263,11 +254,6 @@ export function createCmsIntegration(
 							"@cms/form",
 							"@cms/routes",
 						],
-					},
-					server: {
-						fs: {
-							allow: workspaceFsAllow(root),
-						},
 					},
 				},
 			});
