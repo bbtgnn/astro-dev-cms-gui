@@ -58,7 +58,7 @@ Authoring UI
                     v
 Host / write-back implementations
   Astro mount + transport + server registry
-  filesystem discovery + validation + atomic write-back + images
+  filesystem discovery + validation + atomic write-back + original assets
 ```
 
 The conceptual modules are:
@@ -111,6 +111,8 @@ graph approximates them while the migration proceeds.
   paths, discovery fallback, and allowlisting.
 - [ADR-0014](adr/0014-working-tree-is-the-local-draft.md) — valid changes write
   to the working tree with atomic, revision-guarded write-back.
+- [ADR-0015](adr/0015-store-original-assets-astro-optimizes.md) — authoring stores
+  original assets; Astro optimizes images at render (no Sharp upload pipeline).
 
 ADR-0001 and ADR-0002 are retained as superseded history.
 

@@ -51,7 +51,7 @@ The path by which edits from the authoring shell land in project files (or a loc
 _Avoid_: persistence, save API, storage backend
 
 **CMS protocol**:
-The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + discovered collections (plus optional processImage).
+The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + discovered collections. Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
 _Avoid_: save API, REST CRUD, WriteMode (as a public API)
 
 **Content entry**:
