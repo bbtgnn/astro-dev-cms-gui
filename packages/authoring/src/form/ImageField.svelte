@@ -1,11 +1,9 @@
 <!--
-  Custom sjsf textWidget: image picker → protocol client uploadImage → path string.
-  Needs cms.entry + cms.assets context from CmsForm (collection, id, capability).
+  Stock image editor — FieldEditorProps; upload via cms.entry + cms.assets context.
 -->
 <script lang="ts">
-	import type { ComponentProps } from "@sjsf/form";
-	import { getFormContext, uiTitleOption } from "@sjsf/form";
 	import { getContext } from "svelte";
+	import type { FieldEditorProps } from "../config/contracts";
 
 	export type CmsEntryContext = {
 		collection: string;
@@ -26,37 +24,26 @@
 		}) => Promise<{ ok: true; path: string } | { ok: false; message: string }>;
 	};
 
-	const ctx = getFormContext();
+	let {
+		field,
+		label,
+		description,
+		folder = "cover",
+	}: FieldEditorProps<string | undefined, "image"> & {
+		folder?: string;
+	} = $props();
+
 	const entryCtx = getContext<CmsEntryContext>("cms.entry");
 	const assetsCtx = getContext<CmsAssetsFieldContext | null>("cms.assets");
-
-	let {
-		config,
-		value = $bindable(),
-	}: ComponentProps["textWidget"] = $props();
 
 	let busy = $state(false);
 	let error = $state<string | null>(null);
 
 	const uploadEnabled = $derived(assetsCtx?.uploadEnabled === true);
-	const hasEntry = $derived(
-		Boolean(entryCtx?.collection && entryCtx?.id),
+	const hasEntry = $derived(Boolean(entryCtx?.collection && entryCtx?.id));
+	const canUpload = $derived(
+		uploadEnabled && hasEntry && !busy && !field.disabled,
 	);
-	const canUpload = $derived(uploadEnabled && hasEntry && !busy);
-
-	function uiOptions(): Record<string, unknown> {
-		return (config.uiSchema?.["ui:options"] ?? {}) as Record<string, unknown>;
-	}
-
-	function folderName(): string {
-		const fromUi = uiOptions().folder;
-		if (typeof fromUi === "string" && fromUi.length > 0) return fromUi;
-		const path = String(config.path ?? "cover");
-		const leaf = path.split("/").filter(Boolean).pop();
-		return leaf && /^[a-zA-Z0-9_-]+$/.test(leaf) ? leaf : "cover";
-	}
-
-	const title = $derived(uiTitleOption(ctx, config.uiSchema) ?? "Image");
 
 	async function onFile(files: FileList | null) {
 		const file = files?.[0];
@@ -81,14 +68,14 @@
 				file,
 				collection: entryCtx.collection,
 				id: entryCtx.id,
-				name: folderName(),
+				name: folder,
 				filename: file.name,
 			});
 			if (!result.ok) {
 				error = result.message;
 				return;
 			}
-			value = result.path;
+			field.set(result.path);
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		} finally {
@@ -99,7 +86,7 @@
 
 <div class="cms-image-field">
 	<label class="cms-image-label">
-		<span class="sjsf-label">{title}</span>
+		<span class="sjsf-label">{label}</span>
 		<input
 			type="file"
 			accept="image/jpeg,image/png,image/webp"
@@ -107,8 +94,11 @@
 			onchange={(e) => void onFile(e.currentTarget.files)}
 		/>
 	</label>
-	{#if value}
-		<p class="cms-image-path"><code>{value}</code></p>
+	{#if description}
+		<small class="cms-image-hint">{description}</small>
+	{/if}
+	{#if field.value}
+		<p class="cms-image-path"><code>{field.value}</code></p>
 	{/if}
 	{#if busy}
 		<p class="cms-image-status">uploading…</p>
@@ -116,6 +106,9 @@
 	{#if error}
 		<p class="cms-image-error" role="alert">{error}</p>
 	{/if}
+	{#each field.errors as err, i (i)}
+		<p class="cms-image-error" role="alert">{err.message}</p>
+	{/each}
 	{#if !uploadEnabled}
 		<p class="cms-image-hint">Image upload is unavailable on this backend.</p>
 	{:else if !hasEntry}

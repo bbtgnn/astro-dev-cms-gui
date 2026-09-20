@@ -35,6 +35,30 @@ export type FieldControl<Input, Kind extends FieldKind> = {
 	readonly [fieldKindBrand]: (kind: Kind) => Kind;
 };
 
+/** Build a branded field control for the form shell / SJSF bridge. */
+export function createFieldControl<Input, Kind extends FieldKind>(args: {
+	readonly getValue: () => Input;
+	readonly setValue: (value: Input) => void;
+	readonly getErrors: () => readonly FieldError[];
+	readonly getDisabled: () => boolean;
+}): FieldControl<Input, Kind> {
+	return {
+		get value() {
+			return args.getValue();
+		},
+		get errors() {
+			return args.getErrors();
+		},
+		get disabled() {
+			return args.getDisabled();
+		},
+		set(value: Input) {
+			args.setValue(value);
+		},
+		[fieldKindBrand]: (kind) => kind,
+	};
+}
+
 /** Props the form shell always supplies to a field / aggregate editor. */
 export type FieldEditorProps<Input, Kind extends FieldKind> = {
 	field: FieldControl<Input, Kind>;

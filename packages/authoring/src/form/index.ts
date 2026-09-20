@@ -23,3 +23,4 @@ export {
 	type StockEditorRegistry,
 	stockEditorRegistry,
 } from "./stock-registry";
+export { wrapFieldEditorForSjsf } from "./wrap-field-editor";

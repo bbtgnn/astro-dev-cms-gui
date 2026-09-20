@@ -49,6 +49,7 @@ describe("stockEditorRegistry", () => {
 		expect(getStockEditor("boolean").sjsfWidget).toBe("checkboxWidget");
 		expect(getStockEditor("image").componentKey).toBe("imageField");
 		expect(getStockEditor("reference").stub).toBe(true);
+		expect(getStockEditor("reference").componentKey).toBe("referenceField");
 		expect(stockEditorRegistry.enum.sjsfWidget).toBe("selectWidget");
 	});
 

@@ -2,6 +2,9 @@
  * Stock editor registry by semantic kind (ADR-0019).
  * Field-level opaque `component` overrides win when present on the form model.
  * Live Svelte resolution stays on the host Vite seam — core stays Svelte-free.
+ *
+ * Stock editors are FieldEditorProps components; the form theme bridges them to
+ * SJSF widget slots. `sjsfWidget` / `componentKey` remain lowering tokens only.
  */
 
 import type {
@@ -32,13 +35,19 @@ export const stockEditorRegistry: StockEditorRegistry = {
 	string: { kind: "string", sjsfWidget: "textWidget" },
 	number: { kind: "number", sjsfWidget: "numberWidget" },
 	boolean: { kind: "boolean", sjsfWidget: "checkboxWidget" },
-	literal: { kind: "literal", sjsfWidget: "textWidget", stub: true },
+	literal: {
+		kind: "literal",
+		sjsfWidget: "textWidget",
+		componentKey: "literalField",
+		stub: true,
+	},
 	enum: { kind: "enum", sjsfWidget: "selectWidget" },
 	object: { kind: "object" },
 	array: { kind: "array" },
 	discriminatedUnion: {
 		kind: "discriminatedUnion",
 		sjsfWidget: "selectWidget",
+		componentKey: "discriminatedUnionField",
 		stub: true,
 	},
 	image: {
@@ -49,6 +58,7 @@ export const stockEditorRegistry: StockEditorRegistry = {
 	reference: {
 		kind: "reference",
 		sjsfWidget: "textWidget",
+		componentKey: "referenceField",
 		stub: true,
 	},
 };

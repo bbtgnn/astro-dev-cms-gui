@@ -11,17 +11,23 @@ import type {
 	FormFieldDescriptor,
 	FormLayoutNode,
 } from "@cms/core/semantic";
+import type { AnySvelteComponent } from "../config/contracts";
 import {
 	type LiveBindingResolver,
 	resolveFieldEditor,
 	type StockEditorRegistry,
 	stockEditorRegistry,
 } from "./stock-registry";
+import { wrapFieldEditorForSjsf } from "./wrap-field-editor";
 
 export type LowerFormModelOptions = {
 	readonly resolveBinding?: LiveBindingResolver;
 	readonly registry?: StockEditorRegistry;
 };
+
+function isLiveEditorComponent(value: unknown): value is AnySvelteComponent {
+	return typeof value === "function";
+}
 
 function uiNodeForField(
 	field: FormFieldDescriptor,
@@ -35,7 +41,19 @@ function uiNodeForField(
 	}
 
 	if (resolved.source === "override") {
-		node["ui:components"] = { textWidget: resolved.component };
+		const live = resolved.component;
+		if (isLiveEditorComponent(live)) {
+			node["ui:components"] = {
+				textWidget: wrapFieldEditorForSjsf(live, {
+					...(resolved.props !== undefined
+						? { editorProps: resolved.props as Record<string, unknown> }
+						: {}),
+				}),
+			};
+		} else {
+			// Opaque token (string key) — theme resolves; wrap at theme registration.
+			node["ui:components"] = { textWidget: live };
+		}
 		return node;
 	}
 

@@ -28,8 +28,11 @@ fields are injected on unions.
 **Generation:** commit generated `content.config.ts`. `cms()` regenerates in
 `astro:config:setup` (dev/sync/check/build) without mandatory host script
 wrappers. Writes are atomic and embed a source hash; CI runs
-`cms generate --check`. Schema generation loads a schema partition only — never
-browser-only editor modules.
+`cms generate --check`. Schema generation loads a **Svelte-free schema
+partition** only (`src/cms.schema.ts` by convention) — never browser-only
+editor modules from `cms.config.ts`. v1 keeps that partition as a second
+hand-authored file in sync with `cms.config` by discipline; a single-source
+or codegen seam is a follow-up, not a change to this authority split.
 
 **Packages:** `@cms/core` owns IR and serializable models (no Svelte);
 `@cms/authoring` owns Svelte contracts and the form shell;
@@ -39,8 +42,11 @@ browser-only editor modules.
 **Why not Astro-native schemas + sparse editor config:** Astro 7’s public
 `image()` typing blocks compile-time recovery of persisted path + image kind
 from `z.input` without CMS wrappers or generated tokens. Owning the algebra
-costs a product schema language and generation lifecycle; Gate 4 showed that
-lifecycle is workable on Astro 7 with committed generated source.
+costs a product schema language and generation lifecycle; a Gate 4 spike on
+Astro 7 showed that lifecycle is workable with committed generated source
+(ordering in `astro:config:setup`, atomic hash/`--check`, opaque partition
+load). Residual by design: public `z.input` still does not recover image path
+strings — the IR owns persisted input.
 
 Supersedes [ADR-0003](0003-field-ui-on-zod-meta.md) (FieldUi no longer rides on
 Zod `.meta()`).
@@ -57,7 +63,3 @@ reading the generated `collections` export.
 [ADR-0011](0011-sjsf-internal-one-form-recursive-layout.md) remain; the IR is
 the explicit persisted-input authority, and layout is authored in-tree rather
 than as a separate selector callback.
-
-Exploratory detail and spikes:
-[cms-first-semantic-schema.md](../design/cms-first-semantic-schema.md),
-[generation-lifecycle/VERDICT.md](../design/spikes/generation-lifecycle/VERDICT.md).

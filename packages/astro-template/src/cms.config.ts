@@ -43,8 +43,7 @@ const cms = defineCms<Collections>((s) => ({
 				id: "name",
 				label: "Author name",
 				schema: s.string().min(1),
-				// SJSF textWidget-shaped; FieldEditorProps seam lands with form shell work.
-				component: AuthorNameEditor as never,
+				component: AuthorNameEditor,
 			}),
 		}),
 		posts: s.collection({
@@ -67,7 +66,7 @@ const cms = defineCms<Collections>((s) => ({
 					id: "body",
 					label: "Body",
 					schema: s.string(),
-					component: BodyEditor as never,
+					component: BodyEditor,
 				}),
 				s.field({
 					id: "cover",

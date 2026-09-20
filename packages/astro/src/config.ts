@@ -23,7 +23,11 @@ export type {
 	ShapeOfContent,
 	ShellOwnedKey,
 } from "@cms/authoring/config";
-export { createCmsBuilders, SHELL_OWNED_KEYS } from "@cms/authoring/config";
+export {
+	createCmsBuilders,
+	createFieldControl,
+	SHELL_OWNED_KEYS,
+} from "@cms/authoring/config";
 
 /**
  * Typed entry for the CMS unified tree. Collection name generics type

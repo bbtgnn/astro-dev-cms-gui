@@ -22,7 +22,7 @@ export type {
 	ShellCompatibleWrapper,
 	ShellOwnedKey,
 } from "./contracts";
-export { SHELL_OWNED_KEYS } from "./contracts";
+export { SHELL_OWNED_KEYS, createFieldControl } from "./contracts";
 export type {
 	AnyTypedSchema,
 	IdOfNode,

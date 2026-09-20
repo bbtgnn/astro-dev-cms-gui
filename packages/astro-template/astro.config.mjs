@@ -10,7 +10,9 @@ export default defineConfig({
 		// extensionless relatives. Node ESM cannot load those; Vite must.
 		// Published @cms/* builds would not need this — keep it out of @cms/astro.
 		ssr: {
-			noExternal: [/^@cms\//],
+			// @cms/*: workspace TS. astro: keep assets/fonts virtuals in Vite
+			// (Node native ESM cannot load virtual:astro:assets/fonts/*).
+			noExternal: [/^@cms\//, "astro"],
 		},
 		optimizeDeps: {
 			// Include transitive workspace packages (@cms/authoring via @cms/astro).

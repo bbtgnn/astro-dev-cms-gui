@@ -1,36 +1,34 @@
 <!--
-  Direct textWidget for markdown-like body — supplied via project editor config
-  (virtual:@cms/config), not Astro props or the CMS protocol.
-
-  Props match SJSF textWidget structurally so the host template need not
-  depend on @sjsf/form (mechanism proof only; #7 still owns the public contract).
+  Direct string field for markdown-like body — FieldEditorProps (shell-owned contract).
+  Supplied via project editor config (virtual:@cms/config).
 -->
 <script lang="ts">
-	let {
-		config,
-		value = $bindable(""),
-	}: {
-		config?: { uiSchema?: Record<string, unknown> };
-		value?: string;
-	} = $props();
+	import type { FieldEditorProps } from "@cms/authoring/config";
 
-	const title = $derived(
-		((config?.uiSchema?.["ui:options"] as { title?: string } | undefined)
-			?.title ?? "Body"),
-	);
+	let { field, label, description }: FieldEditorProps<string, "string"> =
+		$props();
 </script>
 
 <label class="cms-body-editor">
-	<span class="sjsf-label">{title}</span>
+	<span class="sjsf-label">{label}</span>
 	<textarea
 		class="sjsf-text-input cms-body-editor-input"
-		bind:value
+		value={field.value ?? ""}
+		disabled={field.disabled}
+		oninput={(e) => field.set(e.currentTarget.value)}
 		rows="12"
 		placeholder="Markdown-like body (direct editor)"
 	></textarea>
-	<small class="cms-body-editor-hint"
-		>Direct Svelte field via <code>virtual:@cms/config</code></small
-	>
+	{#if description}
+		<small class="cms-body-editor-hint">{description}</small>
+	{:else}
+		<small class="cms-body-editor-hint"
+			>Direct Svelte field via <code>virtual:@cms/config</code></small
+		>
+	{/if}
+	{#each field.errors as err, i (i)}
+		<p class="cms-body-editor-error" role="alert">{err.message}</p>
+	{/each}
 </label>
 
 <style>
@@ -46,5 +44,11 @@
 
 	.cms-body-editor-hint {
 		opacity: 0.75;
+	}
+
+	.cms-body-editor-error {
+		margin: 0;
+		color: #b00020;
+		font-size: 0.9em;
 	}
 </style>
