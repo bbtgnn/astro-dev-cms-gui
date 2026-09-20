@@ -2,7 +2,8 @@
  * Setup-hook entry for ADR-0019 content.config generation.
  *
  * Called from `astro:config:setup` before Astro evaluates `content.config.ts`.
- * Loads the schema partition only — never full `cms.config.ts` / editors.
+ * Loads the Svelte-free unified tree (`cms.config.ts`) — never the Vite
+ * components catalog.
  */
 
 import { existsSync } from "node:fs";

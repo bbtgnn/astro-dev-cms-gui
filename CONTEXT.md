@@ -19,11 +19,12 @@ How the authoring shell is hooked into an Astro project so it runs during local 
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
 
 **Editor configuration**:
-The browser-safe project module (`src/cms.config.ts` by convention) that exports
-the CMS unified tree (closed semantic schema, layout, direct Svelte editors) and
-optional preview URL mapping. Compiled through the host Vite graph as
+The Node-safe project module (`src/cms.config.ts` by convention) that exports
+the CMS unified tree (closed semantic schema, layout, loaders, string catalog
+keys) and optional preview URL mapping. Compiled through the host Vite graph as
 `virtual:@cms/config`; never mixed into the CMS protocol. Also the human source
-for generated `src/content.config.ts` (ADR-0019).
+and generation partition for `src/content.config.ts` (ADR-0019). Live Svelte
+editors live in `src/cms.components.ts` (`virtual:@cms/components`).
 _Avoid_: cms.config as a server discovery registry, content.config (for the browser edge)
 
 **Reference host**:
@@ -50,8 +51,9 @@ _Avoid_: Astro schema alone, Zod schema alone, form config
 
 **FieldUi**:
 Authoring UI on a field or aggregate: stock editor from semantic kind, optional
-direct Svelte `component`, optional `wrapper` on objects/arrays, and explicit
-`props`. Authored in the unified tree, not on Zod `.meta()`.
+catalog-key `component`, optional `wrapper` on objects/arrays, and explicit
+`props`. Authored in the unified tree, not on Zod `.meta()`. Keys resolve to
+live Svelte modules via the host components catalog.
 _Avoid_: form config, widget map alone, Zod meta UI
 
 **Field registry**:

@@ -1,7 +1,7 @@
 /**
- * Typed CMS schema builders: core `s` at runtime + Svelte ComponentProps at
- * the type level (ADR-0019). Opaque bindings still compile through
- * `@cms/core/semantic` without Svelte imports on the generation path.
+ * Typed CMS schema builders: core `s` at runtime + catalog key contracts at
+ * the type level (ADR-0019 residual 4.1). Opaque bindings are string keys into
+ * a Vite-only components catalog — generation stays Svelte-free.
  */
 
 import {
@@ -22,12 +22,13 @@ import {
 	type TreeNode,
 } from "@cms/core/semantic";
 import type {
-	AnySvelteComponent,
-	FieldIcon,
+	CompatibleIconKey,
+	CompatibleKey,
+	CompatibleWrapperKey,
+	ComponentsCatalog,
+	EmptyComponents,
 	FieldKind,
 	PropsBagOption,
-	ShellCompatibleEditor,
-	ShellCompatibleWrapper,
 } from "./contracts";
 import type {
 	AnyTypedSchema,
@@ -193,13 +194,14 @@ type FieldOptsBase<Id extends string, S extends AnyTypedSchema> = {
 	schema: S;
 };
 
-type FieldWithComponent<
+type FieldWithComponentKey<
 	Id extends string,
 	S extends AnyTypedSchema,
-	C extends AnySvelteComponent,
+	Components extends ComponentsCatalog,
+	K extends CompatibleKey<Components, InputOfSchema<S>, KindOfSchema<S>>,
 > = FieldOptsBase<Id, S> & {
-	component: ShellCompatibleEditor<C, InputOfSchema<S>, KindOfSchema<S>>;
-} & PropsBagOption<C>;
+	component: K;
+} & PropsBagOption<Components[K]>;
 
 type FieldStock<Id extends string, S extends AnyTypedSchema> = FieldOptsBase<
 	Id,
@@ -221,29 +223,31 @@ type ObjectStock<
 	props?: undefined;
 };
 
-type ObjectWithComponent<
+type ObjectWithComponentKey<
 	Id extends string,
 	Content extends readonly TypedTreeNode[],
-	C extends AnySvelteComponent,
+	Components extends ComponentsCatalog,
+	K extends CompatibleKey<Components, ShapeOfContent<Content>, "object">,
 > = {
 	id: Id;
 	label?: string;
 	content: Content;
-	component: ShellCompatibleEditor<C, ShapeOfContent<Content>, "object">;
+	component: K;
 	wrapper?: never;
-} & PropsBagOption<C>;
+} & PropsBagOption<Components[K]>;
 
-type ObjectWithWrapper<
+type ObjectWithWrapperKey<
 	Id extends string,
 	Content extends readonly TypedTreeNode[],
-	W extends AnySvelteComponent,
+	Components extends ComponentsCatalog,
+	W extends CompatibleWrapperKey<Components>,
 > = {
 	id: Id;
 	label?: string;
 	content: Content;
-	wrapper: ShellCompatibleWrapper<W>;
+	wrapper: W;
 	component?: never;
-} & PropsBagOption<W>;
+} & PropsBagOption<Components[W]>;
 
 type ArrayStock<Id extends string, S extends AnyTypedSchema> = {
 	id: Id;
@@ -254,29 +258,31 @@ type ArrayStock<Id extends string, S extends AnyTypedSchema> = {
 	props?: undefined;
 };
 
-type ArrayWithComponent<
+type ArrayWithComponentKey<
 	Id extends string,
 	S extends AnyTypedSchema,
-	C extends AnySvelteComponent,
+	Components extends ComponentsCatalog,
+	K extends CompatibleKey<Components, InputOfSchema<S>[], "array">,
 > = {
 	id: Id;
 	label?: string;
 	of: S;
-	component: ShellCompatibleEditor<C, InputOfSchema<S>[], "array">;
+	component: K;
 	wrapper?: never;
-} & PropsBagOption<C>;
+} & PropsBagOption<Components[K]>;
 
-type ArrayWithWrapper<
+type ArrayWithWrapperKey<
 	Id extends string,
 	S extends AnyTypedSchema,
-	W extends AnySvelteComponent,
+	Components extends ComponentsCatalog,
+	W extends CompatibleWrapperKey<Components>,
 > = {
 	id: Id;
 	label?: string;
 	of: S;
-	wrapper: ShellCompatibleWrapper<W>;
+	wrapper: W;
 	component?: never;
-} & PropsBagOption<W>;
+} & PropsBagOption<Components[W]>;
 
 export type CmsConfigInput = {
 	readonly collections: Readonly<Record<string, CollectionNode>>;
@@ -286,7 +292,10 @@ export type CmsConfigInput = {
 	) => string | null | undefined;
 };
 
-export type CmsBuilders<Collections extends string = string> = {
+export type CmsBuilders<
+	Collections extends string = string,
+	Components extends ComponentsCatalog = EmptyComponents,
+> = {
 	string(): StringBuilder;
 	number(): NumberBuilder;
 	boolean(): BooleanBuilder;
@@ -312,9 +321,13 @@ export type CmsBuilders<Collections extends string = string> = {
 	field<
 		const Id extends string,
 		S extends AnyTypedSchema,
-		C extends AnySvelteComponent,
+		const K extends CompatibleKey<
+			Components,
+			InputOfSchema<S>,
+			KindOfSchema<S>
+		>,
 	>(
-		opts: FieldWithComponent<Id, S, C>,
+		opts: FieldWithComponentKey<Id, S, Components, K>,
 	): TypedFieldNode<Id, InputOfSchema<S>, KindOfSchema<S>>;
 	field<const Id extends string, S extends AnyTypedSchema>(
 		opts: FieldStock<Id, S>,
@@ -323,16 +336,20 @@ export type CmsBuilders<Collections extends string = string> = {
 	object<
 		const Id extends string,
 		const Content extends readonly TypedTreeNode[],
-		C extends AnySvelteComponent,
+		const K extends CompatibleKey<
+			Components,
+			ShapeOfContent<Content>,
+			"object"
+		>,
 	>(
-		opts: ObjectWithComponent<Id, Content, C>,
+		opts: ObjectWithComponentKey<Id, Content, Components, K>,
 	): TypedObjectNode<Id, ShapeOfContent<Content>>;
 	object<
 		const Id extends string,
 		const Content extends readonly TypedTreeNode[],
-		W extends AnySvelteComponent,
+		const W extends CompatibleWrapperKey<Components>,
 	>(
-		opts: ObjectWithWrapper<Id, Content, W>,
+		opts: ObjectWithWrapperKey<Id, Content, Components, W>,
 	): TypedObjectNode<Id, ShapeOfContent<Content>>;
 	object<
 		const Id extends string,
@@ -344,13 +361,17 @@ export type CmsBuilders<Collections extends string = string> = {
 	array<
 		const Id extends string,
 		S extends AnyTypedSchema,
-		C extends AnySvelteComponent,
-	>(opts: ArrayWithComponent<Id, S, C>): TypedArrayNode<Id, InputOfSchema<S>[]>;
+		const K extends CompatibleKey<Components, InputOfSchema<S>[], "array">,
+	>(
+		opts: ArrayWithComponentKey<Id, S, Components, K>,
+	): TypedArrayNode<Id, InputOfSchema<S>[]>;
 	array<
 		const Id extends string,
 		S extends AnyTypedSchema,
-		W extends AnySvelteComponent,
-	>(opts: ArrayWithWrapper<Id, S, W>): TypedArrayNode<Id, InputOfSchema<S>[]>;
+		const W extends CompatibleWrapperKey<Components>,
+	>(
+		opts: ArrayWithWrapperKey<Id, S, Components, W>,
+	): TypedArrayNode<Id, InputOfSchema<S>[]>;
 	array<const Id extends string, S extends AnyTypedSchema>(
 		opts: ArrayStock<Id, S>,
 	): TypedArrayNode<Id, InputOfSchema<S>[]>;
@@ -376,7 +397,7 @@ export type CmsBuilders<Collections extends string = string> = {
 	tab<const Content extends readonly TypedTreeNode[]>(opts: {
 		id: string;
 		label: string;
-		icon?: FieldIcon;
+		icon?: CompatibleIconKey<Components>;
 		content: Content;
 	}): TypedTabNode<Content>;
 	stack<const Content extends readonly TypedTreeNode[]>(
@@ -409,11 +430,12 @@ type InputOfNodeVariant<V> =
 
 /**
  * Builders for `defineCms` / host `cms.config.ts`. Collection generics type
- * `reference()` targets; Svelte stays in this package only.
+ * `reference()` targets; `Components` constrains catalog string keys.
  */
 export function createCmsBuilders<
 	Collections extends string = string,
->(): CmsBuilders<Collections> {
+	Components extends ComponentsCatalog = EmptyComponents,
+>(): CmsBuilders<Collections, Components> {
 	const builders = {
 		string(): StringBuilder {
 			return wrapString(coreS.string());
@@ -461,7 +483,7 @@ export function createCmsBuilders<
 			id: string;
 			label?: string;
 			schema: AnyTypedSchema;
-			component?: AnySvelteComponent;
+			component?: string;
 			props?: Record<string, unknown>;
 		}): TypedFieldNode<string, unknown, FieldKind> {
 			return mark(
@@ -481,8 +503,8 @@ export function createCmsBuilders<
 			id: string;
 			label?: string;
 			content: readonly TypedTreeNode[];
-			component?: AnySvelteComponent;
-			wrapper?: AnySvelteComponent;
+			component?: string;
+			wrapper?: string;
 			props?: Record<string, unknown>;
 		}): TypedObjectNode<string, unknown> {
 			return mark(
@@ -503,8 +525,8 @@ export function createCmsBuilders<
 			id: string;
 			label?: string;
 			of: AnyTypedSchema;
-			component?: AnySvelteComponent;
-			wrapper?: AnySvelteComponent;
+			component?: string;
+			wrapper?: string;
 			props?: Record<string, unknown>;
 		}): TypedArrayNode<string, unknown[]> {
 			return mark(
@@ -547,7 +569,7 @@ export function createCmsBuilders<
 		tab<const Content extends readonly TypedTreeNode[]>(opts: {
 			id: string;
 			label: string;
-			icon?: FieldIcon;
+			icon?: string;
 			content: Content;
 		}): TypedTabNode<Content> {
 			return coreS.tab({
@@ -613,5 +635,5 @@ export function createCmsBuilders<
 		},
 	};
 
-	return builders as CmsBuilders<Collections>;
+	return builders as CmsBuilders<Collections, Components>;
 }

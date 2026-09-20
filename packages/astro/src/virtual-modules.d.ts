@@ -12,25 +12,25 @@ interface ImportMeta {
 }
 
 declare module "virtual:@cms/config" {
-	import type { UiSchemaNode } from "@cms/core/fields";
-	import type { z } from "zod";
+	import type { SemanticConfigInput } from "@cms/core/semantic";
 
-	/** Zod+FieldUi (legacy) or lowered IR form model (JSON Schema + uiSchema). */
-	export type EditorCollectionInput =
-		| z.ZodType
-		| {
-				readonly schema: Record<string, unknown>;
-				readonly uiSchema?: UiSchemaNode;
-		  };
-
-	export const collections: Record<string, EditorCollectionInput>;
+	/** Semantic collections from the Node-safe unified tree. */
+	export const collections: SemanticConfigInput["collections"];
 	/** Host-compiled entry → site preview URL; null when unsupported. */
 	export function getPreviewUrl(collection: string, id: string): string | null;
 	const config: {
-		collections: Record<string, EditorCollectionInput>;
+		collections: SemanticConfigInput["collections"];
 		getPreviewUrl?: (collection: string, id: string) => string | null;
 	};
 	export default config;
+}
+
+declare module "virtual:@cms/components" {
+	import type { AnySvelteComponent } from "@cms/authoring/config";
+
+	/** Live Svelte catalog keyed by `cms.config` binding strings. */
+	const components: Readonly<Record<string, AnySvelteComponent>>;
+	export default components;
 }
 
 declare module "virtual:@cms/host" {

@@ -16,12 +16,18 @@ const AuthorPicker = ((_: unknown, __: unknown) => ({})) as Component<
 	FieldEditorProps<string, "reference">
 >;
 
-function defineCmsLocal<C extends string>(
+const catalog = { AuthorPicker } as const;
+type Components = typeof catalog;
+
+function defineCmsLocal<
+	C extends string,
+	Comp extends typeof catalog = Components,
+>(
 	factory: (
-		s: ReturnType<typeof createCmsBuilders<C>>,
+		s: ReturnType<typeof createCmsBuilders<C, Comp>>,
 	) => CmsConfigInput,
 ): CmsConfigInput {
-	return factory(createCmsBuilders<C>());
+	return factory(createCmsBuilders<C, Comp>());
 }
 
 const config = defineCmsLocal<Collections>((s) => ({
@@ -44,7 +50,7 @@ const config = defineCmsLocal<Collections>((s) => ({
 						s.field({
 							id: "author",
 							schema: s.reference("authors"),
-							component: AuthorPicker,
+							component: "AuthorPicker",
 						}),
 						s.object({
 							id: "seo",

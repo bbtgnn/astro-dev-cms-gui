@@ -76,6 +76,21 @@ export function getStockEditor(
  */
 export type LiveBindingResolver = (token: OpaqueBinding) => unknown;
 
+/**
+ * Look up string catalog keys in a Vite components map; pass other tokens
+ * through unchanged (legacy live values / unknown tokens).
+ */
+export function resolveCatalogBinding(
+	catalog: Readonly<Record<string, unknown>>,
+): LiveBindingResolver {
+	return (token) => {
+		if (typeof token === "string" && Object.hasOwn(catalog, token)) {
+			return catalog[token];
+		}
+		return token;
+	};
+}
+
 export type ResolvedFieldEditor =
 	| {
 			readonly source: "override";

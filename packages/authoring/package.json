@@ -24,7 +24,7 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "svelte-check --tsconfig ./tsconfig.json && bunx tsc -p ./scripts/tsconfig.fixtures.json && bun test ./scripts/ajv-schema.test.ts ./scripts/config-facade.test.ts ./scripts/stock-registry.test.ts",
+		"check": "svelte-check --tsconfig ./tsconfig.json && bunx tsc -p ./scripts/tsconfig.fixtures.json && bun test ./scripts/ajv-schema.test.ts ./scripts/config-facade.test.ts ./scripts/stock-registry.test.ts ./scripts/create-field-control.test.ts ./scripts/wrap-field-editor.test.ts",
 		"check:layers": "bun run ./scripts/check-layer-boundaries.ts",
 		"check:allowlist": "bun test ./scripts/authoring-deletion.test.ts ./scripts/authoring-assets.test.ts ./scripts/authoring-autosave.test.ts ./scripts/authoring-session.test.ts",
 		"test:config": "bunx tsc -p ./scripts/tsconfig.fixtures.json && bun test ./scripts/config-facade.test.ts ./scripts/stock-registry.test.ts"

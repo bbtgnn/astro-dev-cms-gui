@@ -5,8 +5,9 @@ status: accepted
 # CMS-first semantic schema; Astro `content.config` is generated
 
 The host authors one **unified tree** in `src/cms.config.ts`: persisted shape,
-semantic field kinds, layout, and Svelte editor bindings together. A closed
-schema algebra is the authority. The compiler projects that IR into (1) a
+semantic field kinds, layout, and string catalog keys for editors together. A
+closed schema algebra is the authority. Live Svelte editors live in
+`src/cms.components.ts` (Vite-only). The compiler projects that IR into (1) a
 browser form model, (2) a component-free authoritative persisted-input
 validator, and (3) generated native Astro source at `src/content.config.ts`
 (real `image()`, `reference()`, loaders, `defineCollection()` — no broad casts).
@@ -28,11 +29,11 @@ fields are injected on unions.
 **Generation:** commit generated `content.config.ts`. `cms()` regenerates in
 `astro:config:setup` (dev/sync/check/build) without mandatory host script
 wrappers. Writes are atomic and embed a source hash; CI runs
-`cms generate --check`. Schema generation loads a **Svelte-free schema
-partition** only (`src/cms.schema.ts` by convention) — never browser-only
-editor modules from `cms.config.ts`. v1 keeps that partition as a second
-hand-authored file in sync with `cms.config` by discipline; a single-source
-or codegen seam is a follow-up, not a change to this authority split.
+`cms generate --check`. Schema generation loads the Svelte-free unified tree
+(`src/cms.config.ts` by convention) — shape, layout, loaders, and **string
+catalog keys** only; never live Svelte values. Live editors / wrappers / icons
+live in `src/cms.components.ts` and resolve only in the host Vite graph
+(`virtual:@cms/components` → `resolveBinding`).
 
 **Packages:** `@cms/core` owns IR and serializable models (no Svelte);
 `@cms/authoring` owns Svelte contracts and the form shell;

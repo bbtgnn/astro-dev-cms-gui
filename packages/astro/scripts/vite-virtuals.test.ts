@@ -5,11 +5,13 @@ import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { createCmsIntegration } from "../src/integration";
 import {
+	CMS_COMPONENTS_VIRTUAL_ID,
 	CMS_CONFIG_VIRTUAL_ID,
 	CMS_CONTENT_CONFIG_VIRTUAL_ID,
 	CMS_HOST_VIRTUAL_ID,
 	CMS_INTEGRATION_OPTIONS_VIRTUAL_ID,
 	CMS_SCHEMA_PARTITION_VIRTUAL_ID,
+	cmsComponentsVitePlugin,
 	cmsConfigVitePlugin,
 	cmsContentConfigVitePlugin,
 	cmsHostVitePlugin,
@@ -45,6 +47,29 @@ describe("cmsConfigVitePlugin", () => {
 	});
 });
 
+describe("cmsComponentsVitePlugin", () => {
+	test("re-exports catalog default export", async () => {
+		const entry = path.resolve("/project/src/cms.components.ts");
+		const plugin = cmsComponentsVitePlugin({ entry });
+		const resolved = await plugin.resolveId(CMS_COMPONENTS_VIRTUAL_ID);
+		expect(resolved).toBe(`\0${CMS_COMPONENTS_VIRTUAL_ID}`);
+		if (resolved == null) throw new Error("expected resolved id");
+		const source = await plugin.load(resolved);
+		expect(source).toBe(
+			`export { default } from ${JSON.stringify(entry)};\n`,
+		);
+	});
+
+	test("emits empty catalog when entry omitted", async () => {
+		const plugin = cmsComponentsVitePlugin({});
+		const resolved = await plugin.resolveId(CMS_COMPONENTS_VIRTUAL_ID);
+		expect(resolved).toBe(`\0${CMS_COMPONENTS_VIRTUAL_ID}`);
+		if (resolved == null) throw new Error("expected resolved id");
+		const source = await plugin.load(resolved);
+		expect(source).toBe("export default {};\n");
+	});
+});
+
 describe("cmsHostVitePlugin", () => {
 	test("re-exports createHost from host module", async () => {
 		const entry = path.resolve("/project/src/cms/host.ts");
@@ -75,7 +100,7 @@ describe("cmsContentConfigVitePlugin", () => {
 
 describe("cmsSchemaPartitionVitePlugin", () => {
 	test("re-exports collections from schema partition", async () => {
-		const entry = path.resolve("/project/src/cms.schema.ts");
+		const entry = path.resolve("/project/src/cms.config.ts");
 		const plugin = cmsSchemaPartitionVitePlugin({ entry });
 		const resolved = await plugin.resolveId(CMS_SCHEMA_PARTITION_VIRTUAL_ID);
 		expect(resolved).toBe(`\0${CMS_SCHEMA_PARTITION_VIRTUAL_ID}`);

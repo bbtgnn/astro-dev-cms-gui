@@ -27,7 +27,7 @@ import {
 const temps: string[] = [];
 const FIXTURE_PARTITION = join(
 	dirname(fileURLToPath(import.meta.url)),
-	"fixtures/cms.schema.ts",
+	"fixtures/cms.config.ts",
 );
 
 function tempProject(): string {
@@ -76,7 +76,7 @@ describe("loadSchemaPartition", () => {
 
 	test("rejects modules without collections or ir", async () => {
 		const root = tempProject();
-		const partitionPath = join(root, "src/cms.schema.ts");
+		const partitionPath = join(root, "src/cms.config.ts");
 		writeFileSync(
 			partitionPath,
 			`export const note = "not a partition";\n`,
@@ -92,7 +92,7 @@ describe("loadSchemaPartition", () => {
 describe("generateContentConfig", () => {
 	test("writes atomically, --check passes when fresh, fails after partition mutation", async () => {
 		const root = tempProject();
-		const partitionPath = join(root, "src/cms.schema.ts");
+		const partitionPath = join(root, "src/cms.config.ts");
 		const contentConfigPath = join(root, "src/content.config.ts");
 		// Hash input lives in the temp project; IR is supplied so we do not
 		// dynamically import from outside the workspace graph.

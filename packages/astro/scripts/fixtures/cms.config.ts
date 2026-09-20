@@ -1,5 +1,5 @@
 /**
- * Svelte-free schema partition fixture for generate / load tests.
+ * Svelte-free cms.config-shaped partition fixture for generate / load tests.
  * Lives inside the package so `@cms/core/semantic` resolves.
  */
 import { s } from "@cms/core/semantic";

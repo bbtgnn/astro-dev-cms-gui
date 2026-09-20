@@ -8,6 +8,8 @@
 import {
 	type CmsBuilders,
 	type CmsConfigInput,
+	type ComponentsCatalog,
+	type EmptyComponents,
 	createCmsBuilders,
 } from "@cms/authoring/config";
 
@@ -15,6 +17,11 @@ export type {
 	AggregateWrapperProps,
 	CmsBuilders,
 	CmsConfigInput,
+	CompatibleIconKey,
+	CompatibleKey,
+	CompatibleWrapperKey,
+	ComponentsCatalog,
+	EmptyComponents,
 	FieldControl,
 	FieldEditorProps,
 	FieldError,
@@ -30,12 +37,18 @@ export {
 } from "@cms/authoring/config";
 
 /**
- * Typed entry for the CMS unified tree. Collection name generics type
- * `reference()` targets. Returns the host config (collections + optional
- * preview map); call `compileSemanticIr({ collections })` for IR.
+ * Typed entry for the CMS unified tree (`src/cms.config.ts`).
+ * - `Collections` types `reference()` targets.
+ * - `Components` is the Vite catalog type (`typeof` default export of
+ *   `cms.components.ts`); `component` / `wrapper` / `icon` are string keys.
+ * Returns the host config (collections + optional preview map); call
+ * `compileSemanticIr({ collections })` for IR.
  */
-export function defineCms<Collections extends string = string>(
-	factory: (s: CmsBuilders<Collections>) => CmsConfigInput,
+export function defineCms<
+	Collections extends string = string,
+	Components extends ComponentsCatalog = EmptyComponents,
+>(
+	factory: (s: CmsBuilders<Collections, Components>) => CmsConfigInput,
 ): CmsConfigInput {
-	return factory(createCmsBuilders<Collections>());
+	return factory(createCmsBuilders<Collections, Components>());
 }

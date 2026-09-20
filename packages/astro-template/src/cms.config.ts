@@ -1,23 +1,15 @@
 /**
- * Browser-safe CMS unified tree — human source (ADR-0019).
+ * Node-safe CMS unified tree — human source (ADR-0019 residual 4.1).
  *
- * Convention path `src/cms.config.ts`. Loaded through `virtual:@cms/config`
- * (host Vite graph). Must not import Astro server modules, Node builtins,
- * filesystem utilities, or secrets.
- *
- * Persisted shape is mirrored (Svelte-free) in `src/cms.schema.ts` for
- * generation. Keep both trees in sync by discipline for v1.
+ * Convention path `src/cms.config.ts`. Loaded as generation partition and as
+ * `virtual:@cms/config`. No runtime Svelte imports — only `import type` from
+ * the components catalog when typing `defineCms` generics. Live editors live
+ * in `src/cms.components.ts` and resolve via `virtual:@cms/components`.
  */
 import { defineCms } from "@cms/astro/config";
-import { editorCollectionsFromFormModels } from "@cms/authoring";
-import {
-	compileSemanticIr,
-	projectFormModels,
-} from "@cms/core/semantic";
-import AuthorNameEditor from "./cms/fields/AuthorNameEditor.svelte";
-import BodyEditor from "./cms/fields/BodyEditor.svelte";
 
 type Collections = "posts" | "authors";
+type Components = typeof import("./cms.components").default;
 
 /**
  * Derive the real Astro site route for a content entry (ADR-0013).
@@ -32,7 +24,7 @@ export function getPreviewUrl(collection: string, id: string): string | null {
 	return null;
 }
 
-const cms = defineCms<Collections>((s) => ({
+const cms = defineCms<Collections, Components>((s) => ({
 	collections: {
 		authors: s.collection({
 			loader: s.glob({
@@ -43,7 +35,7 @@ const cms = defineCms<Collections>((s) => ({
 				id: "name",
 				label: "Author name",
 				schema: s.string().min(1),
-				component: AuthorNameEditor,
+				component: "AuthorNameEditor",
 			}),
 		}),
 		posts: s.collection({
@@ -66,7 +58,7 @@ const cms = defineCms<Collections>((s) => ({
 					id: "body",
 					label: "Body",
 					schema: s.string(),
-					component: BodyEditor,
+					component: "BodyEditor",
 				}),
 				s.field({
 					id: "cover",
@@ -84,11 +76,5 @@ const cms = defineCms<Collections>((s) => ({
 	getPreviewUrl,
 }));
 
-const ir = compileSemanticIr({ collections: cms.collections });
-const formModels = projectFormModels(ir);
-
-/** Collection name → lowered IR form model for the authoring shell. */
-export const collections = editorCollectionsFromFormModels(formModels);
-
-const editorConfig = { collections, getPreviewUrl };
-export default editorConfig;
+export const collections = cms.collections;
+export default cms;

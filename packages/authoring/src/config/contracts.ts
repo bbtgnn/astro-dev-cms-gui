@@ -21,7 +21,7 @@ export type FieldError = {
 	readonly message: string;
 };
 
-declare const fieldKindBrand: unique symbol;
+const fieldKindBrand: unique symbol = Symbol("cms.fieldKind");
 
 /**
  * Authoring-facing field control. The brand keeps string-persisted kinds
@@ -140,3 +140,44 @@ export type ShellCompatibleWrapper<C extends AnySvelteComponent> =
 
 /** Optional tab / chrome icon — no required props. */
 export type FieldIcon = Component<Record<string, never> | { class?: string }>;
+
+/**
+ * Catalog of live Svelte editors / wrappers / icons (Vite-only module).
+ * Keys are authored in `cms.config.ts`; values resolve in the host graph.
+ */
+export type ComponentsCatalog = Record<string, AnySvelteComponent>;
+
+/** Default when the host uses only stock editors (no custom catalog). */
+export type EmptyComponents = Record<never, AnySvelteComponent>;
+
+/**
+ * Catalog keys whose component is shell-compatible for the field's Input/Kind.
+ * Wrong shape or kind yields `never` (type error on `component: …`).
+ */
+export type CompatibleKey<
+	Components extends ComponentsCatalog,
+	Input,
+	Kind extends FieldKind,
+> = {
+	[K in keyof Components & string]: Components[K] extends ShellCompatibleEditor<
+		Components[K],
+		Input,
+		Kind
+	>
+		? K
+		: never;
+}[keyof Components & string];
+
+/** Catalog keys usable as aggregate `wrapper` (chrome only). */
+export type CompatibleWrapperKey<Components extends ComponentsCatalog> = {
+	[K in keyof Components & string]: Components[K] extends ShellCompatibleWrapper<
+		Components[K]
+	>
+		? K
+		: never;
+}[keyof Components & string];
+
+/** Catalog keys usable as tab / chrome `icon`. */
+export type CompatibleIconKey<Components extends ComponentsCatalog> = {
+	[K in keyof Components & string]: Components[K] extends FieldIcon ? K : never;
+}[keyof Components & string];

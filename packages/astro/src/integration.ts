@@ -11,8 +11,9 @@
  * });
  * ```
  *
- * Conventions: `src/cms.config.ts`, `src/cms.schema.ts` (partition) →
- * generated `src/content.config.ts`, `src/content/`.
+ * Conventions: `src/cms.config.ts` (unified tree + generation partition),
+ * optional `src/cms.components.ts` (Vite catalog) → generated
+ * `src/content.config.ts`, `src/content/`.
  * Escape hatches: `editorConfig`, `hostModule`, `contentRoot`, `schemaPartition`.
  *
  * Generation runs in `astro:config:setup` (dev/sync/check/build) before Astro
@@ -30,9 +31,11 @@ import {
 	createCmsMiddleware,
 } from "./http";
 import {
+	CMS_COMPONENTS_CONVENTION,
 	CMS_CONFIG_CONVENTION,
 	type CmsVitePlugin,
 	CONTENT_CONFIG_CONVENTION,
+	cmsComponentsVitePlugin,
 	cmsConfigVitePlugin,
 	cmsContentConfigVitePlugin,
 	cmsHostVitePlugin,
@@ -46,11 +49,17 @@ import {
 
 export type CmsIntegrationOptions = {
 	/**
-	 * Browser-safe editor configuration module (project-relative or absolute).
+	 * Node-safe unified tree module (project-relative or absolute).
 	 * Defaults to `src/cms.config.{ts,mjs,js}` when present.
 	 * Exposed to the client as `virtual:@cms/config`.
 	 */
 	editorConfig?: string;
+	/**
+	 * Vite-only components catalog (project-relative or absolute).
+	 * Defaults to `src/cms.components.{ts,mjs,js}` when present; otherwise an
+	 * empty catalog. Exposed as `virtual:@cms/components`.
+	 */
+	componentsCatalog?: string | false;
 	/**
 	 * Project module that exports `createHost(): CmsHost`.
 	 * When omitted, uses the package default host from `content.config` +
@@ -69,7 +78,7 @@ export type CmsIntegrationOptions = {
 	shellPath?: string | false;
 	/**
 	 * Svelte-free schema partition for content.config generation (ADR-0019).
-	 * Defaults to `src/cms.schema.ts` when present. Pass `false` to disable
+	 * Defaults to `src/cms.config.ts` when present. Pass `false` to disable
 	 * generation (tests / hosts that still hand-author content.config only).
 	 */
 	schemaPartition?: string | false;
@@ -131,7 +140,8 @@ function defaultHostEntry(mode: "semantic" | "legacy"): string {
 /**
  * Named install object for the Astro host surface.
  * - Resolves `src/cms.config.*` (or `editorConfig`) → `virtual:@cms/config` + `/cms`.
- * - When `src/cms.schema.ts` (or `schemaPartition`) exists, regenerates
+ * - Resolves `src/cms.components.*` → `virtual:@cms/components` for binding lookup.
+ * - When `src/cms.config.ts` (or `schemaPartition`) exists, regenerates
  *   `content.config.ts` in `astro:config:setup` before other wiring and uses
  *   the CMS-first default host (authoritative IR validator).
  * - Without a schema partition, falls back to live `content.config` discovery.
@@ -202,6 +212,13 @@ export function createCmsIntegration(
 						? resolveProjectEntry(options.schemaPartition, root)
 						: resolveConventionEntry(root, SCHEMA_PARTITION_CONVENTION);
 
+			const componentsEntry =
+				options.componentsCatalog === false
+					? undefined
+					: options.componentsCatalog != null
+						? resolveProjectEntry(options.componentsCatalog, root)
+						: resolveConventionEntry(root, CMS_COMPONENTS_CONVENTION);
+
 			// Resolve after generation so a missing committed bootstrap is
 			// created in-hook and default-host wiring can see it.
 			const contentConfigEntry = resolveConventionEntry(
@@ -249,6 +266,10 @@ export function createCmsIntegration(
 
 			if (editorConfigEntry != null) {
 				plugins.push(cmsConfigVitePlugin({ entry: editorConfigEntry }));
+			}
+
+			if (editorConfigEntry != null || resolvedShellPath != null) {
+				plugins.push(cmsComponentsVitePlugin({ entry: componentsEntry }));
 			}
 
 			if (hostEntry != null || resolvedShellPath != null) {

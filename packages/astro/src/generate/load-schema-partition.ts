@@ -1,10 +1,11 @@
 /**
- * Schema-partition load seam (ADR-0019).
+ * Schema-partition load seam (ADR-0019 residual 4.1).
  *
- * Generation must never import the host's full `cms.config.ts` (Svelte editors).
- * Hosts expose a Svelte-free partition module that exports either:
+ * Generation loads the Svelte-free unified tree (`src/cms.config.ts`) — string
+ * catalog keys only, never live Svelte modules from `cms.components.ts`.
+ * Hosts expose a module that exports either:
  *
- * - `collections` — authored with `@cms/core/semantic` `s` builders, or
+ * - `collections` — authored with `defineCms` / `@cms/core/semantic` `s`, or
  * - `ir` — precompiled `CompiledSemanticIr`
  *
  * Slice 4 (`cms()` hooks) calls the same loader / `generateContentConfig`.
@@ -20,13 +21,13 @@ import {
 
 /**
  * Convention path (project-relative) for the Svelte-free schema partition.
- * Distinct from `src/cms.config.ts` (browser unified tree with editors).
+ * Same module as the browser unified tree (`src/cms.config.ts`).
  */
-export const SCHEMA_PARTITION_CONVENTION = "src/cms.schema.ts";
+export const SCHEMA_PARTITION_CONVENTION = "src/cms.config.ts";
 
 /**
  * Expected exports from a schema partition module.
- * Prefer `collections` from `@cms/core/semantic`; `ir` skips compile.
+ * Prefer `collections` from `defineCms` / `@cms/core/semantic`; `ir` skips compile.
  */
 export type SchemaPartitionExport = {
 	readonly collections?: SemanticConfigInput["collections"];
@@ -91,7 +92,7 @@ function compileFromModule(mod: Record<string, unknown>, where: string) {
 	) {
 		throw new Error(
 			`schema partition missing "collections" or "ir" export at ${where} ` +
-				`(author with @cms/core/semantic — never import Svelte editors here)`,
+				`(author with defineCms / @cms/core/semantic — no live Svelte imports)`,
 		);
 	}
 

@@ -24,8 +24,8 @@ Options:
   -h, --help      Show this help
 
 The schema partition must export Svelte-free \`collections\` (from
-@cms/core/semantic) or precompiled \`ir\`. Never point --partition at
-cms.config.ts editor modules.
+defineCms / @cms/core/semantic) or precompiled \`ir\`. Default is
+src/cms.config.ts (string catalog keys only — no live Svelte imports).
 `);
 }
 

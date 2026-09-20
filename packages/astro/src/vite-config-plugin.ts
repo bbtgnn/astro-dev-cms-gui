@@ -1,12 +1,13 @@
 /**
  * Vite virtual modules for the Astro host integration:
- * - `virtual:@cms/config` — browser-safe editor configuration
+ * - `virtual:@cms/config` — Node-safe unified tree (`cms.config.ts`)
+ * - `virtual:@cms/components` — Vite-only live Svelte catalog (`cms.components.ts`)
  * - `virtual:@cms/host` — `createHost()` factory (project or package default)
  * - `virtual:@cms/content-config` — live `content.config` collections (legacy host)
- * - `virtual:@cms/schema-partition` — Svelte-free IR partition (CMS-first host)
+ * - `virtual:@cms/schema-partition` — same Svelte-free tree for the CMS-first host
  * - `virtual:@cms/integration-options` — mount / allowInProd / contentRoot
  *
- * Direct Svelte components stay live module values in the host graph —
+ * Catalog values stay live module bindings in the host Vite graph —
  * they are never serialized through Astro props or the CMS protocol.
  */
 import fs from "node:fs";
@@ -14,6 +15,9 @@ import path from "node:path";
 
 export const CMS_CONFIG_VIRTUAL_ID = "virtual:@cms/config";
 const CMS_CONFIG_RESOLVED_ID = `\0${CMS_CONFIG_VIRTUAL_ID}`;
+
+export const CMS_COMPONENTS_VIRTUAL_ID = "virtual:@cms/components";
+const CMS_COMPONENTS_RESOLVED_ID = `\0${CMS_COMPONENTS_VIRTUAL_ID}`;
 
 export const CMS_HOST_VIRTUAL_ID = "virtual:@cms/host";
 const CMS_HOST_RESOLVED_ID = `\0${CMS_HOST_VIRTUAL_ID}`;
@@ -28,11 +32,24 @@ export const CMS_INTEGRATION_OPTIONS_VIRTUAL_ID =
 	"virtual:@cms/integration-options";
 const CMS_INTEGRATION_OPTIONS_RESOLVED_ID = `\0${CMS_INTEGRATION_OPTIONS_VIRTUAL_ID}`;
 
-/** Convention paths for browser editor configuration (ADR-0016). */
+/** Convention paths for the Node-safe unified tree (ADR-0016 / 0019). */
 export const CMS_CONFIG_CONVENTION = [
 	"src/cms.config.ts",
 	"src/cms.config.mjs",
 	"src/cms.config.js",
+] as const;
+
+/**
+ * Schema partition for generation + CMS-first default host.
+ * Same files as {@link CMS_CONFIG_CONVENTION} (Svelte-free `cms.config.ts`).
+ */
+export const SCHEMA_PARTITION_CONVENTION = CMS_CONFIG_CONVENTION;
+
+/** Vite-only live components catalog (optional; empty map when absent). */
+export const CMS_COMPONENTS_CONVENTION = [
+	"src/cms.components.ts",
+	"src/cms.components.mjs",
+	"src/cms.components.js",
 ] as const;
 
 /** Convention paths for Astro content collections (ADR-0004 / 0016). */
@@ -42,19 +59,20 @@ export const CONTENT_CONFIG_CONVENTION = [
 	"src/content.config.js",
 ] as const;
 
-/** Svelte-free schema partition for generation + CMS-first default host. */
-export const SCHEMA_PARTITION_CONVENTION = [
-	"src/cms.schema.ts",
-	"src/cms.schema.mjs",
-	"src/cms.schema.js",
-] as const;
-
 /** Default write-back root relative to the Astro project root. */
 export const DEFAULT_CONTENT_ROOT = "src/content";
 
 export type CmsConfigVitePluginOptions = {
-	/** Absolute path to the browser-safe editor configuration module. */
+	/** Absolute path to the Node-safe unified tree module. */
 	entry: string;
+};
+
+export type CmsComponentsVitePluginOptions = {
+	/**
+	 * Absolute path to the Vite-only components catalog, or omit for an empty
+	 * default export (stock editors only).
+	 */
+	entry?: string;
 };
 
 export type CmsHostVitePluginOptions = {
@@ -68,7 +86,7 @@ export type CmsContentConfigVitePluginOptions = {
 };
 
 export type CmsSchemaPartitionVitePluginOptions = {
-	/** Absolute path to the project's Svelte-free schema partition. */
+	/** Absolute path to the Svelte-free schema partition (`cms.config`). */
 	entry: string;
 };
 
@@ -119,7 +137,7 @@ export function resolveConventionEntry(
 
 /**
  * Expose `virtual:@cms/config` as a static re-export of `entry`.
- * Vite HMR follows the real module (and its Svelte imports) automatically.
+ * Entry must be Svelte-free (string catalog keys only).
  */
 export function cmsConfigVitePlugin(
 	options: CmsConfigVitePluginOptions,
@@ -141,6 +159,33 @@ export function cmsConfigVitePlugin(
 				`export { collections, default } from ${entryLiteral};`,
 				`export * from ${entryLiteral};`,
 			].join("\n");
+		},
+	};
+}
+
+/**
+ * Expose `virtual:@cms/components` as the live Svelte catalog (or `{}`).
+ */
+export function cmsComponentsVitePlugin(
+	options: CmsComponentsVitePluginOptions = {},
+): CmsVitePlugin {
+	const entry =
+		options.entry != null ? path.normalize(options.entry) : undefined;
+	const entryLiteral = entry != null ? JSON.stringify(entry) : null;
+
+	return {
+		name: "@cms/astro:virtual-components",
+		enforce: "pre",
+		resolveId(id) {
+			if (id === CMS_COMPONENTS_VIRTUAL_ID) return CMS_COMPONENTS_RESOLVED_ID;
+			return null;
+		},
+		load(id) {
+			if (id !== CMS_COMPONENTS_RESOLVED_ID) return null;
+			if (entryLiteral == null) {
+				return "export default {};\n";
+			}
+			return `export { default } from ${entryLiteral};\n`;
 		},
 	};
 }
@@ -196,7 +241,7 @@ export function cmsContentConfigVitePlugin(
 
 /**
  * Expose `virtual:@cms/schema-partition` for the CMS-first default host.
- * Partition must export Svelte-free `collections` (or be loadable as such).
+ * Partition must export Svelte-free `collections` (typically `cms.config.ts`).
  */
 export function cmsSchemaPartitionVitePlugin(
 	options: CmsSchemaPartitionVitePluginOptions,

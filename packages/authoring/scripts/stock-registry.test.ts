@@ -8,6 +8,7 @@ import { createFormValidator } from "@sjsf/ajv8-validator";
 import { lowerFormModelToSjsf } from "../src/form/lower-sjsf";
 import {
 	getStockEditor,
+	resolveCatalogBinding,
 	resolveFieldEditor,
 	stockEditorRegistry,
 } from "../src/form/stock-registry";
@@ -60,12 +61,11 @@ describe("stockEditorRegistry", () => {
 		expect(author).toBeDefined();
 		if (!author) throw new Error("missing author");
 
-		const live = new Map<string, { name: string }>([
-			["AuthorPickerToken", { name: "LiveAuthorPicker" }],
-		]);
+		const live = {
+			AuthorPickerToken: { name: "LiveAuthorPicker" },
+		};
 		const resolved = resolveFieldEditor(author, {
-			resolveBinding: (token) =>
-				typeof token === "string" ? live.get(token) : token,
+			resolveBinding: resolveCatalogBinding(live),
 		});
 		expect(resolved.source).toBe("override");
 		if (resolved.source === "override") {

@@ -22,12 +22,15 @@ export {
 	createCmsIntegration,
 } from "./integration";
 export {
+	CMS_COMPONENTS_CONVENTION,
+	CMS_COMPONENTS_VIRTUAL_ID,
 	CMS_CONFIG_CONVENTION,
 	CMS_CONFIG_VIRTUAL_ID,
 	CMS_CONTENT_CONFIG_VIRTUAL_ID,
 	CMS_HOST_VIRTUAL_ID,
 	CMS_INTEGRATION_OPTIONS_VIRTUAL_ID,
 	CMS_SCHEMA_PARTITION_VIRTUAL_ID,
+	type CmsComponentsVitePluginOptions,
 	type CmsConfigVitePluginOptions,
 	type CmsContentConfigVitePluginOptions,
 	type CmsHostVitePluginOptions,
@@ -35,6 +38,7 @@ export {
 	type CmsSchemaPartitionVitePluginOptions,
 	type CmsVitePlugin,
 	CONTENT_CONFIG_CONVENTION,
+	cmsComponentsVitePlugin,
 	cmsConfigVitePlugin,
 	cmsContentConfigVitePlugin,
 	cmsHostVitePlugin,

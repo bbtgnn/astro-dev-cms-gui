@@ -20,13 +20,11 @@ Happy path: `http://127.0.0.1:4321/cms` (shell via `injectRoute`) and `/_cms`
 
 Conventions (ADR-0016 / ADR-0019):
 
-- `src/cms.config.ts` — human unified tree (`defineCms` + Svelte editors)
-- `src/cms.schema.ts` — Svelte-free schema partition (generation + host validator)
+- `src/cms.config.ts` — Node-safe unified tree (`defineCms` + catalog string keys);
+  also the generation / host-validator partition
+- `src/cms.components.ts` — Vite-only live Svelte catalog (`virtual:@cms/components`)
 - `src/content.config.ts` — **generated** native Astro output (do not hand-edit)
 - `src/content/` — JSON entries (`posts`, `authors`)
-
-Keep `cms.config.ts` and `cms.schema.ts` persisted shapes in sync by discipline
-(no codegen between them in v1).
 
 Regenerate / CI check (from this package):
 
@@ -57,7 +55,7 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 
 From the repo root: `bun run check:allowlist` (core write-back contracts + authoring layer/session tests).
 
-Default host (with `cms.schema.ts`) builds an authoritative validator from the
+Default host (with `cms.config.ts`) builds an authoritative validator from the
 IR partition and injects FS image + reference-existence checks under
 `src/content/`.
 

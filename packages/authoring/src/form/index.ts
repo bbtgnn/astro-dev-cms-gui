@@ -18,6 +18,7 @@ export {
 	getStockEditor,
 	type LiveBindingResolver,
 	type ResolvedFieldEditor,
+	resolveCatalogBinding,
 	resolveFieldEditor,
 	type StockEditorEntry,
 	type StockEditorRegistry,

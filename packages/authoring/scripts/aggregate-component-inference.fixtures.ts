@@ -1,6 +1,5 @@
 /**
- * Compile-time fixtures: aggregate `component` inference with real Svelte
- * `Component` / `ComponentProps` (ADR-0019 slice 2).
+ * Compile-time fixtures: catalog-key `component` inference (ADR-0019 residual 4.1).
  *
  * Run: bunx tsc -p packages/authoring/scripts/tsconfig.fixtures.json
  * Expect: exit 0. Negatives use @ts-expect-error.
@@ -13,8 +12,6 @@ import {
 	createCmsBuilders,
 	type InputOfNode,
 } from "../src/config";
-
-const s = createCmsBuilders();
 
 type SeoShape = { title: string; description: string };
 
@@ -38,6 +35,18 @@ const MarkdownEditor = ((_: unknown, __: unknown) => ({})) as Component<
 	FieldEditorProps<string, "string"> & { toolbar: string[] }
 >;
 
+const catalog = {
+	SeoEditor,
+	WrongEditor,
+	StringEditor,
+	ExtraPropsEditor,
+	MarkdownEditor,
+} as const;
+
+type Components = typeof catalog;
+
+const s = createCmsBuilders<string, Components>();
+
 // --- Happy path: tuple content → { title; description } ---
 
 const seo = s.object({
@@ -46,7 +55,7 @@ const seo = s.object({
 		s.field({ id: "title", schema: s.string() }),
 		s.field({ id: "description", schema: s.string() }),
 	],
-	component: SeoEditor,
+	component: "SeoEditor",
 });
 
 type SeoFromNode = InputOfNode<typeof seo>;
@@ -64,7 +73,7 @@ const withChrome = s.object({
 		s.separator(),
 		s.field({ id: "description", schema: s.string() }),
 	],
-	component: SeoEditor,
+	component: "SeoEditor",
 });
 
 type ChromeInferred = InputOfNode<typeof withChrome>;
@@ -105,7 +114,7 @@ const mixed = s.object({
 			s.field({ id: "description", schema: s.string() }),
 		]),
 	],
-	component: SeoEditor,
+	component: "SeoEditor",
 });
 
 type MixedInferred = InputOfNode<typeof mixed>;
@@ -117,7 +126,7 @@ void _mixedCheck;
 s.field({
 	id: "body",
 	schema: s.string(),
-	component: MarkdownEditor,
+	component: "MarkdownEditor",
 	props: { toolbar: ["bold", "link"] },
 });
 
@@ -129,17 +138,19 @@ s.object({
 		s.field({ id: "title", schema: s.string() }),
 		s.field({ id: "description", schema: s.string() }),
 	],
-	component: ExtraPropsEditor,
+	component: "ExtraPropsEditor",
 	props: { toolbar: ["bold"] },
 });
 
 // Props bag checked against ComponentProps minus shell keys
-const _goodExtra: EditorExtraProps<typeof ExtraPropsEditor> = {
+const _goodExtra: EditorExtraProps<(typeof catalog)["ExtraPropsEditor"]> = {
 	toolbar: ["bold"],
 };
 void _goodExtra;
-// @ts-expect-error toolbar must be string[]
-const _badExtra: EditorExtraProps<typeof ExtraPropsEditor> = { toolbar: 1 };
+const _badExtra: EditorExtraProps<(typeof catalog)["ExtraPropsEditor"]> = {
+	// @ts-expect-error toolbar must be string[]
+	toolbar: 1,
+};
 void _badExtra;
 
 // --- Negatives ---
@@ -151,7 +162,7 @@ s.object({
 		s.field({ id: "description", schema: s.string() }),
 	],
 	// @ts-expect-error WrongEditor expects `other: number`, not `description: string`
-	component: WrongEditor,
+	component: "WrongEditor",
 });
 
 s.object({
@@ -161,14 +172,22 @@ s.object({
 		s.field({ id: "description", schema: s.string() }),
 	],
 	// @ts-expect-error StringEditor is FieldEditorProps<string>, not object shape
-	component: StringEditor,
+	component: "StringEditor",
 });
 
 s.field({
 	id: "body-bad",
 	schema: s.string(),
 	// @ts-expect-error object editor on string field
-	component: SeoEditor,
+	component: "SeoEditor",
+});
+
+// Unknown catalog key
+s.field({
+	id: "body-unknown",
+	schema: s.string(),
+	// @ts-expect-error key not in Components catalog
+	component: "MissingEditor",
 });
 
 // Optionality on schema node: Input becomes string | undefined

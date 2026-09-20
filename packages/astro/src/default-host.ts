@@ -1,6 +1,6 @@
 /**
  * Package default CmsHost factory — legacy FieldUi discovery path.
- * Used when the project has no `src/cms.schema.ts` partition.
+ * Used when the project has no `src/cms.config.ts` partition.
  * Prefer {@link ./default-host-semantic.ts} when a schema partition exists.
  *
  * Discovers collections from the project's `content.config` and writes under

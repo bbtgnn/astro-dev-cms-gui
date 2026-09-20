@@ -11,7 +11,12 @@ export {
 export type {
 	AggregateWrapperProps,
 	AnySvelteComponent,
+	CompatibleIconKey,
+	CompatibleKey,
+	CompatibleWrapperKey,
+	ComponentsCatalog,
 	EditorExtraProps,
+	EmptyComponents,
 	FieldControl,
 	FieldEditorProps,
 	FieldError,

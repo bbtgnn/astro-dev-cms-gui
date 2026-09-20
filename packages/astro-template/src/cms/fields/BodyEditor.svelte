@@ -1,6 +1,6 @@
 <!--
   Direct string field for markdown-like body — FieldEditorProps (shell-owned contract).
-  Supplied via project editor config (virtual:@cms/config).
+  Bound via cms.components catalog key + virtual:@cms/components.
 -->
 <script lang="ts">
 	import type { FieldEditorProps } from "@cms/authoring/config";
@@ -23,7 +23,7 @@
 		<small class="cms-body-editor-hint">{description}</small>
 	{:else}
 		<small class="cms-body-editor-hint"
-			>Direct Svelte field via <code>virtual:@cms/config</code></small
+			>Direct Svelte field via <code>virtual:@cms/components</code></small
 		>
 	{/if}
 	{#each field.errors as err, i (i)}

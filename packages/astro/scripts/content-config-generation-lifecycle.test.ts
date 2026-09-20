@@ -29,7 +29,7 @@ import {
 const temps: string[] = [];
 const FIXTURE_PARTITION = join(
 	dirname(fileURLToPath(import.meta.url)),
-	"fixtures/cms.schema.ts",
+	"fixtures/cms.config.ts",
 );
 
 function tempProject(): string {
