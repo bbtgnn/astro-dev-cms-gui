@@ -12,6 +12,20 @@ export type {
 	CmsEntryContext,
 } from "./form/ImageField.svelte";
 export {
+	type LoweredSjsfSchemas,
+	type LowerFormModelOptions,
+	lowerFormModelToSjsf,
+} from "./form/lower-sjsf";
+export {
+	getStockEditor,
+	type LiveBindingResolver,
+	type ResolvedFieldEditor,
+	resolveFieldEditor,
+	type StockEditorEntry,
+	type StockEditorRegistry,
+	stockEditorRegistry,
+} from "./form/stock-registry";
+export {
 	type AuthoringSession,
 	type AuthoringSessionMode,
 	type AuthoringSessionOptions,

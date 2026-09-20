@@ -2,6 +2,7 @@
  * Closed semantic IR for CMS-first schemas (ADR-0019).
  *
  * Primary seam: `compileSemanticIr` (+ `s` builders, `persistedShape`).
+ * Slice 5 projections: `projectFormModels`, `createAuthoritativeValidator`.
  * No Svelte; no Astro emission.
  */
 
@@ -39,6 +40,28 @@ export {
 } from "./builders";
 export { compileSemanticIr, persistedShape } from "./compile";
 export { SemanticIrError, type SemanticIrIssue } from "./errors";
+export {
+	type CollectionFormModel,
+	type FormConstraintSummary,
+	type FormFieldDescriptor,
+	type FormLayoutArray,
+	type FormLayoutColumn,
+	type FormLayoutColumns,
+	type FormLayoutFieldRef,
+	type FormLayoutGroup,
+	type FormLayoutHeader,
+	type FormLayoutNode,
+	type FormLayoutObject,
+	type FormLayoutSeparator,
+	type FormLayoutStack,
+	type FormLayoutTab,
+	type FormLayoutTabs,
+	type FormLayoutUnion,
+	type FormLayoutUnionVariant,
+	type FormModelsByCollection,
+	projectCollectionFormModel,
+	projectFormModels,
+} from "./form-model";
 export type {
 	CompiledSemanticIr,
 	IrArray,
@@ -84,3 +107,10 @@ export type {
 	SemanticKind,
 	StringConstraint,
 } from "./types";
+export {
+	type AuthoritativeParseIssue,
+	type AuthoritativeParseResult,
+	type AuthoritativeValidator,
+	type AuthoritativeValidatorDeps,
+	createAuthoritativeValidator,
+} from "./validator";
