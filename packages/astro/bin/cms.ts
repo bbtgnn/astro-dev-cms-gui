@@ -5,7 +5,7 @@
  *   cms generate           write content.config.ts when stale
  *   cms generate --check   exit 1 when generated file is missing/stale
  *
- * Slice 4 will also call `generateContentConfig` from `astro:config:setup`.
+ * `cms()` also calls `generateContentConfig` from `astro:config:setup`.
  */
 
 import { resolve } from "node:path";

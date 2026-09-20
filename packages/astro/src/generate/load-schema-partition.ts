@@ -7,7 +7,7 @@
  * - `collections` — authored with `@cms/core/semantic` `s` builders, or
  * - `ir` — precompiled `CompiledSemanticIr`
  *
- * Slice 4 (`cms()` hooks) should call the same loader / `generateContentConfig`.
+ * Slice 4 (`cms()` hooks) calls the same loader / `generateContentConfig`.
  */
 
 import { pathToFileURL } from "node:url";

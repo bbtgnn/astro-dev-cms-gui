@@ -1,7 +1,7 @@
 /**
  * Astro host integration — consumer mount seam.
  *
- * Happy path (ADR-0016):
+ * Happy path (ADR-0016 / ADR-0019):
  *
  * ```ts
  * import { cms } from "@cms/astro";
@@ -11,14 +11,19 @@
  * });
  * ```
  *
- * Conventions: `src/cms.config.ts`, `src/content.config.ts`, `src/content/`.
- * Escape hatches: `editorConfig`, `hostModule`, `contentRoot`.
+ * Conventions: `src/cms.config.ts`, `src/cms.schema.ts` (partition) →
+ * generated `src/content.config.ts`, `src/content/`.
+ * Escape hatches: `editorConfig`, `hostModule`, `contentRoot`, `schemaPartition`.
+ *
+ * Generation runs in `astro:config:setup` (dev/sync/check/build) before Astro
+ * evaluates `content.config.ts`. No mandatory host package.json wrappers.
  *
  * Manual middleware (tests / advanced hosts): `createCmsMiddleware` from
  * `@cms/astro`. Pass `hostModule: false` with `protocol` + `isDev`
  * to expose `integration.middleware` for `defineMiddleware`.
  */
 import { fileURLToPath } from "node:url";
+import { runContentConfigGeneration } from "./generate/run-content-config-generation";
 import {
 	type CmsDispatcherOptions,
 	type CmsMiddlewareHandler,
@@ -60,6 +65,12 @@ export type CmsIntegrationOptions = {
 	 * Defaults to `/cms` when an editor config is resolved; pass `false` to skip injectRoute.
 	 */
 	shellPath?: string | false;
+	/**
+	 * Svelte-free schema partition for content.config generation (ADR-0019).
+	 * Defaults to `src/cms.schema.ts` when present. Pass `false` to disable
+	 * generation (tests / hosts that still hand-author content.config only).
+	 */
+	schemaPartition?: string | false;
 } & Partial<CmsDispatcherOptions>;
 
 /** Minimal Astro `astro:config:setup` hook params we use. */
@@ -116,6 +127,8 @@ function defaultHostEntry(): string {
 /**
  * Named install object for the Astro host surface.
  * - Resolves `src/cms.config.*` (or `editorConfig`) → `virtual:@cms/config` + `/cms`.
+ * - When `src/cms.schema.ts` (or `schemaPartition`) exists, regenerates
+ *   `content.config.ts` in `astro:config:setup` before other wiring.
  * - Resolves default or project host → Astro `addMiddleware` for `/_cms`.
  * - With `hostModule: false` + `protocol`: exposes `middleware` for manual mount.
  */
@@ -155,14 +168,29 @@ export function createCmsIntegration(
 	}
 
 	integration.hooks = {
-		"astro:config:setup"({ config, updateConfig, addMiddleware, injectRoute }) {
+		async "astro:config:setup"({
+			config,
+			updateConfig,
+			addMiddleware,
+			injectRoute,
+		}) {
 			const root = projectRootFromAstroConfig(config.root);
+
+			// Gate 4 / ADR-0019: regenerate before Astro evaluates content.config.
+			// Key off setup completion — not a distinct "check" command string
+			// (astro check still runs the content pipeline with command=sync).
+			await runContentConfigGeneration({
+				projectRoot: root,
+				schemaPartition: options.schemaPartition,
+			});
 
 			const editorConfigEntry =
 				options.editorConfig != null
 					? resolveProjectEntry(options.editorConfig, root)
 					: resolveConventionEntry(root, CMS_CONFIG_CONVENTION);
 
+			// Resolve after generation so a missing committed bootstrap is
+			// created in-hook and default-host wiring can see it.
 			const contentConfigEntry = resolveConventionEntry(
 				root,
 				CONTENT_CONFIG_CONVENTION,

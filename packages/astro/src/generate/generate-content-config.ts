@@ -1,7 +1,7 @@
 /**
  * Generate (or --check) native `src/content.config.ts` from a schema partition.
  *
- * Public API for CLI and for slice 4 `cms()` hooks — same seam, no host wrappers
+ * Public API for CLI and `cms()` hooks — same seam, no host wrappers
  * required beyond calling this function with project paths.
  */
 
