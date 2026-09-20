@@ -29,7 +29,8 @@ const FORBIDDEN: Array<{ id: string; pattern: RegExp }> = [
 	{ id: "host-astro", pattern: /^@cms\/astro(?:\/|$)/ },
 	/**
 	 * `@cms/core` root re-exports Node FS writers; browser code must use
-	 * `@cms/core/fetch-client`, `@cms/core/protocol`, or `@cms/core/fields`.
+	 * `@cms/core/fetch-client`, `@cms/core/protocol`, `@cms/core/fields`,
+	 * or `@cms/core/semantic`.
 	 */
 	{ id: "core-root", pattern: /^@cms\/core$/ },
 ];

@@ -8,7 +8,8 @@
 		".": "./src/index.ts",
 		"./fetch-client": "./src/fetch-client.ts",
 		"./protocol": "./src/protocol.ts",
-		"./fields": "./src/fields/index.ts"
+		"./fields": "./src/fields/index.ts",
+		"./semantic": "./src/semantic/index.ts"
 	},
 	"dependencies": {
 		"zod": "catalog:"
@@ -18,6 +19,7 @@
 	},
 	"scripts": {
 		"check": "tsc -p .",
-		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts"
+		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/semantic-ir.test.ts",
+		"test:semantic": "bun test ./scripts/semantic-ir.test.ts"
 	}
 }
