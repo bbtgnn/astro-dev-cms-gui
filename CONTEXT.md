@@ -15,11 +15,15 @@ Running the authoring shell on a real local Astro project (especially the refere
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: `src/cms.config.ts`, `src/content.config.ts`, content under `src/content/`. Field schemas and the CMS protocol live in `@cms/core`; the authoring UI lives in `@cms/authoring`.
+How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: `src/cms.config.ts` (human unified tree), generated `src/content.config.ts`, content under `src/content/`. Semantic IR and the CMS protocol live in `@cms/core`; the authoring UI lives in `@cms/authoring`.
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
 
 **Editor configuration**:
-The browser-safe project module (`src/cms.config.ts` by convention) that exports editor field schemas (Zod + FieldUi / direct Svelte components) and optional preview URL mapping. Compiled through the host Vite graph as `virtual:@cms/config`; never mixed into the CMS protocol.
+The browser-safe project module (`src/cms.config.ts` by convention) that exports
+the CMS unified tree (closed semantic schema, layout, direct Svelte editors) and
+optional preview URL mapping. Compiled through the host Vite graph as
+`virtual:@cms/config`; never mixed into the CMS protocol. Also the human source
+for generated `src/content.config.ts` (ADR-0019).
 _Avoid_: cms.config as a server discovery registry, content.config (for the browser edge)
 
 **Reference host**:
@@ -39,15 +43,20 @@ is an internal seam. The Shell UI is a thin view over the session.
 _Avoid_: autosave controller (as the public face), editor store, form state manager
 
 **Field schema**:
-The per-field definition that pairs a validation/type schema with UI metadata used to generate editors. In this product, usually a Zod schema with FieldUi on `.meta()` (builders return Zod for Astro).
+A durable node in the CMS semantic tree: persisted input type, semantic kind,
+validation constraints, and optional editor binding (`component` / `props`).
+Projected to browser form model, authoritative validator, and native Astro Zod.
 _Avoid_: Astro schema alone, Zod schema alone, form config
 
 **FieldUi**:
-UI metadata on a field: a `widget` key (and optional label/options), and/or a direct editor `ui` binding such as a Svelte component on Zod `.meta()`.
-_Avoid_: form config, widget map alone
+Authoring UI on a field or aggregate: stock editor from semantic kind, optional
+direct Svelte `component`, optional `wrapper` on objects/arrays, and explicit
+`props`. Authored in the unified tree, not on Zod `.meta()`.
+_Avoid_: form config, widget map alone, Zod meta UI
 
 **Field registry**:
-The map from `widget` identity to default validation helpers and UI used to generate editors; field-level `meta.ui` can override.
+The map from semantic field kind (and optional widget identity) to default
+validation helpers and stock editors; field-level `component` can override.
 _Avoid_: widget map (Decap-only sense), component library
 
 **Write-back**:

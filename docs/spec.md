@@ -16,9 +16,10 @@ Steal Kirby’s panel *feel* (composable, calm) and Payload’s *config-in-code*
 habit; reject Kirby’s YAML blueprints and Payload’s Next-shaped admin clunk.
 The job is a local-first **authoring shell**, not a production CMS identity.
 
-- **Building blocks (v1 surface):** Zod + FieldUi / direct Svelte widgets,
-  recursive layouts (tabs, groups, grids), and blocks. Shell-chrome plugins
-  that replace the form shell are out of the star.
+- **Building blocks (v1 surface):** CMS unified tree (closed semantic schema +
+  layout + direct Svelte widgets), recursive layouts (tabs, groups, columns),
+  and blocks. Shell-chrome plugins that replace the form shell are out of the
+  star.
 - **Defaults vs custom widgets:** the product owns excellent stock building
   blocks and tidy default editing. Bad UX from a consumer’s clever custom
   widget is the consumer’s business.
@@ -76,19 +77,23 @@ rather than copying those decisions into a second source of truth.
 
 ```text
 Host project
-  browser-safe editor config
-  Zod + FieldUi + layouts + direct Svelte components
+  src/cms.config.ts (unified semantic tree + Svelte bindings)
                     |
-                    | Vite module graph
-                    v
-Authoring UI
-  shell UI + form shell + SJSF + authoring session
-                    |
-                    | serializable CMS protocol
-                    v
-Host / write-back implementations
-  Astro mount + transport + server registry
-  filesystem discovery + validation + atomic write-back + original assets
+                    | host Vite / build-time compiler
+        +-----------+------------------+
+        |                              |
+        v                              v
+generated content.config.ts       virtual:@cms/config
+  Astro Zod + loaders             form model + live bindings
+        |                              |
+        v                              v
+Astro sync / types            Authoring UI (shell + form + SJSF)
+        |                              |
+        +-------------+----------------+
+                      |
+                      | serializable CMS protocol
+                      v
+Host / write-back (FS discovery on generated content.config)
 ```
 
 The conceptual modules are:
@@ -97,7 +102,7 @@ The conceptual modules are:
 - CMS protocol, outcomes, and client;
 - Svelte/SJSF form shell;
 - reusable authoring application;
-- Astro dev integration;
+- Astro dev integration + content.config generation;
 - filesystem write-back implementation.
 
 These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
@@ -114,17 +119,20 @@ These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
 - [ADR-0009](adr/0009-conceptual-layers-before-package-extraction.md) —
   superseded by ADR-0018 (historical “stabilize before extract” guidance).
 - [ADR-0016](adr/0016-astro-convention-install-surface.md) — convention-first
-  Astro install (`cms()`, `cms.config` + `content.config` + `src/content/`).
+  Astro install (`cms()`, `cms.config` + generated `content.config` +
+  `src/content/`).
 
 ### Fields and schema projections
 
-- [ADR-0003](adr/0003-field-ui-on-zod-meta.md) — FieldUi rides on Zod metadata;
-  direct components use the host Vite graph.
-- [ADR-0004](adr/0004-live-content-config-discovery.md) — server/FS discovery and
-  browser editor configuration are separate module-graph edges.
+- [ADR-0019](adr/0019-cms-first-semantic-schema.md) — CMS-first unified tree;
+  generated native Astro `content.config`; supersedes ADR-0003.
+- [ADR-0003](adr/0003-field-ui-on-zod-meta.md) — superseded by ADR-0019.
+- [ADR-0004](adr/0004-live-content-config-discovery.md) — server/FS discovery
+  still reads live `content.config`; browser stays on a separate edge (human
+  source is now `cms.config` per ADR-0019).
 - [ADR-0010](adr/0010-persisted-input-with-environment-schema-projections.md) —
   editor, authoritative validator, and Astro are projections of one
-  persisted-input model.
+  persisted-input model (IR is the authority under ADR-0019).
 
 ### Form shell, blocks, and preview
 
@@ -159,6 +167,7 @@ Active design questions:
 
 - [#2 — end-user form UI composition](https://github.com/bbtgnn/astro-dev-cms-gui/issues/2)
 - [#6 — semantic schema and projection contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/6)
+  (answered by [ADR-0019](adr/0019-cms-first-semantic-schema.md))
 - [#7 — custom field and SJSF binding contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/7)
 - [#8 — recursive form layout contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/8)
 - [#9 — preview surface and unsaved draft transport](https://github.com/bbtgnn/astro-dev-cms-gui/issues/9)
