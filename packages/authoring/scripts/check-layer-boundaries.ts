@@ -30,7 +30,8 @@ const FORBIDDEN: Array<{ id: string; pattern: RegExp }> = [
 	/**
 	 * `@cms/core` root re-exports Node FS writers; browser code must use
 	 * `@cms/core/fetch-client`, `@cms/core/protocol`, `@cms/core/fields`,
-	 * or `@cms/core/semantic`.
+	 * or `@cms/core/semantic` (IR builders; no Svelte). Authoring config
+	 * contracts live in `@cms/authoring/config` and may import semantic only.
 	 */
 	{ id: "core-root", pattern: /^@cms\/core$/ },
 ];

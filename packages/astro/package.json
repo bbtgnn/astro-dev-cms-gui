@@ -6,6 +6,7 @@
 	"description": "Astro host — cms() integration, /cms shell, /_cms protocol transport",
 	"exports": {
 		".": "./src/index.ts",
+		"./config": "./src/config.ts",
 		"./middleware-entry": "./src/middleware-entry.ts",
 		"./shell-page.astro": "./src/shell-page.astro",
 		"./CmsMount.svelte": "./src/CmsMount.svelte"
@@ -25,6 +26,6 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts"
+		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-cms.test.ts"
 	}
 }
