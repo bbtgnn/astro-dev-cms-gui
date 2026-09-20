@@ -16,6 +16,7 @@ export {
 	type LowerFormModelOptions,
 	lowerFormModelToSjsf,
 } from "./form/lower-sjsf";
+export { editorCollectionsFromFormModels } from "./form/editor-collections";
 export {
 	getStockEditor,
 	type LiveBindingResolver,
@@ -36,6 +37,11 @@ export {
 } from "./session";
 export type {
 	AuthoringClient,
+	EditorCollectionInput,
 	EditorCollections,
 	GetPreviewUrl,
+} from "./types";
+export {
+	isZodEditorSchema,
+	resolveEditorCollection,
 } from "./types";

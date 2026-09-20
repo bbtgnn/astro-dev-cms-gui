@@ -12,13 +12,22 @@ interface ImportMeta {
 }
 
 declare module "virtual:@cms/config" {
+	import type { UiSchemaNode } from "@cms/core/fields";
 	import type { z } from "zod";
 
-	export const collections: Record<string, z.ZodType>;
+	/** Zod+FieldUi (legacy) or lowered IR form model (JSON Schema + uiSchema). */
+	export type EditorCollectionInput =
+		| z.ZodType
+		| {
+				readonly schema: Record<string, unknown>;
+				readonly uiSchema?: UiSchemaNode;
+		  };
+
+	export const collections: Record<string, EditorCollectionInput>;
 	/** Host-compiled entry → site preview URL; null when unsupported. */
 	export function getPreviewUrl(collection: string, id: string): string | null;
 	const config: {
-		collections: Record<string, z.ZodType>;
+		collections: Record<string, EditorCollectionInput>;
 		getPreviewUrl?: (collection: string, id: string) => string | null;
 	};
 	export default config;
@@ -32,8 +41,15 @@ declare module "virtual:@cms/host" {
 }
 
 declare module "virtual:@cms/content-config" {
-	/** Live Astro `content.config` collections export for the default host. */
+	/** Live Astro `content.config` collections export for the legacy default host. */
 	export const collections: Record<string, unknown>;
+}
+
+declare module "virtual:@cms/schema-partition" {
+	import type { SemanticConfigInput } from "@cms/core/semantic";
+
+	/** Svelte-free partition collections for the CMS-first default host. */
+	export const collections: SemanticConfigInput["collections"];
 }
 
 declare module "virtual:@cms/integration-options" {

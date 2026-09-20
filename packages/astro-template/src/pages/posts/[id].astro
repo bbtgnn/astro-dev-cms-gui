@@ -1,14 +1,10 @@
 ---
 /**
  * Real Astro site route for posts — default preview target (ADR-0013).
- * Renders persisted content via content collections + production block
- * renderer bindings (ADR-0012). No duplicate inline preview registry.
+ * Cover uses Astro `image()` output when present; body/title stay plain fields.
  */
+import { Image } from "astro:assets";
 import { getCollection, getEntry } from "astro:content";
-import { resolveBlock } from "@cms/core";
-import type { AstroComponentFactory } from "astro/runtime/server/index.js";
-import { postBlocks } from "../../cms/post-blocks-render";
-import CmsImage from "../../components/CmsImage.astro";
 
 export async function getStaticPaths() {
 	const posts = await getCollection("posts");
@@ -27,30 +23,16 @@ if (!entry) {
 	return new Response(null, { status: 404, statusText: "Not Found" });
 }
 
-const data = entry.data as {
-	title?: string;
-	draft?: boolean;
-	body?: string;
-	summary?: { en?: string; it?: string };
-	blocks?: Array<{ type: string; content: unknown }>;
-	cover?: string | null;
-	author?: string;
-};
-
-const blocks = Array.isArray(data.blocks) ? data.blocks : [];
-const rendered = blocks.map((block) => {
-	const resolved = resolveBlock(block, postBlocks);
-	return {
-		type: block.type,
-		Comp: resolved?.component as AstroComponentFactory | undefined,
-		props: (resolved?.props ?? {}) as Record<string, unknown>,
-	};
-});
-
-const cover = typeof data.cover === "string" ? data.cover : null;
-const title = typeof data.title === "string" ? data.title : id;
-const summaryEn = data.summary?.en;
-const summaryIt = data.summary?.it;
+const data = entry.data;
+const title = data.title;
+const body = data.body;
+const draft = data.draft;
+const cover = data.cover;
+const authorRef = data.author;
+const authorId =
+	authorRef && typeof authorRef === "object" && "id" in authorRef
+		? String(authorRef.id)
+		: null;
 ---
 
 <html lang="en">
@@ -64,53 +46,29 @@ const summaryIt = data.summary?.it;
 		<article>
 			<header>
 				<h1>{title}</h1>
-				{data.draft ? (
+				{draft ? (
 					<p>
 						<small>draft</small>
 					</p>
 				) : null}
-				{data.author ? (
+				{authorId ? (
 					<p>
-						<small>author: {data.author}</small>
+						<small>author: {authorId}</small>
 					</p>
 				) : null}
 			</header>
 
 			{cover ? (
 				<figure>
-					<CmsImage src={cover} base="posts" alt="" />
+					<Image src={cover} alt="" />
 				</figure>
 			) : null}
 
-			{data.body ? (
+			{body ? (
 				<section>
-					<pre>{data.body}</pre>
+					<pre>{body}</pre>
 				</section>
 			) : null}
-
-			{summaryEn || summaryIt ? (
-				<section>
-					{summaryEn ? <p>{summaryEn}</p> : null}
-					{summaryIt ? (
-						<p>
-							<small>{summaryIt}</small>
-						</p>
-					) : null}
-				</section>
-			) : null}
-
-			{
-				rendered.map((row) => {
-					const Comp = row.Comp;
-					return Comp ? (
-						<Comp {...row.props} />
-					) : (
-						<p>
-							<small>unknown block: {row.type}</small>
-						</p>
-					);
-				})
-			}
 		</article>
 	</body>
 </html>

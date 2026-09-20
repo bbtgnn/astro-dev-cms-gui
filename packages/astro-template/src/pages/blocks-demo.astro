@@ -1,58 +1,24 @@
 ---
 /**
- * Host render of posts/hello blocks via resolveBlock + postBlocks map.
- * Reads JSON directly (same content file as the CMS) so the demo does not depend on
- * Astro Content Layer ingest of the posts schema.
+ * Parked: blocksLayout / resolveBlock demo (outside v1 IR algebra).
+ * Sample posts JSON no longer carries a `blocks` field after ADR-0019 slice 6.
+ * Kept as a residual link target so hosts can reintroduce blocks later.
  */
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { resolveBlock } from "@cms/core";
-import type { AstroComponentFactory } from "astro/runtime/server/index.js";
-import { postBlocks } from "../cms/post-blocks-render";
-
-type HelloDoc = {
-	title?: string;
-	blocks?: Array<{ type: string; content: unknown }>;
-};
-
-const entryPath = join(
-	dirname(fileURLToPath(import.meta.url)),
-	"../content/posts/hello.json",
-);
-const doc = JSON.parse(readFileSync(entryPath, "utf8")) as HelloDoc;
-const blocks = Array.isArray(doc.blocks) ? doc.blocks : [];
-
-const rendered = blocks.map((block) => {
-	const resolved = resolveBlock(block, postBlocks);
-	return {
-		type: block.type,
-		Comp: resolved?.component as AstroComponentFactory | undefined,
-		props: (resolved?.props ?? {}) as Record<string, unknown>,
-	};
-});
 ---
 
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
-		<title>blocks render — {doc.title ?? "hello"}</title>
+		<title>blocks demo — parked</title>
 	</head>
 	<body>
 		<p><a href="/">← home</a></p>
-		<h1>{doc.title}</h1>
-		{
-			rendered.map((row) => {
-				const Comp = row.Comp;
-				return Comp ? (
-					<Comp {...row.props} />
-				) : (
-					<p>
-						<small>unknown block: {row.type}</small>
-					</p>
-				);
-			})
-		}
+		<h1>Blocks demo parked</h1>
+		<p>
+			<code>blocksLayout</code> / production block renderers are outside the
+			closed v1 semantic algebra. Reintroduce with a later algebra expansion —
+			not part of the CMS-first reference host collections.
+		</p>
 	</body>
 </html>

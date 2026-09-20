@@ -1,6 +1,7 @@
 /**
  * Bounded IR form-model → SJSF uiSchema lowering (ADR-0011 internal path).
- * Additive: legacy FieldUi / Zod `.meta()` path remains until slice 6.
+ * Primary path for CMS-first hosts; legacy FieldUi / Zod `.meta()` still works
+ * via CmsForm when a live Zod schema is passed.
  */
 
 import type { UiSchemaNode } from "@cms/core/fields";

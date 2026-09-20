@@ -142,7 +142,7 @@ const form = untrack(() => {
 </script>
 
 <section>
-	<p><small>@cms/authoring — FieldUi → sjsf uiSchema</small></p>
+	<p><small>@cms/authoring — form shell (IR / FieldUi → sjsf)</small></p>
 	<h2>{title}</h2>
 	{#if form === null}
 		<p>form shell — no schema</p>

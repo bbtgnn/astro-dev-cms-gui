@@ -13,6 +13,7 @@ export {
 	type LowerFormModelOptions,
 	lowerFormModelToSjsf,
 } from "./lower-sjsf";
+export { editorCollectionsFromFormModels } from "./editor-collections";
 export {
 	getStockEditor,
 	type LiveBindingResolver,

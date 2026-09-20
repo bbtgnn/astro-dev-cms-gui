@@ -37,9 +37,11 @@ import {
 	cmsContentConfigVitePlugin,
 	cmsHostVitePlugin,
 	cmsIntegrationOptionsVitePlugin,
+	cmsSchemaPartitionVitePlugin,
 	DEFAULT_CONTENT_ROOT,
 	resolveConventionEntry,
 	resolveProjectEntry,
+	SCHEMA_PARTITION_CONVENTION,
 } from "./vite-config-plugin";
 
 export type CmsIntegrationOptions = {
@@ -120,15 +122,19 @@ function normalizeShellPath(shellPath: string): string {
 	return trimmed.startsWith("/") ? trimmed || "/" : `/${trimmed}`;
 }
 
-function defaultHostEntry(): string {
-	return fileURLToPath(new URL("./default-host.ts", import.meta.url));
+function defaultHostEntry(mode: "semantic" | "legacy"): string {
+	const file =
+		mode === "semantic" ? "./default-host-semantic.ts" : "./default-host.ts";
+	return fileURLToPath(new URL(file, import.meta.url));
 }
 
 /**
  * Named install object for the Astro host surface.
  * - Resolves `src/cms.config.*` (or `editorConfig`) → `virtual:@cms/config` + `/cms`.
  * - When `src/cms.schema.ts` (or `schemaPartition`) exists, regenerates
- *   `content.config.ts` in `astro:config:setup` before other wiring.
+ *   `content.config.ts` in `astro:config:setup` before other wiring and uses
+ *   the CMS-first default host (authoritative IR validator).
+ * - Without a schema partition, falls back to live `content.config` discovery.
  * - Resolves default or project host → Astro `addMiddleware` for `/_cms`.
  * - With `hostModule: false` + `protocol`: exposes `middleware` for manual mount.
  */
@@ -189,6 +195,13 @@ export function createCmsIntegration(
 					? resolveProjectEntry(options.editorConfig, root)
 					: resolveConventionEntry(root, CMS_CONFIG_CONVENTION);
 
+			const schemaPartitionEntry =
+				options.schemaPartition === false
+					? undefined
+					: options.schemaPartition != null
+						? resolveProjectEntry(options.schemaPartition, root)
+						: resolveConventionEntry(root, SCHEMA_PARTITION_CONVENTION);
+
 			// Resolve after generation so a missing committed bootstrap is
 			// created in-hook and default-host wiring can see it.
 			const contentConfigEntry = resolveConventionEntry(
@@ -198,13 +211,19 @@ export function createCmsIntegration(
 
 			const useProjectHost =
 				typeof options.hostModule === "string" && options.hostModule.length > 0;
-			const useDefaultHost =
-				options.hostModule == null && contentConfigEntry != null;
+			const useSemanticDefaultHost =
+				options.hostModule == null && schemaPartitionEntry != null;
+			const useLegacyDefaultHost =
+				options.hostModule == null &&
+				schemaPartitionEntry == null &&
+				contentConfigEntry != null;
 			const hostEntry = useProjectHost
 				? resolveProjectEntry(options.hostModule as string, root)
-				: useDefaultHost
-					? defaultHostEntry()
-					: undefined;
+				: useSemanticDefaultHost
+					? defaultHostEntry("semantic")
+					: useLegacyDefaultHost
+						? defaultHostEntry("legacy")
+						: undefined;
 
 			const contentRoot = resolveProjectEntry(
 				options.contentRoot ?? DEFAULT_CONTENT_ROOT,
@@ -242,7 +261,11 @@ export function createCmsIntegration(
 				);
 			}
 
-			if (useDefaultHost && contentConfigEntry != null) {
+			if (useSemanticDefaultHost && schemaPartitionEntry != null) {
+				plugins.push(
+					cmsSchemaPartitionVitePlugin({ entry: schemaPartitionEntry }),
+				);
+			} else if (useLegacyDefaultHost && contentConfigEntry != null) {
 				plugins.push(cmsContentConfigVitePlugin({ entry: contentConfigEntry }));
 			}
 

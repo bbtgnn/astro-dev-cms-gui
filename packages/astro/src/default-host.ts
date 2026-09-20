@@ -1,6 +1,7 @@
 /**
- * Package default CmsHost factory (ADR-0016).
- * Wired when `cms()` runs without a project `hostModule`.
+ * Package default CmsHost factory — legacy FieldUi discovery path.
+ * Used when the project has no `src/cms.schema.ts` partition.
+ * Prefer {@link ./default-host-semantic.ts} when a schema partition exists.
  *
  * Discovers collections from the project's `content.config` and writes under
  * the configured content root (default `src/content`).

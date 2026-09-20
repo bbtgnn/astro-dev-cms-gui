@@ -30,6 +30,6 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-cms.test.ts ./scripts/emit-content-config.test.ts ./scripts/generate-content-config.test.ts ./scripts/content-config-generation-lifecycle.test.ts"
+		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-cms.test.ts ./scripts/emit-content-config.test.ts ./scripts/generate-content-config.test.ts ./scripts/content-config-generation-lifecycle.test.ts ./scripts/default-host-semantic.test.ts"
 	}
 }

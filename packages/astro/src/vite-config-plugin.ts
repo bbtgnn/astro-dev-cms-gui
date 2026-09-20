@@ -2,7 +2,8 @@
  * Vite virtual modules for the Astro host integration:
  * - `virtual:@cms/config` — browser-safe editor configuration
  * - `virtual:@cms/host` — `createHost()` factory (project or package default)
- * - `virtual:@cms/content-config` — live `content.config` collections (default host)
+ * - `virtual:@cms/content-config` — live `content.config` collections (legacy host)
+ * - `virtual:@cms/schema-partition` — Svelte-free IR partition (CMS-first host)
  * - `virtual:@cms/integration-options` — mount / allowInProd / contentRoot
  *
  * Direct Svelte components stay live module values in the host graph —
@@ -19,6 +20,9 @@ const CMS_HOST_RESOLVED_ID = `\0${CMS_HOST_VIRTUAL_ID}`;
 
 export const CMS_CONTENT_CONFIG_VIRTUAL_ID = "virtual:@cms/content-config";
 const CMS_CONTENT_CONFIG_RESOLVED_ID = `\0${CMS_CONTENT_CONFIG_VIRTUAL_ID}`;
+
+export const CMS_SCHEMA_PARTITION_VIRTUAL_ID = "virtual:@cms/schema-partition";
+const CMS_SCHEMA_PARTITION_RESOLVED_ID = `\0${CMS_SCHEMA_PARTITION_VIRTUAL_ID}`;
 
 export const CMS_INTEGRATION_OPTIONS_VIRTUAL_ID =
 	"virtual:@cms/integration-options";
@@ -38,6 +42,13 @@ export const CONTENT_CONFIG_CONVENTION = [
 	"src/content.config.js",
 ] as const;
 
+/** Svelte-free schema partition for generation + CMS-first default host. */
+export const SCHEMA_PARTITION_CONVENTION = [
+	"src/cms.schema.ts",
+	"src/cms.schema.mjs",
+	"src/cms.schema.js",
+] as const;
+
 /** Default write-back root relative to the Astro project root. */
 export const DEFAULT_CONTENT_ROOT = "src/content";
 
@@ -53,6 +64,11 @@ export type CmsHostVitePluginOptions = {
 
 export type CmsContentConfigVitePluginOptions = {
 	/** Absolute path to the project's `content.config` module. */
+	entry: string;
+};
+
+export type CmsSchemaPartitionVitePluginOptions = {
+	/** Absolute path to the project's Svelte-free schema partition. */
 	entry: string;
 };
 
@@ -154,7 +170,7 @@ export function cmsHostVitePlugin(
 }
 
 /**
- * Expose `virtual:@cms/content-config` for the package default host factory.
+ * Expose `virtual:@cms/content-config` for the legacy FieldUi default host.
  */
 export function cmsContentConfigVitePlugin(
 	options: CmsContentConfigVitePluginOptions,
@@ -173,6 +189,32 @@ export function cmsContentConfigVitePlugin(
 		},
 		load(id) {
 			if (id !== CMS_CONTENT_CONFIG_RESOLVED_ID) return null;
+			return `export { collections } from ${entryLiteral};\n`;
+		},
+	};
+}
+
+/**
+ * Expose `virtual:@cms/schema-partition` for the CMS-first default host.
+ * Partition must export Svelte-free `collections` (or be loadable as such).
+ */
+export function cmsSchemaPartitionVitePlugin(
+	options: CmsSchemaPartitionVitePluginOptions,
+): CmsVitePlugin {
+	const entry = path.normalize(options.entry);
+	const entryLiteral = JSON.stringify(entry);
+
+	return {
+		name: "@cms/astro:virtual-schema-partition",
+		enforce: "pre",
+		resolveId(id) {
+			if (id === CMS_SCHEMA_PARTITION_VIRTUAL_ID) {
+				return CMS_SCHEMA_PARTITION_RESOLVED_ID;
+			}
+			return null;
+		},
+		load(id) {
+			if (id !== CMS_SCHEMA_PARTITION_RESOLVED_ID) return null;
 			return `export { collections } from ${entryLiteral};\n`;
 		},
 	};

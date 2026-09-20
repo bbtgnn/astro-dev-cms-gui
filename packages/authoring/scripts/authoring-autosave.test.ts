@@ -417,7 +417,7 @@ describe("authoring autosave self-host json", () => {
 		}
 		expect(previewPage).toContain('getEntry("posts"');
 		expect(previewPage).toContain("<h1>{title}</h1>");
-		expect(previewPage).toContain("postBlocks");
+		expect(previewPage).toContain('from "astro:assets"');
 		expect(status).toBe("saved");
 	});
 });

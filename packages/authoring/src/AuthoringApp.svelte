@@ -11,7 +11,6 @@ import {
 	isCmsFetchError,
 } from "@cms/core/fetch-client";
 import { onDestroy, onMount } from "svelte";
-import type { z } from "zod";
 import EntryEditor from "./EntryEditor.svelte";
 import {
 	type AuthoringSession,
@@ -19,6 +18,7 @@ import {
 } from "./session";
 import type {
 	AuthoringClient,
+	EditorCollectionInput,
 	EditorCollections,
 	GetPreviewUrl,
 } from "./types";
@@ -61,9 +61,9 @@ function errMsg(e: unknown): string {
 	return e instanceof Error ? e.message : String(e);
 }
 
-function editorSchemaFor(name: string | null): z.ZodType | null {
+function editorSchemaFor(name: string | null): EditorCollectionInput | null {
 	if (!name) return null;
-	return (editorCollections[name] as z.ZodType | undefined) ?? null;
+	return editorCollections[name] ?? null;
 }
 
 const activeSchema = $derived(editorSchemaFor(selectedCollection));

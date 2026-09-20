@@ -9,10 +9,12 @@ import {
 	CMS_CONTENT_CONFIG_VIRTUAL_ID,
 	CMS_HOST_VIRTUAL_ID,
 	CMS_INTEGRATION_OPTIONS_VIRTUAL_ID,
+	CMS_SCHEMA_PARTITION_VIRTUAL_ID,
 	cmsConfigVitePlugin,
 	cmsContentConfigVitePlugin,
 	cmsHostVitePlugin,
 	cmsIntegrationOptionsVitePlugin,
+	cmsSchemaPartitionVitePlugin,
 	DEFAULT_CONTENT_ROOT,
 	resolveProjectEntry,
 } from "../src/vite-config-plugin";
@@ -63,6 +65,20 @@ describe("cmsContentConfigVitePlugin", () => {
 		const plugin = cmsContentConfigVitePlugin({ entry });
 		const resolved = await plugin.resolveId(CMS_CONTENT_CONFIG_VIRTUAL_ID);
 		expect(resolved).toBe(`\0${CMS_CONTENT_CONFIG_VIRTUAL_ID}`);
+		if (resolved == null) throw new Error("expected resolved id");
+		const source = await plugin.load(resolved);
+		expect(source).toBe(
+			`export { collections } from ${JSON.stringify(entry)};\n`,
+		);
+	});
+});
+
+describe("cmsSchemaPartitionVitePlugin", () => {
+	test("re-exports collections from schema partition", async () => {
+		const entry = path.resolve("/project/src/cms.schema.ts");
+		const plugin = cmsSchemaPartitionVitePlugin({ entry });
+		const resolved = await plugin.resolveId(CMS_SCHEMA_PARTITION_VIRTUAL_ID);
+		expect(resolved).toBe(`\0${CMS_SCHEMA_PARTITION_VIRTUAL_ID}`);
 		if (resolved == null) throw new Error("expected resolved id");
 		const source = await plugin.load(resolved);
 		expect(source).toBe(

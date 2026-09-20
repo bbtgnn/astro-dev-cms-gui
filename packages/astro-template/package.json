@@ -9,7 +9,9 @@
 		"build": "astro build",
 		"preview": "astro preview",
 		"check": "astro check",
-		"check:image": "bun test ./scripts/image.test.ts"
+		"check:image": "bun test ./scripts/image.test.ts",
+		"generate": "bun ../astro/bin/cms.ts generate --root .",
+		"generate:check": "bun ../astro/bin/cms.ts generate --check --root ."
 	},
 	"dependencies": {
 		"@astrojs/svelte": "catalog:",
