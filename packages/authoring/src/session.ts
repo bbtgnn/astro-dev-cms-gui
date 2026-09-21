@@ -1,23 +1,17 @@
 /**
- * Authoring session against AuthoringClient + editor schema (ADR-0008 / 0014).
+ * Authoring session against AuthoringClient (ADR-0008 / 0014).
  * Owns statuses, guarded write-back, preview eligibility, and remount rules.
  * Debounce/coalesce lives behind an internal autosave seam.
+ * Draft-write eligibility is an injected opaque predicate (not Ajv/Zod here).
  */
 import type { CmsCapabilities, ContentEntry } from "@cms/core/fetch-client";
-import { createFormValidator } from "@sjsf/ajv8-validator";
-import type { Schema } from "@sjsf/form";
 import {
 	type AuthoringStatus,
 	type AutosaveTimers,
 	createAutosaveController,
 } from "./autosave";
 import type { CmsAssetsFieldContext } from "./form";
-import {
-	type AuthoringClient,
-	type EditorCollectionInput,
-	type GetPreviewUrl,
-	resolveEditorCollection,
-} from "./types";
+import type { AuthoringClient, GetPreviewUrl } from "./types";
 
 const DEFAULT_DEBOUNCE_MS = 400;
 
@@ -29,8 +23,11 @@ export type AuthoringSessionOptions = {
 	client: AuthoringClient;
 	collection: string;
 	mode: AuthoringSessionMode;
-	/** Lowered IR JSON Schema (+ optional uiSchema, unused for validity). */
-	schema?: EditorCollectionInput | null;
+	/**
+	 * Opaque draft-write gate (ADR-0014). Production: `createDraftEligibility`
+	 * over the collection form-model JSON Schema. Host Zod stays authoritative.
+	 */
+	isClientValid: (data: Record<string, unknown>) => boolean;
 	capabilities?: CmsCapabilities | null;
 	getPreviewUrl?: GetPreviewUrl;
 	debounceMs?: number;
@@ -106,7 +103,6 @@ function resolvePreviewUrl(
 export function createAuthoringSession(
 	options: AuthoringSessionOptions,
 ): AuthoringSession {
-	const schema = options.schema ?? null;
 	const capabilities = options.capabilities ?? null;
 	const canDelete = offersEntryDeletion(capabilities);
 	const canUploadAssets = offersAssetUpload(capabilities);
@@ -165,14 +161,7 @@ export function createAuthoringSession(
 
 	function isClientValid(data: Record<string, unknown>): boolean {
 		if (creating && !createIdDraft.trim()) return false;
-		if (!schema) return true;
-		const { schema: jsonSchema } = resolveEditorCollection(schema);
-		const validator = createFormValidator();
-		return validator.isValid(
-			jsonSchema as Schema,
-			jsonSchema as Schema,
-			data as never,
-		);
+		return options.isClientValid(data);
 	}
 
 	async function writeBack(

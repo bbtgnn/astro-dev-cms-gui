@@ -6,8 +6,8 @@
 
 import { describe, expect, test } from "bun:test";
 import { resolveCmsCapabilities } from "@cms/core/fetch-client";
+import { createDraftEligibility } from "../src/draft-eligibility";
 import { createAuthoringSession } from "../src/session";
-import type { EditorCollectionInput } from "../src/types";
 import {
 	createFakeTimers,
 	sampleEntry,
@@ -15,14 +15,14 @@ import {
 } from "./authoring-test-fixtures";
 import { createFakeClient } from "./fake-client";
 
-const titleEditor: EditorCollectionInput = {
-	schema: {
-		type: "object",
-		properties: { title: { type: "string", minLength: 1 } },
-		required: ["title"],
-		additionalProperties: false,
-	},
-};
+const titleEligible = createDraftEligibility({
+	type: "object",
+	properties: { title: { type: "string", minLength: 1 } },
+	required: ["title"],
+	additionalProperties: false,
+});
+
+const alwaysEligible = () => true;
 
 describe("authoring session", () => {
 	test("edit: guarded revision, no remount, preview after write-back", async () => {
@@ -32,7 +32,7 @@ describe("authoring session", () => {
 			client: fake.client,
 			collection: "posts",
 			mode: { kind: "edit", entry: sampleEntry },
-			schema: titleEditor,
+			isClientValid: titleEligible,
 			capabilities: resolveCmsCapabilities({ deleteEntry: true }),
 			getPreviewUrl: (c, id) => `/${c}/${id}`,
 			debounceMs: 50,
@@ -75,7 +75,7 @@ describe("authoring session", () => {
 			client: fake.client,
 			collection: "posts",
 			mode: { kind: "create" },
-			schema: titleEditor,
+			isClientValid: titleEligible,
 			capabilities: resolveCmsCapabilities({ deleteEntry: true }),
 			getPreviewUrl: (c, id) => `/preview/${c}/${id}`,
 			debounceMs: 50,
@@ -127,6 +127,7 @@ describe("authoring session", () => {
 			client: fake.client,
 			collection: "posts",
 			mode: { kind: "edit", entry: sampleEntry },
+			isClientValid: alwaysEligible,
 			capabilities: resolveCmsCapabilities({
 				deleteEntry: false,
 				assets: { uploadImage: false },
@@ -155,6 +156,7 @@ describe("authoring session", () => {
 			client: fake.client,
 			collection: "posts",
 			mode: { kind: "edit", entry: sampleEntry },
+			isClientValid: alwaysEligible,
 			capabilities: resolveCmsCapabilities({
 				deleteEntry: true,
 				assets: { uploadImage: true, maxUploadBytes: 1024 },
@@ -203,6 +205,7 @@ describe("authoring session", () => {
 			client: fake.client,
 			collection: "posts",
 			mode: { kind: "edit", entry: sampleEntry },
+			isClientValid: alwaysEligible,
 			capabilities: resolveCmsCapabilities({
 				deleteEntry: true,
 				assets: { uploadImage: true },
@@ -236,7 +239,7 @@ describe("authoring session", () => {
 			client: fake.client,
 			collection: "posts",
 			mode: { kind: "edit", entry: sampleEntry },
-			schema: titleEditor,
+			isClientValid: titleEligible,
 			debounceMs: 50,
 			timers: clock.timers,
 		});
@@ -260,6 +263,29 @@ describe("authoring session", () => {
 		expect(snap.formEpoch).toBeGreaterThan(epochBefore);
 		expect(snap.revision).toBe("rev-other");
 		expect(snap.formValue.title).toBe("Canonical");
+
+		session.dispose();
+	});
+
+	test("edit: invalid draft data skips write-back", async () => {
+		const fake = createFakeClient({ entries: [sampleEntry] });
+		const clock = createFakeTimers();
+		const session = createAuthoringSession({
+			client: fake.client,
+			collection: "posts",
+			mode: { kind: "edit", entry: sampleEntry },
+			isClientValid: titleEligible,
+			debounceMs: 50,
+			timers: clock.timers,
+		});
+
+		session.handleChange({ title: "" });
+		clock.advance(50);
+		await waitUntil(
+			() => session.getSnapshot().saveStatus === "client_invalid",
+			"invalid title",
+		);
+		expect(fake.upsertCalls).toHaveLength(0);
 
 		session.dispose();
 	});

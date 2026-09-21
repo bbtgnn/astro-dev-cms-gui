@@ -12,6 +12,7 @@ import {
 } from "@cms/core/fetch-client";
 import { onDestroy, onMount } from "svelte";
 import EntryEditor from "./EntryEditor.svelte";
+import { createDraftEligibility } from "./draft-eligibility";
 import {
 	type AuthoringSession,
 	createAuthoringSession,
@@ -64,6 +65,12 @@ function errMsg(e: unknown): string {
 function editorSchemaFor(name: string | null): EditorCollectionInput | null {
 	if (!name) return null;
 	return editorCollections[name] ?? null;
+}
+
+function draftEligibilityFor(name: string | null) {
+	const input = editorSchemaFor(name);
+	if (!input) return () => true;
+	return createDraftEligibility(input.schema);
 }
 
 const activeSchema = $derived(editorSchemaFor(selectedCollection));
@@ -127,7 +134,7 @@ async function openEntry(id: string) {
 			client,
 			collection: selectedCollection,
 			mode: { kind: "edit", entry: result.value },
-			schema: editorSchemaFor(selectedCollection),
+			isClientValid: draftEligibilityFor(selectedCollection),
 			capabilities,
 			getPreviewUrl,
 		});
@@ -148,7 +155,7 @@ function startCreate() {
 		client,
 		collection: selectedCollection,
 		mode: { kind: "create" },
-		schema: editorSchemaFor(selectedCollection),
+		isClientValid: draftEligibilityFor(selectedCollection),
 		capabilities,
 		getPreviewUrl,
 	});
