@@ -1,11 +1,12 @@
 /**
  * Authoring-application assets capability (issue #17).
  * Uses a fake protocol client through the public AuthoringClient seam.
+ * Capability chrome is owned by the Authoring session (`assetsContext()`).
  */
 
 import { describe, expect, test } from "bun:test";
 import { resolveCmsCapabilities } from "@cms/core/fetch-client";
-import { offersAssetUpload } from "../src/session";
+import { createAuthoringSession } from "../src/session";
 import { sampleEntry } from "./authoring-test-fixtures";
 import { createFakeClient } from "./fake-client";
 
@@ -18,27 +19,58 @@ const unsupportedCaps = resolveCmsCapabilities({
 	assets: { uploadImage: false },
 });
 
+const alwaysEligible = () => true;
+
+function sessionWithCaps(
+	capabilities: ReturnType<typeof resolveCmsCapabilities> | null | undefined,
+) {
+	const fake = createFakeClient({
+		capabilities: capabilities ?? unsupportedCaps,
+		entries: [sampleEntry],
+	});
+	const session = createAuthoringSession({
+		client: fake.client,
+		collection: "posts",
+		mode: { kind: "edit", entry: sampleEntry },
+		isClientValid: alwaysEligible,
+		capabilities,
+	});
+	return { fake, session };
+}
+
 describe("authoring assets capability", () => {
-	test("offersAssetUpload true when capability set", () => {
-		expect(offersAssetUpload(supportedCaps)).toBe(true);
+	test("assetsContext uploadEnabled when capability set", () => {
+		const { session } = sessionWithCaps(supportedCaps);
+		expect(session.getSnapshot().canUploadAssets).toBe(true);
+		expect(session.assetsContext().uploadEnabled).toBe(true);
+		session.dispose();
 	});
 
-	test("offersAssetUpload false when capability unset", () => {
-		expect(offersAssetUpload(unsupportedCaps)).toBe(false);
+	test("assetsContext disabled when capability unset", () => {
+		const { session } = sessionWithCaps(unsupportedCaps);
+		expect(session.getSnapshot().canUploadAssets).toBe(false);
+		expect(session.assetsContext().uploadEnabled).toBe(false);
+		expect(session.assetsContext().uploadImage).toBeUndefined();
+		session.dispose();
 	});
 
-	test("offersAssetUpload false when capabilities unknown", () => {
-		expect(offersAssetUpload(null)).toBe(false);
-		expect(offersAssetUpload(undefined)).toBe(false);
+	test("assetsContext disabled when capabilities unknown", () => {
+		const { session: nullSession } = sessionWithCaps(null);
+		expect(nullSession.getSnapshot().canUploadAssets).toBe(false);
+		expect(nullSession.assetsContext().uploadEnabled).toBe(false);
+		nullSession.dispose();
+
+		const { session: undefinedSession } = sessionWithCaps(undefined);
+		expect(undefinedSession.getSnapshot().canUploadAssets).toBe(false);
+		expect(undefinedSession.assetsContext().uploadEnabled).toBe(false);
+		undefinedSession.dispose();
 	});
 
 	test("supported capability uploads and persists asset reference", async () => {
-		const fake = createFakeClient({
-			capabilities: supportedCaps,
-			entries: [sampleEntry],
-		});
-		const caps = await fake.client.getCapabilities();
-		expect(offersAssetUpload(caps.value)).toBe(true);
+		const { fake, session } = sessionWithCaps(supportedCaps);
+		const assets = session.assetsContext();
+		expect(assets.uploadEnabled).toBe(true);
+		expect(assets.uploadImage).toBeDefined();
 
 		const uploaded = await fake.client.uploadImage({
 			file: new Blob([new Uint8Array([1, 2, 3])]),
@@ -61,15 +93,13 @@ describe("authoring assets capability", () => {
 			expect(saved.value.data.cover).toBe(uploaded.value.path);
 		}
 		expect(fake.uploadCalls).toBe(1);
+
+		session.dispose();
 	});
 
 	test("unsupported capability hides upload; typed refuse leaves entry clean", async () => {
-		const fake = createFakeClient({
-			capabilities: unsupportedCaps,
-			entries: [sampleEntry],
-		});
-		const caps = await fake.client.getCapabilities();
-		expect(offersAssetUpload(caps.value)).toBe(false);
+		const { fake, session } = sessionWithCaps(unsupportedCaps);
+		expect(session.assetsContext().uploadEnabled).toBe(false);
 		expect(fake.uploadCalls).toBe(0);
 
 		const refused = await fake.client.uploadImage({
@@ -87,5 +117,7 @@ describe("authoring assets capability", () => {
 		if (still.ok) {
 			expect(still.value.data.cover).toBeUndefined();
 		}
+
+		session.dispose();
 	});
 });

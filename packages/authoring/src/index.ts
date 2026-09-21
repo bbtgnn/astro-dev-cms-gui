@@ -22,8 +22,6 @@ export {
 	type AuthoringSessionOptions,
 	type AuthoringSessionSnapshot,
 	createAuthoringSession,
-	offersAssetUpload,
-	offersEntryDeletion,
 } from "./session";
 export type {
 	AuthoringClient,

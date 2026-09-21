@@ -73,20 +73,6 @@ export type AuthoringSession = {
 	dispose: () => void;
 };
 
-/** Whether the authoring application should offer content-entry deletion. */
-export function offersEntryDeletion(
-	capabilities: CmsCapabilities | null | undefined,
-): boolean {
-	return capabilities?.deleteEntry === true;
-}
-
-/** Whether the authoring application should offer image asset upload. */
-export function offersAssetUpload(
-	capabilities: CmsCapabilities | null | undefined,
-): boolean {
-	return capabilities?.assets?.uploadImage === true;
-}
-
 function resolvePreviewUrl(
 	getPreviewUrl: GetPreviewUrl | undefined,
 	collection: string,
@@ -104,8 +90,8 @@ export function createAuthoringSession(
 	options: AuthoringSessionOptions,
 ): AuthoringSession {
 	const capabilities = options.capabilities ?? null;
-	const canDelete = offersEntryDeletion(capabilities);
-	const canUploadAssets = offersAssetUpload(capabilities);
+	const canDelete = capabilities?.deleteEntry === true;
+	const canUploadAssets = capabilities?.assets?.uploadImage === true;
 	const maxUploadBytes = capabilities?.assets?.maxUploadBytes;
 
 	let creating = options.mode.kind === "create";
