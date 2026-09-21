@@ -1,7 +1,6 @@
 /**
  * Collection descriptors for the FS / protocol host, plus entry-id scanning.
- * Legacy live `content.config` FieldUi discovery is gone (ADR-0019); semantic
- * hosts build {@link DiscoveredCollection} from compiled IR themselves.
+ * Default hosts build descriptors from compiled IR (ADR-0019 / 0020).
  */
 import path from "node:path";
 import type { z } from "zod";
@@ -19,7 +18,8 @@ export type CollectionConfig = {
 	extension?: "json";
 };
 
-export type DiscoveredCollection = {
+/** One collection’s write-back descriptor (name, base, authoritative schema). */
+export type CollectionDescriptor = {
 	name: string;
 	label?: string;
 	schema: z.ZodType;

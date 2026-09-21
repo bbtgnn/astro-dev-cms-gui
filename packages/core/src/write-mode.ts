@@ -5,8 +5,8 @@
  */
 import path from "node:path";
 import { z } from "zod";
-import type { DiscoveredCollection } from "./discovery";
-import { scanEntryIds } from "./discovery";
+import type { CollectionDescriptor } from "./collection-descriptors";
+import { scanEntryIds } from "./collection-descriptors";
 import { parseEntryFile, serializeEntryFile } from "./entry-file";
 import {
 	applyPathTemplate,
@@ -83,7 +83,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 		fakeCatalog = {},
 	} = options;
 
-	const byName = new Map<string, DiscoveredCollection>(
+	const byName = new Map<string, CollectionDescriptor>(
 		collections.map((c) => [c.name, c]),
 	);
 	const schemas: Record<string, z.ZodType> = { ...schemaOverrides };

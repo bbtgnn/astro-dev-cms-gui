@@ -1,6 +1,5 @@
 /**
  * Serializable sjsf uiSchema nodes + Ajv-safe JSON Schema cleanup (ADR-0019).
- * No Zod FieldUi — IR form models lower into these shapes.
  */
 
 /** Minimal sjsf uiSchema node (serializable options + optional component override). */

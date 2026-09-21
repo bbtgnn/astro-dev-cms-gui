@@ -47,7 +47,7 @@ Three product packages match ADR-0008 layers
 ([ADR-0018](docs/adr/0018-three-packages-for-adr-0008-layers.md)):
 
 - `@cms/authoring` — shell UI + form shell
-- `@cms/core` — field schemas + CMS protocol + FS adapters
+- `@cms/core` — semantic IR + CMS protocol + FS adapters
 - `@cms/astro` — `cms()` host mount + `/_cms` transport
 
 Checks: `bun run check && bun run check:allowlist && bun run lint`.

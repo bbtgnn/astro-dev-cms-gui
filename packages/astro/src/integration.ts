@@ -78,8 +78,8 @@ export type CmsIntegrationOptions = {
 	/**
 	 * Svelte-free schema partition for content.config generation (ADR-0019).
 	 * Defaults to `src/cms.config.ts` when present. Pass `false` to disable
-	 * generation (tests / hand-authored content.config). Editing with the
-	 * package default host still requires a partition — no Zod FieldUi fallback.
+	 * generation (tests / hand-authored content.config). The package default
+	 * host requires a partition (ADR-0020).
 	 */
 	schemaPartition?: string | false;
 } & Partial<CmsDispatcherOptions>;

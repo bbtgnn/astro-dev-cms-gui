@@ -1,9 +1,14 @@
 /**
  * @cms/core — CMS protocol, FS write-back adapters, and semantic IR.
  * Filesystem write-back sits behind createCmsProtocol / createCmsHost (ADR-0005).
- * Editor configuration is CMS-first IR only (ADR-0019) — no FieldUi-on-Zod.
+ * Editor configuration is CMS-first IR only (ADR-0019 / 0020).
  */
 
+export type {
+	CollectionConfig,
+	CollectionDescriptor,
+} from "./collection-descriptors";
+export { scanEntryIds } from "./collection-descriptors";
 export type {
 	AdaptProtocolOptions,
 	CmsHost,
@@ -14,8 +19,6 @@ export {
 	createCmsHost,
 	createCmsProtocol,
 } from "./create-cms-protocol";
-export type { CollectionConfig, DiscoveredCollection } from "./discovery";
-export { scanEntryIds } from "./discovery";
 export { parseEntryFile, serializeEntryFile } from "./entry-file";
 export {
 	type CmsFetchClient,

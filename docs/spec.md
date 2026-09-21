@@ -168,12 +168,15 @@ ordering and deferred fog.
 Active design questions:
 
 - [#2 — end-user form UI composition](https://github.com/bbtgnn/astro-dev-cms-gui/issues/2)
-- [#6 — semantic schema and projection contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/6)
-  (answered by [ADR-0019](adr/0019-cms-first-semantic-schema.md))
 - [#7 — custom field and SJSF binding contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/7)
 - [#8 — recursive form layout contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/8)
 - [#9 — preview surface and unsaved draft transport](https://github.com/bbtgnn/astro-dev-cms-gui/issues/9)
 - [#10 — invalid browser-state recovery](https://github.com/bbtgnn/astro-dev-cms-gui/issues/10)
+
+Closed (keep linked):
+
+- [#6 — semantic schema and projection contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/6)
+  → [ADR-0019](adr/0019-cms-first-semantic-schema.md) / [ADR-0020](adr/0020-ir-form-model-only-editor-configuration.md)
 
 Other deferred product questions:
 

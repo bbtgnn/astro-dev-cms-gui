@@ -8,8 +8,8 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import type { CollectionDescriptor } from "../src/collection-descriptors";
 import { createCmsProtocol } from "../src/create-cms-protocol";
-import type { DiscoveredCollection } from "../src/discovery";
 import { memoryWriter } from "../src/memory-writer";
 import { nodeFsWriter } from "../src/node-fs-writer";
 import type { CmsProtocol } from "../src/protocol";
@@ -31,7 +31,7 @@ export const postsSchema = z.object({
 	title: z.string(),
 });
 
-export const postsCollection: DiscoveredCollection = {
+export const postsCollection: CollectionDescriptor = {
 	name: "posts",
 	label: "Posts",
 	schema: postsSchema,

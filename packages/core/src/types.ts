@@ -2,7 +2,7 @@
  * Shared DTOs for write-back.
  */
 import type { z } from "zod";
-import type { DiscoveredCollection } from "./discovery";
+import type { CollectionDescriptor } from "./collection-descriptors";
 
 /** Content entry payload — clients never send FS paths. */
 export type ContentEntry = {
@@ -85,16 +85,16 @@ export type CreateCmsHostOptions = {
 	allowPaths: string[];
 	writer: Writer;
 	/**
-	 * Discovery result — preferred happy path (ADR-0006 / 0007).
+	 * Collection descriptors — preferred happy path (ADR-0007 / 0019 / 0020).
 	 * Path = root + collection.base + id + ext (or pathTemplate).
 	 */
-	collections?: DiscoveredCollection[];
+	collections?: CollectionDescriptor[];
 	/**
 	 * Optional Content Layer id index keyed by collection name.
 	 * When absent, listEntries FS-scans the collection base.
 	 */
 	entryIndex?: Record<string, string[]>;
-	/** Per-collection Zod schemas. Merged under discovery schemas when both set. */
+	/** Per-collection Zod schemas. Merged under descriptor schemas when both set. */
 	schemas?: Record<string, z.ZodType>;
 };
 

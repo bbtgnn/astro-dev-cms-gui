@@ -13,8 +13,8 @@ import { contentRoot } from "virtual:@cms/integration-options";
 import { collections as partitionCollections } from "virtual:@cms/schema-partition";
 import {
 	type CmsHost,
+	type CollectionDescriptor,
 	createCmsHost,
-	type DiscoveredCollection,
 	nodeFsWriter,
 	scanEntryIds,
 } from "@cms/core";
@@ -77,7 +77,7 @@ export function createHost(): CmsHost {
 		},
 	});
 
-	const collections: DiscoveredCollection[] = [...bases.entries()].map(
+	const collections: CollectionDescriptor[] = [...bases.entries()].map(
 		([name, base]) => {
 			const schema = validator.schemas[name];
 			if (!schema) {
