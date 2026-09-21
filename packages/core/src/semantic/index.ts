@@ -8,6 +8,9 @@
 
 export {
 	type ArrayNode,
+	type BindableArrayNode,
+	type BindableFieldNode,
+	type BindableObjectNode,
 	type BooleanNode,
 	type CollectionNode,
 	type ColumnNode,

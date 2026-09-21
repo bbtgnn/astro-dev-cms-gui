@@ -62,8 +62,7 @@ function sampleIr() {
 							s.field({
 								id: "author",
 								schema: s.reference("authors"),
-								component: "AuthorPicker",
-							}),
+							}).editor("AuthorPicker"),
 						],
 					}),
 				]),

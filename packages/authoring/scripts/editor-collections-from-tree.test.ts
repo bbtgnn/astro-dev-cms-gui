@@ -20,8 +20,7 @@ describe("editorCollectionsFromTree", () => {
 					s.field({
 						id: "author",
 						schema: s.reference("authors"),
-						component: "AuthorPickerToken",
-					}),
+					}).editor("AuthorPickerToken"),
 				]),
 			}),
 		};

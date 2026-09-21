@@ -31,8 +31,7 @@ function postsIr() {
 					s.field({
 						id: "author",
 						schema: s.reference("authors"),
-						component: "AuthorPickerToken",
-					}),
+					}).editor("AuthorPickerToken"),
 					s.field({
 						id: "count",
 						schema: s.number().int(),

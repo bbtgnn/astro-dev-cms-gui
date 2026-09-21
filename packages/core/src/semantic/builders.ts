@@ -329,6 +329,138 @@ function booleanBuilder(): BooleanBuilder {
 	return wrapMethods(brand({ type: "boolean" as const })) as BooleanBuilder;
 }
 
+/** Field / aggregate before catalog binding via `.editor()` / `.wrapper()`. */
+export type BindableFieldNode = FieldNode & {
+	editor(key: OpaqueBinding, props?: OpaqueProps): FieldNode;
+};
+
+export type BindableObjectNode = ObjectNode & {
+	editor(key: OpaqueBinding, props?: OpaqueProps): ObjectNode;
+	wrapper(key: OpaqueBinding, props?: OpaqueProps): ObjectNode;
+};
+
+export type BindableArrayNode = ArrayNode & {
+	editor(key: OpaqueBinding, props?: OpaqueProps): ArrayNode;
+	wrapper(key: OpaqueBinding, props?: OpaqueProps): ArrayNode;
+};
+
+function fieldNode(opts: {
+	id: string;
+	label?: string;
+	schema: SchemaNode;
+	component?: OpaqueBinding;
+	props?: OpaqueProps;
+}): FieldNode {
+	return brand({
+		type: "field" as const,
+		id: opts.id,
+		...(opts.label !== undefined ? { label: opts.label } : {}),
+		schema: opts.schema,
+		...(opts.component !== undefined ? { component: opts.component } : {}),
+		...(opts.props !== undefined ? { props: opts.props } : {}),
+	});
+}
+
+function objectNode(opts: {
+	id: string;
+	label?: string;
+	content: readonly TreeNode[];
+	component?: OpaqueBinding;
+	wrapper?: OpaqueBinding;
+	props?: OpaqueProps;
+}): ObjectNode {
+	return brand({
+		type: "object" as const,
+		id: opts.id,
+		...(opts.label !== undefined ? { label: opts.label } : {}),
+		content: opts.content,
+		...(opts.component !== undefined ? { component: opts.component } : {}),
+		...(opts.wrapper !== undefined ? { wrapper: opts.wrapper } : {}),
+		...(opts.props !== undefined ? { props: opts.props } : {}),
+	});
+}
+
+function arrayNode(opts: {
+	id: string;
+	label?: string;
+	of: SchemaNode;
+	component?: OpaqueBinding;
+	wrapper?: OpaqueBinding;
+	props?: OpaqueProps;
+}): ArrayNode {
+	return brand({
+		type: "array" as const,
+		id: opts.id,
+		...(opts.label !== undefined ? { label: opts.label } : {}),
+		of: opts.of,
+		...(opts.component !== undefined ? { component: opts.component } : {}),
+		...(opts.wrapper !== undefined ? { wrapper: opts.wrapper } : {}),
+		...(opts.props !== undefined ? { props: opts.props } : {}),
+	});
+}
+
+function bindableField(opts: {
+	id: string;
+	label?: string;
+	schema: SchemaNode;
+}): BindableFieldNode {
+	return Object.assign(fieldNode(opts), {
+		editor(key: OpaqueBinding, props?: OpaqueProps): FieldNode {
+			return fieldNode({
+				...opts,
+				component: key,
+				...(props !== undefined ? { props } : {}),
+			});
+		},
+	});
+}
+
+function bindableObject(opts: {
+	id: string;
+	label?: string;
+	content: readonly TreeNode[];
+}): BindableObjectNode {
+	return Object.assign(objectNode(opts), {
+		editor(key: OpaqueBinding, props?: OpaqueProps): ObjectNode {
+			return objectNode({
+				...opts,
+				component: key,
+				...(props !== undefined ? { props } : {}),
+			});
+		},
+		wrapper(key: OpaqueBinding, props?: OpaqueProps): ObjectNode {
+			return objectNode({
+				...opts,
+				wrapper: key,
+				...(props !== undefined ? { props } : {}),
+			});
+		},
+	});
+}
+
+function bindableArray(opts: {
+	id: string;
+	label?: string;
+	of: SchemaNode;
+}): BindableArrayNode {
+	return Object.assign(arrayNode(opts), {
+		editor(key: OpaqueBinding, props?: OpaqueProps): ArrayNode {
+			return arrayNode({
+				...opts,
+				component: key,
+				...(props !== undefined ? { props } : {}),
+			});
+		},
+		wrapper(key: OpaqueBinding, props?: OpaqueProps): ArrayNode {
+			return arrayNode({
+				...opts,
+				wrapper: key,
+				...(props !== undefined ? { props } : {}),
+			});
+		},
+	});
+}
+
 /** Closed algebra builders — prefer this surface over hand-built IR. */
 export const s = {
 	string(): StringBuilder {
@@ -365,53 +497,22 @@ export const s = {
 		id: string;
 		label?: string;
 		schema: SchemaNode;
-		component?: OpaqueBinding;
-		props?: OpaqueProps;
-	}): FieldNode {
-		return brand({
-			type: "field" as const,
-			id: opts.id,
-			...(opts.label !== undefined ? { label: opts.label } : {}),
-			schema: opts.schema,
-			...(opts.component !== undefined ? { component: opts.component } : {}),
-			...(opts.props !== undefined ? { props: opts.props } : {}),
-		});
+	}): BindableFieldNode {
+		return bindableField(opts);
 	},
 	object(opts: {
 		id: string;
 		label?: string;
 		content: readonly TreeNode[];
-		component?: OpaqueBinding;
-		wrapper?: OpaqueBinding;
-		props?: OpaqueProps;
-	}): ObjectNode {
-		return brand({
-			type: "object" as const,
-			id: opts.id,
-			...(opts.label !== undefined ? { label: opts.label } : {}),
-			content: opts.content,
-			...(opts.component !== undefined ? { component: opts.component } : {}),
-			...(opts.wrapper !== undefined ? { wrapper: opts.wrapper } : {}),
-			...(opts.props !== undefined ? { props: opts.props } : {}),
-		});
+	}): BindableObjectNode {
+		return bindableObject(opts);
 	},
 	array(opts: {
 		id: string;
 		label?: string;
 		of: SchemaNode;
-		component?: OpaqueBinding;
-		wrapper?: OpaqueBinding;
-		props?: OpaqueProps;
-	}): ArrayNode {
-		return brand({
-			type: "array" as const,
-			id: opts.id,
-			...(opts.label !== undefined ? { label: opts.label } : {}),
-			of: opts.of,
-			...(opts.component !== undefined ? { component: opts.component } : {}),
-			...(opts.wrapper !== undefined ? { wrapper: opts.wrapper } : {}),
-			...(opts.props !== undefined ? { props: opts.props } : {}),
-		});
+	}): BindableArrayNode {
+		return bindableArray(opts);
 	},
 	discriminatedUnion(opts: {
 		id: string;

@@ -42,13 +42,10 @@ describe("compileSemanticIr", () => {
 									id: "body",
 									label: "Body",
 									schema: s.string(),
-									component: "MarkdownEditor",
-									props: { toolbar: ["bold", "link"] },
-								}),
+								}).editor("MarkdownEditor", { toolbar: ["bold", "link"] }),
 								s.object({
 									id: "seo",
 									label: "SEO",
-									wrapper: "SeoCard",
 									content: [
 										s.field({
 											id: "title",
@@ -60,7 +57,7 @@ describe("compileSemanticIr", () => {
 											schema: s.string().max(160),
 										}),
 									],
-								}),
+								}).wrapper("SeoCard"),
 							],
 						}),
 						s.tab({
@@ -70,8 +67,7 @@ describe("compileSemanticIr", () => {
 								s.field({
 									id: "author",
 									schema: s.reference("authors"),
-									component: "AuthorPicker",
-								}),
+								}).editor("AuthorPicker"),
 								s.field({
 									id: "cover",
 									schema: s.image().optional(),
@@ -264,16 +260,18 @@ describe("compileSemanticIr", () => {
 
 	test("rejects component and wrapper together", () => {
 		try {
+			const conflicted = Object.assign(
+				s.object({
+					id: "seo",
+					content: [s.field({ id: "title", schema: s.string() })],
+				}),
+				{ component: "SeoEditor", wrapper: "SeoCard" },
+			);
 			compileSemanticIr({
 				collections: {
 					posts: s.collection({
 						loader: s.glob({ base: "./c", pattern: "**/*.json" }),
-						schema: s.object({
-							id: "seo",
-							component: "SeoEditor",
-							wrapper: "SeoCard",
-							content: [s.field({ id: "title", schema: s.string() })],
-						}),
+						schema: conflicted,
 					}),
 				},
 			});
@@ -472,12 +470,12 @@ describe("compileSemanticIr", () => {
 			collections: {
 				posts: s.collection({
 					loader: s.glob({ base: "./c", pattern: "**/*.json" }),
-					schema: s.field({
-						id: "body",
-						schema: s.string(),
-						component: "MarkdownEditor",
-						props: { toolbar: ["bold"] },
-					}),
+					schema: s
+						.field({
+							id: "body",
+							schema: s.string(),
+						})
+						.editor("MarkdownEditor", { toolbar: ["bold"] }),
 				}),
 			},
 		});
