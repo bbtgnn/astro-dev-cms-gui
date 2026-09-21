@@ -52,13 +52,19 @@ _Avoid_: Astro schema alone, Zod schema alone, form config
 **FieldUi**:
 Authoring UI on a field or aggregate: stock editor from semantic kind, optional
 catalog-key `component`, optional `wrapper` on objects/arrays, and explicit
-`props`. Authored in the unified tree, not on Zod `.meta()`. Keys resolve to
-live Svelte modules via the host components catalog.
-_Avoid_: form config, widget map alone, Zod meta UI
+`props`. Authored in the unified tree. Keys resolve to live Svelte modules via
+the host components catalog.
+_Avoid_: form config, widget map alone, Zod meta UI, FieldUi-on-Zod
+
+**Form model**:
+The browser editor projection of the IR for one collection: JSON Schema plus
+uiSchema/layout bindings, without live Svelte values. What the form shell
+receives after compile + project.
+_Avoid_: Zod editor schema, toFormSchemas output, content.config schema
 
 **Field registry**:
-The map from semantic field kind (and optional widget identity) to default
-validation helpers and stock editors; field-level `component` can override.
+The map from semantic field kind to default validation helpers and stock
+editors; field-level `component` can override via the components catalog.
 _Avoid_: widget map (Decap-only sense), component library
 
 **Write-back**:
@@ -66,8 +72,8 @@ The path by which edits from the authoring shell land in project files (or a loc
 _Avoid_: persistence, save API, storage backend
 
 **CMS protocol**:
-The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + discovered collections. Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
-_Avoid_: save API, REST CRUD, WriteMode (as a public API)
+The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + collection descriptors (from compiled IR on the default host). Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
+_Avoid_: save API, REST CRUD, WriteMode (as a public API), content.config discovery (as the editor seam)
 
 **Content entry**:
 One unit of content addressed by the shell (a file or logical document in a collection).
@@ -78,7 +84,7 @@ An Astro content collection whose entries the shell can list and edit.
 _Avoid_: content type, model (Payload sense)
 
 **Form shell**:
-The Svelte UI that turns a field schema (or derived JSON Schema) into an editable form for one content entry.
+The Svelte UI that turns a form model into an editable form for one content entry.
 _Avoid_: admin form, CMS form
 
 **Schema builder**:

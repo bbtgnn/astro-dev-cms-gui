@@ -57,10 +57,14 @@ Supersedes the human-authored dual-authority split in
 [ADR-0016](0016-astro-convention-install-surface.md): `cms.config.ts` is the
 human source; `content.config.ts` is generated output. Runtime module-graph
 separation remains — the browser still must not import `content.config`, and
-Astro still must not import Svelte editor modules. Live FS discovery may keep
-reading the generated `collections` export.
+Astro still must not import Svelte editor modules. The package default host
+builds collection descriptors from the compiled IR (schema partition), not by
+Vite-importing generated `content.config` for editor schemas.
 
 [ADR-0010](0010-persisted-input-with-environment-schema-projections.md) and
 [ADR-0011](0011-sjsf-internal-one-form-recursive-layout.md) remain; the IR is
 the explicit persisted-input authority, and layout is authored in-tree rather
 than as a separate selector callback.
+
+[ADR-0020](0020-ir-form-model-only-editor-configuration.md) records the removal
+of the transitional Zod/FieldUi editor path.

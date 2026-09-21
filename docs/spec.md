@@ -93,7 +93,7 @@ Astro sync / types            Authoring UI (shell + form + SJSF)
                       |
                       | serializable CMS protocol
                       v
-Host / write-back (FS discovery on generated content.config)
+Host / write-back (collection descriptors from compiled IR)
 ```
 
 The conceptual modules are:
@@ -126,10 +126,12 @@ These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
 
 - [ADR-0019](adr/0019-cms-first-semantic-schema.md) — CMS-first unified tree;
   generated native Astro `content.config`; supersedes ADR-0003.
+- [ADR-0020](adr/0020-ir-form-model-only-editor-configuration.md) — editor
+  configuration is IR form model only; no Zod/FieldUi dual path.
 - [ADR-0003](adr/0003-field-ui-on-zod-meta.md) — superseded by ADR-0019.
-- [ADR-0004](adr/0004-live-content-config-discovery.md) — server/FS discovery
-  still reads live `content.config`; browser stays on a separate edge (human
-  source is now `cms.config` per ADR-0019).
+- [ADR-0004](adr/0004-live-content-config-discovery.md) — default host uses
+  schema partition / IR; browser never loads `content.config` (amended by
+  ADR-0019 / 0020).
 - [ADR-0010](adr/0010-persisted-input-with-environment-schema-projections.md) —
   editor, authoritative validator, and Astro are projections of one
   persisted-input model (IR is the authority under ADR-0019).
