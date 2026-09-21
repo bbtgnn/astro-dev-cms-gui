@@ -7,29 +7,14 @@
  * or call `safeParseAsync` before upsert.
  */
 
-import { z } from "zod";
-import type {
-	CompiledSemanticIr,
-	PersistedCollectionShape,
-	PersistedField,
-	PersistedSchema,
-} from "./types";
+import type { z } from "zod";
+import {
+	type AuthoritativeValidatorDeps,
+	persistedProjections,
+} from "./persisted-projections";
+import type { CompiledSemanticIr } from "./types";
 
-export type AuthoritativeValidatorDeps = {
-	/**
-	 * True when the persisted image path is allowlisted and resolves to an
-	 * accepted asset. Omitted → structural string check only.
-	 */
-	readonly isAcceptedImageAsset?: (path: string) => boolean | Promise<boolean>;
-	/**
-	 * True when `id` exists in `collection`. Omitted → structural string check
-	 * only (collection name is still fixed by the IR reference node).
-	 */
-	readonly entryExists?: (
-		collection: string,
-		id: string,
-	) => boolean | Promise<boolean>;
-};
+export type { AuthoritativeValidatorDeps };
 
 export type AuthoritativeParseIssue = {
 	readonly path: readonly (string | number)[];
@@ -57,154 +42,6 @@ export type AuthoritativeValidator = {
 	): Promise<AuthoritativeParseResult>;
 };
 
-function stringConstraints(
-	base: z.ZodString,
-	constraints: readonly {
-		readonly method: string;
-		readonly value?: number;
-		readonly source?: string;
-		readonly flags?: string;
-	}[],
-): z.ZodString {
-	let out = base;
-	for (const c of constraints) {
-		if (c.method === "min" && typeof c.value === "number") {
-			out = out.min(c.value);
-		} else if (c.method === "max" && typeof c.value === "number") {
-			out = out.max(c.value);
-		} else if (c.method === "regex" && typeof c.source === "string") {
-			out = out.regex(new RegExp(c.source, c.flags ?? ""));
-		}
-	}
-	return out;
-}
-
-function numberConstraints(
-	base: z.ZodNumber,
-	constraints: readonly {
-		readonly method: string;
-		readonly value?: number;
-	}[],
-): z.ZodNumber {
-	let out = base;
-	for (const c of constraints) {
-		if (c.method === "min" && typeof c.value === "number") {
-			out = out.min(c.value);
-		} else if (c.method === "max" && typeof c.value === "number") {
-			out = out.max(c.value);
-		} else if (c.method === "int") {
-			out = out.int();
-		}
-	}
-	return out;
-}
-
-function persistedToZod(
-	schema: PersistedSchema,
-	deps: AuthoritativeValidatorDeps | undefined,
-	path: string,
-): z.ZodType {
-	switch (schema.kind) {
-		case "string":
-			return stringConstraints(z.string(), schema.constraints);
-		case "number":
-			return numberConstraints(z.number(), schema.constraints);
-		case "boolean":
-			return z.boolean();
-		case "literal":
-			return z.literal(schema.value);
-		case "enum":
-			return z.enum(schema.values);
-		case "image": {
-			let imageSchema: z.ZodType = z.string();
-			if (deps?.isAcceptedImageAsset) {
-				const check = deps.isAcceptedImageAsset;
-				imageSchema = z.string().refine(async (value) => check(value), {
-					message: `Image path not accepted at ${path}`,
-				});
-			}
-			return imageSchema;
-		}
-		case "reference": {
-			const target = schema.collection;
-			let refSchema: z.ZodType = z.string();
-			if (deps?.entryExists) {
-				const exists = deps.entryExists;
-				refSchema = z.string().refine(async (id) => exists(target, id), {
-					message: `Reference "${path}" target not found in collection "${target}"`,
-				});
-			}
-			return refSchema;
-		}
-		case "optional":
-			return persistedToZod(schema.of, deps, path).optional();
-		case "nullable":
-			return persistedToZod(schema.of, deps, path).nullable();
-		case "default":
-			return persistedToZod(schema.of, deps, path).default(schema.value);
-		case "object":
-			return fieldsToZodObject(schema.fields, deps, path);
-		case "array":
-			return z.array(persistedToZod(schema.of, deps, `${path}[]`));
-		case "discriminatedUnion": {
-			if (schema.variants.length === 0) {
-				return z.never();
-			}
-			const options = schema.variants.map((variant) => {
-				const shape: Record<string, z.ZodType> = {
-					[schema.discriminant]: z.literal(variant.id),
-				};
-				for (const field of variant.fields) {
-					if (field.id === schema.discriminant) {
-						// Discriminant already injected as literal.
-						continue;
-					}
-					const fieldPath =
-						path === ""
-							? `${variant.id}.${field.id}`
-							: `${path}.${variant.id}.${field.id}`;
-					shape[field.id] = persistedToZod(field.schema, deps, fieldPath);
-				}
-				return z.object(shape);
-			});
-			// z.discriminatedUnion needs a non-empty tuple.
-			const [first, ...rest] = options;
-			if (!first) return z.never();
-			if (rest.length === 0) return first;
-			return z.discriminatedUnion(schema.discriminant, [first, ...rest] as [
-				z.ZodObject,
-				z.ZodObject,
-				...z.ZodObject[],
-			]);
-		}
-		default: {
-			const _exhaustive: never = schema;
-			return _exhaustive;
-		}
-	}
-}
-
-function fieldsToZodObject(
-	fields: readonly PersistedField[],
-	deps: AuthoritativeValidatorDeps | undefined,
-	parentPath: string,
-): z.ZodObject {
-	const shape: Record<string, z.ZodType> = {};
-	for (const field of fields) {
-		const fieldPath =
-			parentPath === "" ? field.id : `${parentPath}.${field.id}`;
-		shape[field.id] = persistedToZod(field.schema, deps, fieldPath);
-	}
-	return z.object(shape);
-}
-
-function collectionToZod(
-	shape: PersistedCollectionShape,
-	deps: AuthoritativeValidatorDeps | undefined,
-): z.ZodType {
-	return fieldsToZodObject(shape.fields, deps, "");
-}
-
 function mapZodIssues(
 	issues: readonly { path: PropertyKey[]; message: string; code?: string }[],
 ): AuthoritativeParseIssue[] {
@@ -225,10 +62,7 @@ export function createAuthoritativeValidator(
 	ir: CompiledSemanticIr,
 	deps?: AuthoritativeValidatorDeps,
 ): AuthoritativeValidator {
-	const schemas: Record<string, z.ZodType> = {};
-	for (const [id, persisted] of Object.entries(ir.persisted)) {
-		schemas[id] = collectionToZod(persisted, deps);
-	}
+	const schemas = persistedProjections(ir).zodSchemas(deps);
 
 	return {
 		schemas,

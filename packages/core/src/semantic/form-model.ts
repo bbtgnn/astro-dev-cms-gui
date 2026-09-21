@@ -4,6 +4,7 @@
  * Opaque binding tokens are included for host Vite resolution — not live Svelte.
  */
 
+import { persistedProjections } from "./persisted-projections";
 import type {
 	CompiledSemanticIr,
 	IrArray,
@@ -16,8 +17,6 @@ import type {
 	NumberConstraint,
 	OpaqueBinding,
 	OpaqueProps,
-	PersistedField,
-	PersistedSchema,
 	SemanticKind,
 	StringConstraint,
 } from "./types";
@@ -448,122 +447,17 @@ function layoutFromTree(
 }
 
 // ---------------------------------------------------------------------------
-// JSON Schema from persisted shape (IR authority, not Zod meta)
-// ---------------------------------------------------------------------------
-
-function persistedSchemaToJsonSchema(
-	schema: PersistedSchema,
-): Record<string, unknown> {
-	switch (schema.kind) {
-		case "string": {
-			const out: Record<string, unknown> = { type: "string" };
-			for (const c of schema.constraints) {
-				if (c.method === "min") out.minLength = c.value;
-				else if (c.method === "max") out.maxLength = c.value;
-				else if (c.method === "regex") out.pattern = c.source;
-			}
-			return out;
-		}
-		case "number": {
-			const out: Record<string, unknown> = { type: "number" };
-			for (const c of schema.constraints) {
-				if (c.method === "min") out.minimum = c.value;
-				else if (c.method === "max") out.maximum = c.value;
-				else if (c.method === "int") out.type = "integer";
-			}
-			return out;
-		}
-		case "boolean":
-			return { type: "boolean" };
-		case "literal":
-			return { const: schema.value };
-		case "enum":
-			return { type: "string", enum: [...schema.values] };
-		case "image":
-		case "reference":
-			// Persisted input is a path / entry id string (ADR-0010).
-			return { type: "string" };
-		case "optional":
-			return persistedSchemaToJsonSchema(schema.of);
-		case "nullable": {
-			const inner = persistedSchemaToJsonSchema(schema.of);
-			return { anyOf: [inner, { type: "null" }] };
-		}
-		case "default": {
-			const inner = persistedSchemaToJsonSchema(schema.of);
-			return { ...inner, default: schema.value };
-		}
-		case "object":
-			return persistedObjectToJsonSchema(schema.fields);
-		case "array":
-			return {
-				type: "array",
-				items: persistedSchemaToJsonSchema(schema.of),
-			};
-		case "discriminatedUnion": {
-			return {
-				oneOf: schema.variants.map((variant) => {
-					const obj = persistedObjectToJsonSchema(variant.fields);
-					return {
-						...obj,
-						...(variant.label !== undefined ? { title: variant.label } : {}),
-					};
-				}),
-			};
-		}
-		default: {
-			const _exhaustive: never = schema;
-			return _exhaustive;
-		}
-	}
-}
-
-function persistedObjectToJsonSchema(
-	fields: readonly PersistedField[],
-): Record<string, unknown> {
-	const properties: Record<string, unknown> = {};
-	const required: string[] = [];
-	for (const field of fields) {
-		properties[field.id] = {
-			...persistedSchemaToJsonSchema(field.schema),
-			...(field.label !== undefined ? { title: field.label } : {}),
-		};
-		if (!isOptionalPersisted(field.schema)) {
-			required.push(field.id);
-		}
-	}
-	return {
-		type: "object",
-		properties,
-		...(required.length > 0 ? { required } : {}),
-		additionalProperties: false,
-	};
-}
-
-function isOptionalPersisted(schema: PersistedSchema): boolean {
-	if (schema.kind === "optional" || schema.kind === "default") return true;
-	if (schema.kind === "nullable") return isOptionalPersisted(schema.of);
-	return false;
-}
-
-function collectionJsonSchema(
-	fields: readonly PersistedField[],
-): Record<string, unknown> {
-	return persistedObjectToJsonSchema(fields);
-}
-
-// ---------------------------------------------------------------------------
 // Public projection
 // ---------------------------------------------------------------------------
 
 /**
  * Project one compiled collection into a serializable form/layout model.
- * Layout keeps presentation; `jsonSchema` uses the presentation-stripped
- * persisted field list (never invents keys from layout alone).
+ * Layout keeps presentation; `jsonSchema` is the persisted-input projection
+ * (from `persistedProjections(ir).jsonSchemas()`).
  */
 export function projectCollectionFormModel(
 	collection: IrCollection,
-	persistedFields: readonly PersistedField[],
+	jsonSchema: Record<string, unknown>,
 ): CollectionFormModel {
 	const state: WalkState = { fields: {} };
 	const layout = layoutFromTree(collection.schema, "", state);
@@ -571,7 +465,7 @@ export function projectCollectionFormModel(
 		collectionId: collection.id,
 		layout,
 		fields: state.fields,
-		jsonSchema: collectionJsonSchema(persistedFields),
+		jsonSchema,
 	};
 }
 
@@ -581,10 +475,17 @@ export function projectCollectionFormModel(
 export function projectFormModels(
 	ir: CompiledSemanticIr,
 ): FormModelsByCollection {
+	const jsonSchemas = persistedProjections(ir).jsonSchemas();
 	const out: Record<string, CollectionFormModel> = {};
 	for (const [id, collection] of Object.entries(ir.collections)) {
-		const persisted = ir.persisted[id];
-		out[id] = projectCollectionFormModel(collection, persisted?.fields ?? []);
+		out[id] = projectCollectionFormModel(
+			collection,
+			jsonSchemas[id] ?? {
+				type: "object",
+				properties: {},
+				additionalProperties: false,
+			},
+		);
 	}
 	return out;
 }

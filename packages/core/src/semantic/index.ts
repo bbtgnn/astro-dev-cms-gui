@@ -2,7 +2,7 @@
  * Closed semantic IR for CMS-first schemas (ADR-0019).
  *
  * Primary seam: `compileSemanticIr` (+ `s` builders, `persistedShape`).
- * Slice 5 projections: `projectFormModels`, `createAuthoritativeValidator`.
+ * Projections: `persistedProjections`, `projectFormModels`, `createAuthoritativeValidator`.
  * No Svelte; no Astro emission.
  */
 
@@ -62,6 +62,17 @@ export {
 	projectCollectionFormModel,
 	projectFormModels,
 } from "./form-model";
+export {
+	type AstroCollectionSchemaPlan,
+	type AstroSchemaConstraint,
+	type AstroSchemaExpr,
+	type AstroSchemaPlan,
+	type AuthoritativeValidatorDeps,
+	type JsonSchema,
+	type PersistedProjections,
+	persistedProjections,
+	projectAstroSchemaExpr,
+} from "./persisted-projections";
 export type {
 	CompiledSemanticIr,
 	IrArray,
@@ -112,6 +123,5 @@ export {
 	type AuthoritativeParseIssue,
 	type AuthoritativeParseResult,
 	type AuthoritativeValidator,
-	type AuthoritativeValidatorDeps,
 	createAuthoritativeValidator,
 } from "./validator";

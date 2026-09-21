@@ -1,14 +1,17 @@
 /**
  * Emit native Astro `content.config.ts` source from compiled semantic IR.
  *
- * Walks the presentation-stripped persisted shape (ADR-0019). No ZodTypeAny,
- * broad casts, or type assertions in the generated source.
+ * Schema expressions come from `persistedProjections(ir).astroSchemaPlan()`
+ * (ADR-0010 / 0019). This module only renders the plan + file shell.
  */
 
-import type {
-	CompiledSemanticIr,
-	PersistedField,
-	PersistedSchema,
+import {
+	type AstroSchemaExpr,
+	type AstroSchemaPlan,
+	type CompiledSemanticIr,
+	type PersistedSchema,
+	persistedProjections,
+	projectAstroSchemaExpr,
 } from "@cms/core/semantic";
 import { HASH_MARKER } from "./hash";
 
@@ -53,80 +56,17 @@ function emitJsLiteral(value: unknown): string {
 	}
 }
 
-function schemaNeedsImage(schema: PersistedSchema): boolean {
-	switch (schema.kind) {
-		case "image":
-			return true;
-		case "optional":
-		case "nullable":
-		case "default":
-			return schemaNeedsImage(schema.of);
-		case "array":
-			return schemaNeedsImage(schema.of);
-		case "object":
-			return schema.fields.some((f) => schemaNeedsImage(f.schema));
-		case "discriminatedUnion":
-			return schema.variants.some((v) =>
-				v.fields.some((f) => schemaNeedsImage(f.schema)),
-			);
-		case "string":
-		case "number":
-		case "boolean":
-		case "literal":
-		case "enum":
-		case "reference":
-			return false;
-		default: {
-			const _exhaustive: never = schema;
-			return _exhaustive;
-		}
-	}
-}
-
-function schemaNeedsReference(schema: PersistedSchema): boolean {
-	switch (schema.kind) {
-		case "reference":
-			return true;
-		case "optional":
-		case "nullable":
-		case "default":
-			return schemaNeedsReference(schema.of);
-		case "array":
-			return schemaNeedsReference(schema.of);
-		case "object":
-			return schema.fields.some((f) => schemaNeedsReference(f.schema));
-		case "discriminatedUnion":
-			return schema.variants.some((v) =>
-				v.fields.some((f) => schemaNeedsReference(f.schema)),
-			);
-		case "string":
-		case "number":
-		case "boolean":
-		case "literal":
-		case "enum":
-		case "image":
-			return false;
-		default: {
-			const _exhaustive: never = schema;
-			return _exhaustive;
-		}
-	}
-}
-
-function collectionNeedsImage(fields: readonly PersistedField[]): boolean {
-	return fields.some((f) => schemaNeedsImage(f.schema));
-}
-
-function fieldsNeedReference(fields: readonly PersistedField[]): boolean {
-	return fields.some((f) => schemaNeedsReference(f.schema));
-}
-
 function emitConstraints(
 	base: string,
-	schema: Extract<PersistedSchema, { kind: "string" | "number" }>,
+	constraints: readonly {
+		readonly method: string;
+		readonly value?: number;
+		readonly source?: string;
+		readonly flags?: string;
+	}[],
 ): string {
 	let out = base;
-	for (const c of schema.constraints) {
+	for (const c of constraints) {
 		switch (c.method) {
 			case "min":
 				out += `.min(${c.value})`;
@@ -140,86 +80,98 @@ function emitConstraints(
 			case "regex":
 				out += `.regex(new RegExp(${JSON.stringify(c.source)}, ${JSON.stringify(c.flags)}))`;
 				break;
-			default: {
-				const _exhaustive: never = c;
-				throw new Error(
-					`Unexpected constraint: ${JSON.stringify(_exhaustive)}`,
-				);
-			}
+			default:
+				throw new Error(`Unexpected constraint: ${JSON.stringify(c)}`);
 		}
 	}
 	return out;
 }
 
 /**
- * Emit a Zod expression for one persisted schema node.
- * Fail-closed on unexpected IR.
+ * Render one Astro schema expression to a Zod/Astro source fragment.
  */
-export function emitPersistedSchema(schema: PersistedSchema): string {
-	switch (schema.kind) {
+export function renderAstroSchemaExpr(expr: AstroSchemaExpr): string {
+	switch (expr.tag) {
 		case "string":
-			return emitConstraints("z.string()", schema);
+			return emitConstraints("z.string()", expr.constraints);
 		case "number":
-			return emitConstraints("z.number()", schema);
+			return emitConstraints("z.number()", expr.constraints);
 		case "boolean":
 			return "z.boolean()";
 		case "literal":
-			return `z.literal(${emitJsLiteral(schema.value)})`;
+			return `z.literal(${emitJsLiteral(expr.value)})`;
 		case "enum":
-			return `z.enum([${schema.values.map((v) => JSON.stringify(v)).join(", ")}])`;
+			return `z.enum([${expr.values.map((v) => JSON.stringify(v)).join(", ")}])`;
 		case "image":
 			return "image()";
 		case "reference":
-			return `reference(${JSON.stringify(schema.collection)})`;
+			return `reference(${JSON.stringify(expr.collection)})`;
 		case "optional":
-			return `${emitPersistedSchema(schema.of)}.optional()`;
+			return `${renderAstroSchemaExpr(expr.of)}.optional()`;
 		case "nullable":
-			return `${emitPersistedSchema(schema.of)}.nullable()`;
+			return `${renderAstroSchemaExpr(expr.of)}.nullable()`;
 		case "default":
-			return `${emitPersistedSchema(schema.of)}.default(${emitJsLiteral(schema.value)})`;
-		case "object":
-			return emitObjectFields(schema.fields);
+			return `${renderAstroSchemaExpr(expr.of)}.default(${emitJsLiteral(expr.value)})`;
 		case "array":
-			return `z.array(${emitPersistedSchema(schema.of)})`;
+			return `z.array(${renderAstroSchemaExpr(expr.of)})`;
+		case "object":
+			return emitObjectFields(expr.fields);
 		case "discriminatedUnion": {
-			if (schema.variants.length === 0) {
+			if (expr.variants.length === 0) {
 				throw new Error(
-					`discriminatedUnion "${schema.discriminant}" has no variants`,
+					`discriminatedUnion "${expr.discriminant}" has no variants`,
 				);
 			}
-			const variants = schema.variants
+			const variants = expr.variants
 				.map((v) => `\t${emitObjectFields(v.fields)},`)
 				.join("\n");
-			return `z.discriminatedUnion(${JSON.stringify(schema.discriminant)}, [\n${variants}\n])`;
+			return `z.discriminatedUnion(${JSON.stringify(expr.discriminant)}, [\n${variants}\n])`;
 		}
 		default: {
-			const _exhaustive: never = schema;
+			const _exhaustive: never = expr;
 			throw new Error(
-				`Unexpected persisted IR node: ${JSON.stringify(_exhaustive)}`,
+				`Unexpected Astro schema expr: ${JSON.stringify(_exhaustive)}`,
 			);
 		}
 	}
 }
 
-function emitObjectFields(fields: readonly PersistedField[]): string {
+function emitObjectFields(
+	fields: readonly { readonly id: string; readonly schema: AstroSchemaExpr }[],
+): string {
 	if (fields.length === 0) {
 		return "z.object({})";
 	}
 	const lines = fields.map(
-		(f) => `\t${propKey(f.id)}: ${emitPersistedSchema(f.schema)},`,
+		(f) => `\t${propKey(f.id)}: ${renderAstroSchemaExpr(f.schema)},`,
 	);
 	return `z.object({\n${lines.join("\n")}\n})`;
 }
 
+/**
+ * Emit a Zod expression for one persisted schema node.
+ * Projects through the shared IR walker, then renders.
+ */
+export function emitPersistedSchema(schema: PersistedSchema): string {
+	try {
+		return renderAstroSchemaExpr(projectAstroSchemaExpr(schema));
+	} catch (err) {
+		const message = err instanceof Error ? err.message : String(err);
+		if (message.includes("Unexpected persisted IR node")) {
+			throw new Error(`Unexpected persisted IR node: ${message}`);
+		}
+		throw err;
+	}
+}
+
 function emitCollectionSchemaExpr(
-	fields: readonly PersistedField[],
+	root: AstroSchemaExpr,
 	needsImage: boolean,
 ): string {
-	const body = emitObjectFields(fields);
+	const body = renderAstroSchemaExpr(root);
 	if (!needsImage) {
 		return body;
 	}
-	// Indent body one tab under the SchemaContext arrow.
 	const indented = body
 		.split("\n")
 		.map((line, i) => (i === 0 ? line : `\t${line}`))
@@ -227,29 +179,19 @@ function emitCollectionSchemaExpr(
 	return `({ image }: SchemaContext) =>\n\t${indented}`;
 }
 
-/**
- * Render full `content.config.ts` TypeScript source from compiled IR.
- */
-export function emitContentConfig(
+function renderContentConfigFile(
+	plan: AstroSchemaPlan,
 	ir: CompiledSemanticIr,
-	options: EmitContentConfigOptions = {},
+	options: EmitContentConfigOptions,
 ): string {
 	const generatedBy = options.generatedBy ?? DEFAULT_GENERATED_BY;
-	const collectionIds = Object.keys(ir.persisted).sort();
-
-	const anyImage = collectionIds.some((id) => {
-		const shape = ir.persisted[id];
-		return shape !== undefined && collectionNeedsImage(shape.fields);
-	});
-	const anyReference = collectionIds.some((id) =>
-		fieldsNeedReference(ir.persisted[id]?.fields ?? []),
-	);
+	const { collectionIds, needsImage, needsReference } = plan;
 
 	const contentImports = ["defineCollection"];
-	if (anyReference) {
+	if (needsReference) {
 		contentImports.push("reference");
 	}
-	if (anyImage) {
+	if (needsImage) {
 		contentImports.push("type SchemaContext");
 	}
 
@@ -263,9 +205,10 @@ export function emitContentConfig(
 	const collectionDecls: string[] = [];
 
 	for (const id of collectionIds) {
-		const persisted = ir.persisted[id];
+		const collectionPlan = plan.byCollection[id];
 		const collection = ir.collections[id];
-		if (persisted === undefined) {
+		const persisted = ir.persisted[id];
+		if (collectionPlan === undefined || persisted === undefined) {
 			throw new Error(`Missing persisted shape for collection "${id}"`);
 		}
 		const loader = collection?.loader ?? persisted.loader;
@@ -275,9 +218,11 @@ export function emitContentConfig(
 			);
 		}
 
-		const needsImage = collectionNeedsImage(persisted.fields);
 		const constName = schemaConstName(id);
-		const schemaExpr = emitCollectionSchemaExpr(persisted.fields, needsImage);
+		const schemaExpr = emitCollectionSchemaExpr(
+			collectionPlan.root,
+			collectionPlan.needsImage,
+		);
 
 		schemaDecls.push(`export const ${constName} = ${schemaExpr};\n`);
 
@@ -315,4 +260,18 @@ export function emitContentConfig(
 		collectionsExport,
 		"",
 	].join("\n");
+}
+
+/**
+ * Render full `content.config.ts` TypeScript source from compiled IR.
+ */
+export function emitContentConfig(
+	ir: CompiledSemanticIr,
+	options: EmitContentConfigOptions = {},
+): string {
+	return renderContentConfigFile(
+		persistedProjections(ir).astroSchemaPlan(),
+		ir,
+		options,
+	);
 }
