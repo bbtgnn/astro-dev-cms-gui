@@ -50,8 +50,7 @@ const config = defineCmsLocal<Collections>((s) => ({
 						s.field({
 							id: "author",
 							schema: s.reference("authors"),
-							component: "AuthorPicker",
-						}),
+						}).editor("AuthorPicker"),
 						s.object({
 							id: "seo",
 							content: [

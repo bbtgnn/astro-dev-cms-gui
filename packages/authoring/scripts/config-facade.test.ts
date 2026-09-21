@@ -30,13 +30,10 @@ describe("createCmsBuilders → compileSemanticIr", () => {
 								s.field({
 									id: "body",
 									schema: s.string(),
-									component: "MarkdownEditor",
-									props: { toolbar: ["bold"] },
-								}),
+								}).editor("MarkdownEditor", { toolbar: ["bold"] }),
 								s.object({
 									id: "seo",
 									label: "SEO",
-									wrapper: "SeoCard",
 									content: [
 										s.header({ label: "Meta" }),
 										s.field({
@@ -49,12 +46,11 @@ describe("createCmsBuilders → compileSemanticIr", () => {
 											schema: s.string().max(160),
 										}),
 									],
-								}),
+								}).wrapper("SeoCard"),
 								s.field({
 									id: "author",
 									schema: s.reference("authors"),
-									component: "AuthorPicker",
-								}),
+								}).editor("AuthorPicker"),
 								s.field({
 									id: "cover",
 									schema: s.image().optional(),

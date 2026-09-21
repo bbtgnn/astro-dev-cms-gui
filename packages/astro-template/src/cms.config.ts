@@ -35,8 +35,7 @@ const cms = defineCms<Collections, Components>((s) => ({
 				id: "name",
 				label: "Author name",
 				schema: s.string().min(1),
-				component: "AuthorNameEditor",
-			}),
+			}).editor("AuthorNameEditor"),
 		}),
 		posts: s.collection({
 			loader: s.glob({
@@ -58,8 +57,7 @@ const cms = defineCms<Collections, Components>((s) => ({
 					id: "body",
 					label: "Body",
 					schema: s.string(),
-					component: "BodyEditor",
-				}),
+				}).editor("BodyEditor"),
 				s.field({
 					id: "cover",
 					label: "Cover",

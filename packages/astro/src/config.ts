@@ -40,7 +40,8 @@ export {
  * Typed entry for the CMS unified tree (`src/cms.config.ts`).
  * - `Collections` types `reference()` targets.
  * - `Components` is the Vite catalog type (`typeof` default export of
- *   `cms.components.ts`); `component` / `wrapper` / `icon` are string keys.
+ *   `cms.components.ts`); bind via `.editor()` / `.wrapper()` / tab `icon`
+ *   string keys.
  * Returns the host config (collections + optional preview map); call
  * `compileSemanticIr({ collections })` for IR.
  */

@@ -27,8 +27,8 @@ import type {
 	CompatibleWrapperKey,
 	ComponentsCatalog,
 	EmptyComponents,
+	EditorPropsArg,
 	FieldKind,
-	PropsBagOption,
 } from "./contracts";
 import type {
 	AnyTypedSchema,
@@ -188,101 +188,48 @@ function wrapReference(
 	}) as ReferenceBuilder;
 }
 
-type FieldOptsBase<Id extends string, S extends AnyTypedSchema> = {
-	id: Id;
-	label?: string;
-	schema: S;
+/** Stock field / aggregate before catalog binding via `.editor()` / `.wrapper()`. */
+type BindableField<
+	Id extends string,
+	Input,
+	Kind extends FieldKind,
+	Components extends ComponentsCatalog,
+> = TypedFieldNode<Id, Input, Kind> & {
+	editor<const K extends CompatibleKey<Components, Input, Kind>>(
+		key: K,
+		...propsArg: EditorPropsArg<Components[K]>
+	): TypedFieldNode<Id, Input, Kind>;
 };
 
-type FieldWithComponentKey<
+type BindableObject<
 	Id extends string,
-	S extends AnyTypedSchema,
+	Input,
 	Components extends ComponentsCatalog,
-	K extends CompatibleKey<Components, InputOfSchema<S>, KindOfSchema<S>>,
-> = FieldOptsBase<Id, S> & {
-	component: K;
-} & PropsBagOption<Components[K]>;
-
-type FieldStock<Id extends string, S extends AnyTypedSchema> = FieldOptsBase<
-	Id,
-	S
-> & {
-	component?: undefined;
-	props?: undefined;
+> = TypedObjectNode<Id, Input> & {
+	editor<const K extends CompatibleKey<Components, Input, "object">>(
+		key: K,
+		...propsArg: EditorPropsArg<Components[K]>
+	): TypedObjectNode<Id, Input>;
+	wrapper<const W extends CompatibleWrapperKey<Components>>(
+		key: W,
+		...propsArg: EditorPropsArg<Components[W]>
+	): TypedObjectNode<Id, Input>;
 };
 
-type ObjectStock<
+type BindableArray<
 	Id extends string,
-	Content extends readonly TypedTreeNode[],
-> = {
-	id: Id;
-	label?: string;
-	content: Content;
-	component?: undefined;
-	wrapper?: undefined;
-	props?: undefined;
+	Input,
+	Components extends ComponentsCatalog,
+> = TypedArrayNode<Id, Input> & {
+	editor<const K extends CompatibleKey<Components, Input, "array">>(
+		key: K,
+		...propsArg: EditorPropsArg<Components[K]>
+	): TypedArrayNode<Id, Input>;
+	wrapper<const W extends CompatibleWrapperKey<Components>>(
+		key: W,
+		...propsArg: EditorPropsArg<Components[W]>
+	): TypedArrayNode<Id, Input>;
 };
-
-type ObjectWithComponentKey<
-	Id extends string,
-	Content extends readonly TypedTreeNode[],
-	Components extends ComponentsCatalog,
-	K extends CompatibleKey<Components, ShapeOfContent<Content>, "object">,
-> = {
-	id: Id;
-	label?: string;
-	content: Content;
-	component: K;
-	wrapper?: never;
-} & PropsBagOption<Components[K]>;
-
-type ObjectWithWrapperKey<
-	Id extends string,
-	Content extends readonly TypedTreeNode[],
-	Components extends ComponentsCatalog,
-	W extends CompatibleWrapperKey<Components>,
-> = {
-	id: Id;
-	label?: string;
-	content: Content;
-	wrapper: W;
-	component?: never;
-} & PropsBagOption<Components[W]>;
-
-type ArrayStock<Id extends string, S extends AnyTypedSchema> = {
-	id: Id;
-	label?: string;
-	of: S;
-	component?: undefined;
-	wrapper?: undefined;
-	props?: undefined;
-};
-
-type ArrayWithComponentKey<
-	Id extends string,
-	S extends AnyTypedSchema,
-	Components extends ComponentsCatalog,
-	K extends CompatibleKey<Components, InputOfSchema<S>[], "array">,
-> = {
-	id: Id;
-	label?: string;
-	of: S;
-	component: K;
-	wrapper?: never;
-} & PropsBagOption<Components[K]>;
-
-type ArrayWithWrapperKey<
-	Id extends string,
-	S extends AnyTypedSchema,
-	Components extends ComponentsCatalog,
-	W extends CompatibleWrapperKey<Components>,
-> = {
-	id: Id;
-	label?: string;
-	of: S;
-	wrapper: W;
-	component?: never;
-} & PropsBagOption<Components[W]>;
 
 export type CmsConfigInput = {
 	readonly collections: Readonly<Record<string, CollectionNode>>;
@@ -318,63 +265,31 @@ export type CmsBuilders<
 		value: Input,
 	): TypedSchema<Input, Kind>;
 
-	field<
-		const Id extends string,
-		S extends AnyTypedSchema,
-		const K extends CompatibleKey<
-			Components,
-			InputOfSchema<S>,
-			KindOfSchema<S>
-		>,
-	>(
-		opts: FieldWithComponentKey<Id, S, Components, K>,
-	): TypedFieldNode<Id, InputOfSchema<S>, KindOfSchema<S>>;
-	field<const Id extends string, S extends AnyTypedSchema>(
-		opts: FieldStock<Id, S>,
-	): TypedFieldNode<Id, InputOfSchema<S>, KindOfSchema<S>>;
+	field<const Id extends string, S extends AnyTypedSchema>(opts: {
+		id: Id;
+		label?: string;
+		schema: S;
+	}): BindableField<
+		Id,
+		InputOfSchema<S>,
+		KindOfSchema<S>,
+		Components
+	>;
 
 	object<
 		const Id extends string,
 		const Content extends readonly TypedTreeNode[],
-		const K extends CompatibleKey<
-			Components,
-			ShapeOfContent<Content>,
-			"object"
-		>,
-	>(
-		opts: ObjectWithComponentKey<Id, Content, Components, K>,
-	): TypedObjectNode<Id, ShapeOfContent<Content>>;
-	object<
-		const Id extends string,
-		const Content extends readonly TypedTreeNode[],
-		const W extends CompatibleWrapperKey<Components>,
-	>(
-		opts: ObjectWithWrapperKey<Id, Content, Components, W>,
-	): TypedObjectNode<Id, ShapeOfContent<Content>>;
-	object<
-		const Id extends string,
-		const Content extends readonly TypedTreeNode[],
-	>(
-		opts: ObjectStock<Id, Content>,
-	): TypedObjectNode<Id, ShapeOfContent<Content>>;
+	>(opts: {
+		id: Id;
+		label?: string;
+		content: Content;
+	}): BindableObject<Id, ShapeOfContent<Content>, Components>;
 
-	array<
-		const Id extends string,
-		S extends AnyTypedSchema,
-		const K extends CompatibleKey<Components, InputOfSchema<S>[], "array">,
-	>(
-		opts: ArrayWithComponentKey<Id, S, Components, K>,
-	): TypedArrayNode<Id, InputOfSchema<S>[]>;
-	array<
-		const Id extends string,
-		S extends AnyTypedSchema,
-		const W extends CompatibleWrapperKey<Components>,
-	>(
-		opts: ArrayWithWrapperKey<Id, S, Components, W>,
-	): TypedArrayNode<Id, InputOfSchema<S>[]>;
-	array<const Id extends string, S extends AnyTypedSchema>(
-		opts: ArrayStock<Id, S>,
-	): TypedArrayNode<Id, InputOfSchema<S>[]>;
+	array<const Id extends string, S extends AnyTypedSchema>(opts: {
+		id: Id;
+		label?: string;
+		of: S;
+	}): BindableArray<Id, InputOfSchema<S>[], Components>;
 
 	discriminatedUnion<
 		const Id extends string,
@@ -483,64 +398,97 @@ export function createCmsBuilders<
 			id: string;
 			label?: string;
 			schema: AnyTypedSchema;
-			component?: string;
-			props?: Record<string, unknown>;
-		}): TypedFieldNode<string, unknown, FieldKind> {
-			return mark(
-				coreS.field({
-					id: opts.id,
-					...(opts.label !== undefined ? { label: opts.label } : {}),
-					schema: opts.schema as SchemaNode,
-					...(opts.component !== undefined
-						? { component: opts.component }
-						: {}),
-					...(opts.props !== undefined ? { props: opts.props } : {}),
-				}),
-			);
+		}): BindableField<string, unknown, FieldKind, Components> {
+			const node = coreS.field({
+				id: opts.id,
+				...(opts.label !== undefined ? { label: opts.label } : {}),
+				schema: opts.schema as SchemaNode,
+			});
+			return Object.assign({}, mark(node), {
+				editor(key: string, props?: Record<string, unknown>) {
+					return mark(
+						coreS.field({
+							id: opts.id,
+							...(opts.label !== undefined ? { label: opts.label } : {}),
+							schema: opts.schema as SchemaNode,
+							component: key,
+							...(props !== undefined ? { props } : {}),
+						}),
+					);
+				},
+			}) as BindableField<string, unknown, FieldKind, Components>;
 		},
 
 		object(opts: {
 			id: string;
 			label?: string;
 			content: readonly TypedTreeNode[];
-			component?: string;
-			wrapper?: string;
-			props?: Record<string, unknown>;
-		}): TypedObjectNode<string, unknown> {
-			return mark(
-				coreS.object({
-					id: opts.id,
-					...(opts.label !== undefined ? { label: opts.label } : {}),
-					content: opts.content as readonly TreeNode[],
-					...(opts.component !== undefined
-						? { component: opts.component }
-						: {}),
-					...(opts.wrapper !== undefined ? { wrapper: opts.wrapper } : {}),
-					...(opts.props !== undefined ? { props: opts.props } : {}),
-				}),
-			) as TypedObjectNode<string, unknown>;
+		}): BindableObject<string, unknown, Components> {
+			const node = coreS.object({
+				id: opts.id,
+				...(opts.label !== undefined ? { label: opts.label } : {}),
+				content: opts.content as readonly TreeNode[],
+			});
+			return Object.assign({}, mark(node), {
+				editor(key: string, props?: Record<string, unknown>) {
+					return mark(
+						coreS.object({
+							id: opts.id,
+							...(opts.label !== undefined ? { label: opts.label } : {}),
+							content: opts.content as readonly TreeNode[],
+							component: key,
+							...(props !== undefined ? { props } : {}),
+						}),
+					) as TypedObjectNode<string, unknown>;
+				},
+				wrapper(key: string, props?: Record<string, unknown>) {
+					return mark(
+						coreS.object({
+							id: opts.id,
+							...(opts.label !== undefined ? { label: opts.label } : {}),
+							content: opts.content as readonly TreeNode[],
+							wrapper: key,
+							...(props !== undefined ? { props } : {}),
+						}),
+					) as TypedObjectNode<string, unknown>;
+				},
+			}) as BindableObject<string, unknown, Components>;
 		},
 
 		array(opts: {
 			id: string;
 			label?: string;
 			of: AnyTypedSchema;
-			component?: string;
-			wrapper?: string;
-			props?: Record<string, unknown>;
-		}): TypedArrayNode<string, unknown[]> {
-			return mark(
-				coreS.array({
-					id: opts.id,
-					...(opts.label !== undefined ? { label: opts.label } : {}),
-					of: opts.of as SchemaNode,
-					...(opts.component !== undefined
-						? { component: opts.component }
-						: {}),
-					...(opts.wrapper !== undefined ? { wrapper: opts.wrapper } : {}),
-					...(opts.props !== undefined ? { props: opts.props } : {}),
-				}),
-			);
+		}): BindableArray<string, unknown[], Components> {
+			const node = coreS.array({
+				id: opts.id,
+				...(opts.label !== undefined ? { label: opts.label } : {}),
+				of: opts.of as SchemaNode,
+			});
+			return Object.assign({}, mark(node), {
+				editor(key: string, props?: Record<string, unknown>) {
+					return mark(
+						coreS.array({
+							id: opts.id,
+							...(opts.label !== undefined ? { label: opts.label } : {}),
+							of: opts.of as SchemaNode,
+							component: key,
+							...(props !== undefined ? { props } : {}),
+						}),
+					);
+				},
+				wrapper(key: string, props?: Record<string, unknown>) {
+					return mark(
+						coreS.array({
+							id: opts.id,
+							...(opts.label !== undefined ? { label: opts.label } : {}),
+							of: opts.of as SchemaNode,
+							wrapper: key,
+							...(props !== undefined ? { props } : {}),
+						}),
+					);
+				},
+			}) as BindableArray<string, unknown[], Components>;
 		},
 
 		discriminatedUnion(opts: {

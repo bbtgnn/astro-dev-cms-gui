@@ -22,7 +22,7 @@ export type {
 	FieldError,
 	FieldIcon,
 	FieldKind,
-	PropsBagOption,
+	EditorPropsArg,
 	ShellCompatibleEditor,
 	ShellCompatibleWrapper,
 	ShellOwnedKey,

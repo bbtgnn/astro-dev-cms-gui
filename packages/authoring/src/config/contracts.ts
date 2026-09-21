@@ -107,12 +107,15 @@ type RequiredKeys<T> = {
 	[K in keyof T]-?: {} extends Pick<T, K> ? never : K;
 }[keyof T];
 
-/** `props` is required only when the component has required extra keys. */
-export type PropsBagOption<C extends AnySvelteComponent> = [
+/**
+ * Rest args after a catalog key on `.editor()` / `.wrapper()`: props are
+ * required only when the component has required extra keys.
+ */
+export type EditorPropsArg<C extends AnySvelteComponent> = [
 	RequiredKeys<EditorExtraProps<C>>,
 ] extends [never]
-	? { props?: EditorExtraProps<C> }
-	: { props: EditorExtraProps<C> };
+	? [props?: EditorExtraProps<C>]
+	: [props: EditorExtraProps<C>];
 
 /**
  * True when the shell can satisfy the component's shell-owned props for the
@@ -152,7 +155,7 @@ export type EmptyComponents = Record<never, AnySvelteComponent>;
 
 /**
  * Catalog keys whose component is shell-compatible for the field's Input/Kind.
- * Wrong shape or kind yields `never` (type error on `component: …`).
+ * Wrong shape or kind yields `never` (type error on `.editor(…)`).
  */
 export type CompatibleKey<
 	Components extends ComponentsCatalog,

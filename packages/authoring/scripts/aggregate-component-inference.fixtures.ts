@@ -1,5 +1,6 @@
 /**
- * Compile-time fixtures: catalog-key `component` inference (ADR-0019 residual 4.1).
+ * Compile-time fixtures: chained `.editor()` / `.wrapper()` catalog keys
+ * (ADR-0019 residual 4.1).
  *
  * Run: bunx tsc -p packages/authoring/scripts/tsconfig.fixtures.json
  * Expect: exit 0. Negatives use @ts-expect-error.
@@ -49,14 +50,15 @@ const s = createCmsBuilders<string, Components>();
 
 // --- Happy path: tuple content → { title; description } ---
 
-const seo = s.object({
-	id: "seo",
-	content: [
-		s.field({ id: "title", schema: s.string() }),
-		s.field({ id: "description", schema: s.string() }),
-	],
-	component: "SeoEditor",
-});
+const seo = s
+	.object({
+		id: "seo",
+		content: [
+			s.field({ id: "title", schema: s.string() }),
+			s.field({ id: "description", schema: s.string() }),
+		],
+	})
+	.editor("SeoEditor");
 
 type SeoFromNode = InputOfNode<typeof seo>;
 const _seoCheck: SeoShape = null as unknown as SeoFromNode;
@@ -65,16 +67,17 @@ void seo;
 
 // --- Presentation chrome stripped from shape ---
 
-const withChrome = s.object({
-	id: "block",
-	content: [
-		s.header({ label: "SEO" }),
-		s.field({ id: "title", schema: s.string() }),
-		s.separator(),
-		s.field({ id: "description", schema: s.string() }),
-	],
-	component: "SeoEditor",
-});
+const withChrome = s
+	.object({
+		id: "block",
+		content: [
+			s.header({ label: "SEO" }),
+			s.field({ id: "title", schema: s.string() }),
+			s.separator(),
+			s.field({ id: "description", schema: s.string() }),
+		],
+	})
+	.editor("SeoEditor");
 
 type ChromeInferred = InputOfNode<typeof withChrome>;
 const _chromeCheck: SeoShape = null as unknown as ChromeInferred;
@@ -106,29 +109,28 @@ void _nestedCheck;
 
 // --- Mixed chrome: stack of durables (one-level flatten) ---
 
-const mixed = s.object({
-	id: "root",
-	content: [
-		s.stack([
-			s.field({ id: "title", schema: s.string() }),
-			s.field({ id: "description", schema: s.string() }),
-		]),
-	],
-	component: "SeoEditor",
-});
+const mixed = s
+	.object({
+		id: "root",
+		content: [
+			s.stack([
+				s.field({ id: "title", schema: s.string() }),
+				s.field({ id: "description", schema: s.string() }),
+			]),
+		],
+	})
+	.editor("SeoEditor");
 
 type MixedInferred = InputOfNode<typeof mixed>;
 const _mixedCheck: SeoShape = null as unknown as MixedInferred;
 void _mixedCheck;
 
-// --- Field override + props bag ---
+// --- Field override + props as second arg ---
 
 s.field({
 	id: "body",
 	schema: s.string(),
-	component: "MarkdownEditor",
-	props: { toolbar: ["bold", "link"] },
-});
+}).editor("MarkdownEditor", { toolbar: ["bold", "link"] });
 
 // --- Aggregate extra props ---
 
@@ -138,9 +140,7 @@ s.object({
 		s.field({ id: "title", schema: s.string() }),
 		s.field({ id: "description", schema: s.string() }),
 	],
-	component: "ExtraPropsEditor",
-	props: { toolbar: ["bold"] },
-});
+}).editor("ExtraPropsEditor", { toolbar: ["bold"] });
 
 // Props bag checked against ComponentProps minus shell keys
 const _goodExtra: EditorExtraProps<(typeof catalog)["ExtraPropsEditor"]> = {
@@ -161,9 +161,10 @@ s.object({
 		s.field({ id: "title", schema: s.string() }),
 		s.field({ id: "description", schema: s.string() }),
 	],
+}).editor(
 	// @ts-expect-error WrongEditor expects `other: number`, not `description: string`
-	component: "WrongEditor",
-});
+	"WrongEditor",
+);
 
 s.object({
 	id: "seo-bad-kind",
@@ -171,25 +172,27 @@ s.object({
 		s.field({ id: "title", schema: s.string() }),
 		s.field({ id: "description", schema: s.string() }),
 	],
+}).editor(
 	// @ts-expect-error StringEditor is FieldEditorProps<string>, not object shape
-	component: "StringEditor",
-});
+	"StringEditor",
+);
 
 s.field({
 	id: "body-bad",
 	schema: s.string(),
+}).editor(
 	// @ts-expect-error object editor on string field
-	component: "SeoEditor",
-});
+	"SeoEditor",
+);
 
 // Unknown catalog key
 s.field({
 	id: "body-unknown",
 	schema: s.string(),
+}).editor(
 	// @ts-expect-error key not in Components catalog
-	component: "MissingEditor",
-});
-
+	"MissingEditor",
+);
 // Optionality on schema node: Input becomes string | undefined
 const optionalCover = s.field({
 	id: "cover",
