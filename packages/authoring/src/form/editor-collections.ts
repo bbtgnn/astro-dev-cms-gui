@@ -1,16 +1,24 @@
 /**
- * Build shell `collections` map from IR form models (ADR-0019 slice 6).
+ * Form-shell mount seam: unified tree + live catalog → EditorCollections.
+ * Compile, form-model projection, SJSF lowering, and catalog binding stay
+ * implementation (ADR-0011 / 0019 / 0020).
  */
 
-import type { FormModelsByCollection } from "@cms/core/semantic";
+import {
+	compileSemanticIr,
+	projectFormModels,
+	type FormModelsByCollection,
+	type SemanticConfigInput,
+} from "@cms/core/semantic";
 import type { EditorCollections } from "../types";
 import { type LowerFormModelOptions, lowerFormModelToSjsf } from "./lower-sjsf";
+import { resolveCatalogBinding } from "./stock-registry";
 
 /**
  * Lower each collection form model to JSON Schema + uiSchema for CmsForm.
- * Live `component` bindings stay module values when resolveBinding is identity.
+ * Package-private — callers use {@link editorCollectionsFromTree}.
  */
-export function editorCollectionsFromFormModels(
+function editorCollectionsFromFormModels(
 	models: FormModelsByCollection,
 	options?: LowerFormModelOptions,
 ): EditorCollections {
@@ -20,4 +28,19 @@ export function editorCollectionsFromFormModels(
 		out[id] = lowerFormModelToSjsf(model, options);
 	}
 	return out;
+}
+
+/**
+ * Build shell `collections` from the CMS-first unified tree and the live
+ * components catalog. Hosts must not assemble compile → project → lower.
+ */
+export function editorCollectionsFromTree(
+	collections: SemanticConfigInput["collections"],
+	catalog: Readonly<Record<string, unknown>>,
+): EditorCollections {
+	const ir = compileSemanticIr({ collections });
+	const formModels = projectFormModels(ir);
+	return editorCollectionsFromFormModels(formModels, {
+		resolveBinding: resolveCatalogBinding(catalog),
+	});
 }
