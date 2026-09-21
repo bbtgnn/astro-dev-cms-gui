@@ -7,6 +7,7 @@ export type { AuthoringStatus } from "./autosave";
 export { default as PlaceholderChrome } from "./components/PlaceholderChrome.svelte";
 export { default as EntryEditor } from "./EntryEditor.svelte";
 export { default as CmsForm } from "./form/CmsForm.svelte";
+export { editorCollectionsFromFormModels } from "./form/editor-collections";
 export type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,
@@ -16,7 +17,6 @@ export {
 	type LowerFormModelOptions,
 	lowerFormModelToSjsf,
 } from "./form/lower-sjsf";
-export { editorCollectionsFromFormModels } from "./form/editor-collections";
 export {
 	getStockEditor,
 	type LiveBindingResolver,
@@ -42,7 +42,4 @@ export type {
 	EditorCollections,
 	GetPreviewUrl,
 } from "./types";
-export {
-	isZodEditorSchema,
-	resolveEditorCollection,
-} from "./types";
+export { resolveEditorCollection } from "./types";

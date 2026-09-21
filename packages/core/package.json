@@ -3,12 +3,11 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "Field schemas + CMS protocol + FS write-back adapters",
+	"description": "CMS protocol + FS write-back adapters + semantic IR",
 	"exports": {
 		".": "./src/index.ts",
 		"./fetch-client": "./src/fetch-client.ts",
 		"./protocol": "./src/protocol.ts",
-		"./fields": "./src/fields/index.ts",
 		"./semantic": "./src/semantic/index.ts"
 	},
 	"dependencies": {

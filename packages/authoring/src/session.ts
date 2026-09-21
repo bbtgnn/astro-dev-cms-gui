@@ -16,7 +16,6 @@ import {
 	type AuthoringClient,
 	type EditorCollectionInput,
 	type GetPreviewUrl,
-	isZodEditorSchema,
 	resolveEditorCollection,
 } from "./types";
 
@@ -30,7 +29,7 @@ export type AuthoringSessionOptions = {
 	client: AuthoringClient;
 	collection: string;
 	mode: AuthoringSessionMode;
-	/** Legacy Zod or lowered IR JSON Schema (+ optional uiSchema, unused here). */
+	/** Lowered IR JSON Schema (+ optional uiSchema, unused for validity). */
 	schema?: EditorCollectionInput | null;
 	capabilities?: CmsCapabilities | null;
 	getPreviewUrl?: GetPreviewUrl;
@@ -167,9 +166,6 @@ export function createAuthoringSession(
 	function isClientValid(data: Record<string, unknown>): boolean {
 		if (creating && !createIdDraft.trim()) return false;
 		if (!schema) return true;
-		if (isZodEditorSchema(schema)) {
-			return schema.safeParse(data).success;
-		}
 		const { schema: jsonSchema } = resolveEditorCollection(schema);
 		const validator = createFormValidator();
 		return validator.isValid(

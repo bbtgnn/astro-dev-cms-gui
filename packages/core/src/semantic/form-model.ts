@@ -165,7 +165,7 @@ export type CollectionFormModel = {
 	readonly fields: Readonly<Record<string, FormFieldDescriptor>>;
 	/**
 	 * Portable JSON Schema for client structural validation (persisted input).
-	 * Derived from IR, not Zod `.meta()` FieldUi.
+	 * Derived from IR (ADR-0019).
 	 */
 	readonly jsonSchema: Record<string, unknown>;
 };

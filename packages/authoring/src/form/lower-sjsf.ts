@@ -1,16 +1,15 @@
 /**
  * Bounded IR form-model → SJSF uiSchema lowering (ADR-0011 internal path).
- * Primary path for CMS-first hosts; legacy FieldUi / Zod `.meta()` still works
- * via CmsForm when a live Zod schema is passed.
+ * CMS-first hosts only (ADR-0019).
  */
 
-import type { UiSchemaNode } from "@cms/core/fields";
-import { stripUiFromJsonSchema } from "@cms/core/fields";
 import type {
 	CollectionFormModel,
 	FormFieldDescriptor,
 	FormLayoutNode,
+	UiSchemaNode,
 } from "@cms/core/semantic";
+import { stripUiFromJsonSchema } from "@cms/core/semantic";
 import type { AnySvelteComponent } from "../config/contracts";
 import {
 	type LiveBindingResolver,

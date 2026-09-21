@@ -26,8 +26,8 @@ import type {
 	CompatibleKey,
 	CompatibleWrapperKey,
 	ComponentsCatalog,
-	EmptyComponents,
 	EditorPropsArg,
+	EmptyComponents,
 	FieldKind,
 } from "./contracts";
 import type {
@@ -269,12 +269,7 @@ export type CmsBuilders<
 		id: Id;
 		label?: string;
 		schema: S;
-	}): BindableField<
-		Id,
-		InputOfSchema<S>,
-		KindOfSchema<S>,
-		Components
-	>;
+	}): BindableField<Id, InputOfSchema<S>, KindOfSchema<S>, Components>;
 
 	object<
 		const Id extends string,

@@ -3,12 +3,12 @@
   Not the public editor contract — authors implement FieldEditorProps only.
 -->
 <script lang="ts">
-	import type { Component } from "svelte";
 	import {
+		type FormEnumOption,
 		getFormContext,
 		uiTitleOption,
-		type FormEnumOption,
 	} from "@sjsf/form";
+	import type { Component } from "svelte";
 	import {
 		createFieldControl,
 		type FieldEditorProps,

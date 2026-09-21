@@ -12,8 +12,7 @@
 		"@cms/core": "workspace:*",
 		"@sjsf/ajv8-validator": "catalog:",
 		"@sjsf/basic-theme": "catalog:",
-		"@sjsf/form": "catalog:",
-		"zod": "catalog:"
+		"@sjsf/form": "catalog:"
 	},
 	"peerDependencies": {
 		"svelte": "catalog:"
@@ -22,7 +21,8 @@
 		"@astrojs/svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"zod": "catalog:"
 	},
 	"scripts": {
 		"check": "svelte-check --tsconfig ./tsconfig.json && bunx tsc -p ./scripts/tsconfig.fixtures.json && bun test ./scripts/ajv-schema.test.ts ./scripts/config-facade.test.ts ./scripts/stock-registry.test.ts ./scripts/create-field-control.test.ts ./scripts/wrap-field-editor.test.ts",

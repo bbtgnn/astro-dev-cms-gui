@@ -1,11 +1,9 @@
-<!-- @cms/authoring — sjsf wrap; resolves FieldUi + meta.ui Component overrides -->
+<!-- @cms/authoring — sjsf wrap over IR-lowered JSON Schema + uiSchema -->
 <script lang="ts">
 import {
 	stripUiFromJsonSchema,
-	toFormSchemas,
-	toUiSchema,
 	type UiSchemaNode,
-} from "@cms/core/fields";
+} from "@cms/core/semantic";
 import { createFormValidator } from "@sjsf/ajv8-validator";
 import {
 	BasicForm,
@@ -18,24 +16,12 @@ import { createFormMerger } from "@sjsf/form/mergers/modern";
 import { resolver } from "@sjsf/form/resolvers/basic";
 import { translation } from "@sjsf/form/translations/en";
 import { setContext, untrack } from "svelte";
-import type { z } from "zod";
 import "@sjsf/basic-theme/css/basic.css";
-// Registers textareaWidget for markdown multi-line fields (P5).
-import "@sjsf/basic-theme/extra-widgets/textarea-include";
 import { theme } from "./cms-theme";
 import type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,
 } from "./ImageField.svelte";
-
-function isZodSchema(value: unknown): value is z.ZodType {
-	return (
-		typeof value === "object" &&
-		value !== null &&
-		"_zod" in value &&
-		typeof (value as { parse?: unknown }).parse === "function"
-	);
-}
 
 let {
 	schema = null,
@@ -48,13 +34,9 @@ let {
 	onSubmit,
 	onChange,
 }: {
-	/** JSON Schema (preferred across Astro islands) or live Zod when same-bundle. */
-	schema?: z.ZodType | Record<string, unknown> | null;
-	/**
-	 * sjsf uiSchema from FieldUi. Prefer precomputing with `toUiSchema` /
-	 * `toFormSchemas` in the Astro page so labels survive `client:only` props
-	 * (live Zod `.meta()` / Component refs do not serialize across islands).
-	 */
+	/** Ajv-safe JSON Schema from IR form-model lowering (ADR-0019). */
+	schema?: Record<string, unknown> | null;
+	/** sjsf uiSchema from IR lowering / stock editors. */
 	uiSchema?: UiSchemaNode;
 	value?: Record<string, unknown>;
 	title?: string;
@@ -101,17 +83,8 @@ const form = untrack(() => {
 	liveValue = { ...value };
 	if (schema == null) return null;
 
-	let jsonSchema: Record<string, unknown>;
-	let uiSchema: UiSchemaNode;
-
-	if (isZodSchema(schema)) {
-		const derived = toFormSchemas(schema);
-		jsonSchema = stripUiFromJsonSchema(derived.schema);
-		uiSchema = uiSchemaProp ?? derived.uiSchema;
-	} else {
-		jsonSchema = stripUiFromJsonSchema(schema);
-		uiSchema = uiSchemaProp ?? toUiSchema(schema);
-	}
+	const jsonSchema = stripUiFromJsonSchema(schema);
+	const uiSchema: UiSchemaNode = uiSchemaProp ?? {};
 
 	return createForm({
 		theme,
@@ -142,7 +115,7 @@ const form = untrack(() => {
 </script>
 
 <section>
-	<p><small>@cms/authoring — form shell (IR / FieldUi → sjsf)</small></p>
+	<p><small>@cms/authoring — form shell (IR → sjsf)</small></p>
 	<h2>{title}</h2>
 	{#if form === null}
 		<p>form shell — no schema</p>

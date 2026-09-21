@@ -31,11 +31,13 @@ const cms = defineCms<Collections, Components>((s) => ({
 				base: "./src/content/authors",
 				pattern: "**/*.json",
 			}),
-			schema: s.field({
-				id: "name",
-				label: "Author name",
-				schema: s.string().min(1),
-			}).editor("AuthorNameEditor"),
+			schema: s
+				.field({
+					id: "name",
+					label: "Author name",
+					schema: s.string().min(1),
+				})
+				.editor("AuthorNameEditor"),
 		}),
 		posts: s.collection({
 			loader: s.glob({
@@ -53,11 +55,13 @@ const cms = defineCms<Collections, Components>((s) => ({
 					label: "Draft",
 					schema: s.boolean().default(false),
 				}),
-				s.field({
-					id: "body",
-					label: "Body",
-					schema: s.string(),
-				}).editor("BodyEditor"),
+				s
+					.field({
+						id: "body",
+						label: "Body",
+						schema: s.string(),
+					})
+					.editor("BodyEditor"),
 				s.field({
 					id: "cover",
 					label: "Cover",

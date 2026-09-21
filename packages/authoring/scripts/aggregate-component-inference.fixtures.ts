@@ -8,9 +8,9 @@
 
 import type { Component } from "svelte";
 import {
+	createCmsBuilders,
 	type EditorExtraProps,
 	type FieldEditorProps,
-	createCmsBuilders,
 	type InputOfNode,
 } from "../src/config";
 
@@ -201,5 +201,3 @@ const optionalCover = s.field({
 type CoverInput = InputOfNode<typeof optionalCover>;
 const _coverCheck: string | undefined = null as unknown as CoverInput;
 void _coverCheck;
-
-export {};

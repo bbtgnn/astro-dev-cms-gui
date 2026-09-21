@@ -3,7 +3,6 @@
  * - `virtual:@cms/config` — Node-safe unified tree (`cms.config.ts`)
  * - `virtual:@cms/components` — Vite-only live Svelte catalog (`cms.components.ts`)
  * - `virtual:@cms/host` — `createHost()` factory (project or package default)
- * - `virtual:@cms/content-config` — live `content.config` collections (legacy host)
  * - `virtual:@cms/schema-partition` — same Svelte-free tree for the CMS-first host
  * - `virtual:@cms/integration-options` — mount / allowInProd / contentRoot
  *
@@ -21,9 +20,6 @@ const CMS_COMPONENTS_RESOLVED_ID = `\0${CMS_COMPONENTS_VIRTUAL_ID}`;
 
 export const CMS_HOST_VIRTUAL_ID = "virtual:@cms/host";
 const CMS_HOST_RESOLVED_ID = `\0${CMS_HOST_VIRTUAL_ID}`;
-
-export const CMS_CONTENT_CONFIG_VIRTUAL_ID = "virtual:@cms/content-config";
-const CMS_CONTENT_CONFIG_RESOLVED_ID = `\0${CMS_CONTENT_CONFIG_VIRTUAL_ID}`;
 
 export const CMS_SCHEMA_PARTITION_VIRTUAL_ID = "virtual:@cms/schema-partition";
 const CMS_SCHEMA_PARTITION_RESOLVED_ID = `\0${CMS_SCHEMA_PARTITION_VIRTUAL_ID}`;
@@ -77,11 +73,6 @@ export type CmsComponentsVitePluginOptions = {
 
 export type CmsHostVitePluginOptions = {
 	/** Absolute path to the module that exports `createHost`. */
-	entry: string;
-};
-
-export type CmsContentConfigVitePluginOptions = {
-	/** Absolute path to the project's `content.config` module. */
 	entry: string;
 };
 
@@ -210,31 +201,6 @@ export function cmsHostVitePlugin(
 		load(id) {
 			if (id !== CMS_HOST_RESOLVED_ID) return null;
 			return `export { createHost } from ${entryLiteral};\n`;
-		},
-	};
-}
-
-/**
- * Expose `virtual:@cms/content-config` for the legacy FieldUi default host.
- */
-export function cmsContentConfigVitePlugin(
-	options: CmsContentConfigVitePluginOptions,
-): CmsVitePlugin {
-	const entry = path.normalize(options.entry);
-	const entryLiteral = JSON.stringify(entry);
-
-	return {
-		name: "@cms/astro:virtual-content-config",
-		enforce: "pre",
-		resolveId(id) {
-			if (id === CMS_CONTENT_CONFIG_VIRTUAL_ID) {
-				return CMS_CONTENT_CONFIG_RESOLVED_ID;
-			}
-			return null;
-		},
-		load(id) {
-			if (id !== CMS_CONTENT_CONFIG_RESOLVED_ID) return null;
-			return `export { collections } from ${entryLiteral};\n`;
 		},
 	};
 }

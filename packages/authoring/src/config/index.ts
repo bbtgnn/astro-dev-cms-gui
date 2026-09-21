@@ -16,18 +16,18 @@ export type {
 	CompatibleWrapperKey,
 	ComponentsCatalog,
 	EditorExtraProps,
+	EditorPropsArg,
 	EmptyComponents,
 	FieldControl,
 	FieldEditorProps,
 	FieldError,
 	FieldIcon,
 	FieldKind,
-	EditorPropsArg,
 	ShellCompatibleEditor,
 	ShellCompatibleWrapper,
 	ShellOwnedKey,
 } from "./contracts";
-export { SHELL_OWNED_KEYS, createFieldControl } from "./contracts";
+export { createFieldControl, SHELL_OWNED_KEYS } from "./contracts";
 export type {
 	AnyTypedSchema,
 	IdOfNode,

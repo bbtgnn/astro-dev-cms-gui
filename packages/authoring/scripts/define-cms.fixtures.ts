@@ -5,9 +5,9 @@
 
 import type { Component } from "svelte";
 import {
-	type FieldEditorProps,
-	createCmsBuilders,
 	type CmsConfigInput,
+	createCmsBuilders,
+	type FieldEditorProps,
 } from "../src/config";
 
 type Collections = "posts" | "authors";
@@ -23,9 +23,7 @@ function defineCmsLocal<
 	C extends string,
 	Comp extends typeof catalog = Components,
 >(
-	factory: (
-		s: ReturnType<typeof createCmsBuilders<C, Comp>>,
-	) => CmsConfigInput,
+	factory: (s: ReturnType<typeof createCmsBuilders<C, Comp>>) => CmsConfigInput,
 ): CmsConfigInput {
 	return factory(createCmsBuilders<C, Comp>());
 }
@@ -47,10 +45,12 @@ const config = defineCmsLocal<Collections>((s) => ({
 							label: "Title",
 							schema: s.string().min(1),
 						}),
-						s.field({
-							id: "author",
-							schema: s.reference("authors"),
-						}).editor("AuthorPicker"),
+						s
+							.field({
+								id: "author",
+								schema: s.reference("authors"),
+							})
+							.editor("AuthorPicker"),
 						s.object({
 							id: "seo",
 							content: [
@@ -79,5 +79,3 @@ defineCmsLocal<Collections>((s) => ({
 		}),
 	},
 }));
-
-export {};

@@ -40,11 +40,6 @@ declare module "virtual:@cms/host" {
 	export function createHost(): CmsHost;
 }
 
-declare module "virtual:@cms/content-config" {
-	/** Live Astro `content.config` collections export for the legacy default host. */
-	export const collections: Record<string, unknown>;
-}
-
 declare module "virtual:@cms/schema-partition" {
 	import type { SemanticConfigInput } from "@cms/core/semantic";
 

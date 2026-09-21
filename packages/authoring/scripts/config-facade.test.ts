@@ -27,30 +27,36 @@ describe("createCmsBuilders → compileSemanticIr", () => {
 									label: "Title",
 									schema: s.string().min(1),
 								}),
-								s.field({
-									id: "body",
-									schema: s.string(),
-								}).editor("MarkdownEditor", { toolbar: ["bold"] }),
-								s.object({
-									id: "seo",
-									label: "SEO",
-									content: [
-										s.header({ label: "Meta" }),
-										s.field({
-											id: "title",
-											schema: s.string().max(70),
-										}),
-										s.separator(),
-										s.field({
-											id: "description",
-											schema: s.string().max(160),
-										}),
-									],
-								}).wrapper("SeoCard"),
-								s.field({
-									id: "author",
-									schema: s.reference("authors"),
-								}).editor("AuthorPicker"),
+								s
+									.field({
+										id: "body",
+										schema: s.string(),
+									})
+									.editor("MarkdownEditor", { toolbar: ["bold"] }),
+								s
+									.object({
+										id: "seo",
+										label: "SEO",
+										content: [
+											s.header({ label: "Meta" }),
+											s.field({
+												id: "title",
+												schema: s.string().max(70),
+											}),
+											s.separator(),
+											s.field({
+												id: "description",
+												schema: s.string().max(160),
+											}),
+										],
+									})
+									.wrapper("SeoCard"),
+								s
+									.field({
+										id: "author",
+										schema: s.reference("authors"),
+									})
+									.editor("AuthorPicker"),
 								s.field({
 									id: "cover",
 									schema: s.image().optional(),

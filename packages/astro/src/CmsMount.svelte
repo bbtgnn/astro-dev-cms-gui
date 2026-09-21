@@ -3,6 +3,9 @@
   Catalog keys from the IR resolve through virtual:@cms/components.
 -->
 <script lang="ts">
+import components from "virtual:@cms/components";
+import { getPreviewUrl, collections as semanticCollections } from "virtual:@cms/config";
+import { mount } from "virtual:@cms/integration-options";
 import {
 	AuthoringApp,
 	editorCollectionsFromFormModels,
@@ -13,9 +16,6 @@ import {
 	compileSemanticIr,
 	projectFormModels,
 } from "@cms/core/semantic";
-import { collections as semanticCollections, getPreviewUrl } from "virtual:@cms/config";
-import components from "virtual:@cms/components";
-import { mount } from "virtual:@cms/integration-options";
 
 const ir = compileSemanticIr({ collections: semanticCollections });
 const formModels = projectFormModels(ir);

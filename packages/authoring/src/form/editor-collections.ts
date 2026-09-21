@@ -2,14 +2,9 @@
  * Build shell `collections` map from IR form models (ADR-0019 slice 6).
  */
 
-import type {
-	FormModelsByCollection,
-} from "@cms/core/semantic";
+import type { FormModelsByCollection } from "@cms/core/semantic";
 import type { EditorCollections } from "../types";
-import {
-	type LowerFormModelOptions,
-	lowerFormModelToSjsf,
-} from "./lower-sjsf";
+import { type LowerFormModelOptions, lowerFormModelToSjsf } from "./lower-sjsf";
 
 /**
  * Lower each collection form model to JSON Schema + uiSchema for CmsForm.

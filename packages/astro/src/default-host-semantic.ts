@@ -3,12 +3,14 @@
  *
  * Loads the Svelte-free schema partition, builds the authoritative
  * persisted-input validator (image allowlist + reference existence), and
- * derives collection bases from IR glob loaders — not from Astro `image()` /
- * FieldUi `.meta()` on generated `content.config`.
+ * derives collection bases from IR glob loaders — not from Astro `image()`
+ * on generated `content.config`.
  */
 
 import fs from "node:fs";
 import path from "node:path";
+import { contentRoot } from "virtual:@cms/integration-options";
+import { collections as partitionCollections } from "virtual:@cms/schema-partition";
 import {
 	type CmsHost,
 	createCmsHost,
@@ -22,8 +24,6 @@ import {
 	createAuthoritativeValidator,
 	type SemanticConfigInput,
 } from "@cms/core/semantic";
-import { contentRoot } from "virtual:@cms/integration-options";
-import { collections as partitionCollections } from "virtual:@cms/schema-partition";
 import { writeBaseFromGlob } from "./write-base-from-glob";
 
 export { writeBaseFromGlob } from "./write-base-from-glob";
@@ -57,10 +57,7 @@ export function createHost(): CmsHost {
 		entryExists: async (collection, id) => {
 			const base = bases.get(collection);
 			if (!base) return false;
-			const ids = await scanEntryIds(
-				writer,
-				path.join(contentRoot, base),
-			);
+			const ids = await scanEntryIds(writer, path.join(contentRoot, base));
 			return ids.includes(id);
 		},
 		isAcceptedImageAsset: (imagePath) => {

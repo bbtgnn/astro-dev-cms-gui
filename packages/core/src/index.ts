@@ -1,6 +1,7 @@
 /**
- * @cms/core — field schemas, CMS protocol, and FS write-back adapters.
+ * @cms/core — CMS protocol, FS write-back adapters, and semantic IR.
  * Filesystem write-back sits behind createCmsProtocol / createCmsHost (ADR-0005).
+ * Editor configuration is CMS-first IR only (ADR-0019) — no FieldUi-on-Zod.
  */
 
 export type {
@@ -13,18 +14,8 @@ export {
 	createCmsHost,
 	createCmsProtocol,
 } from "./create-cms-protocol";
-export type {
-	DiscoverCollectionsOptions,
-	DiscoveredCollection,
-	LoaderPathHint,
-} from "./discovery";
-export {
-	CMS_LOADER_HINT,
-	discoverCollections,
-	resolveCollectionSchema,
-	scanEntryIds,
-	withLoaderPathHint,
-} from "./discovery";
+export type { CollectionConfig, DiscoveredCollection } from "./discovery";
+export { scanEntryIds } from "./discovery";
 export { parseEntryFile, serializeEntryFile } from "./entry-file";
 export {
 	type CmsFetchClient,
@@ -32,60 +23,7 @@ export {
 	createFetchClient,
 	isCmsFetchError,
 } from "./fetch-client";
-/** Field schemas / FieldUi (Svelte-free). */
-export {
-	array,
-	type BlockDefinition,
-	type BlocksLayoutItem,
-	type BlocksLayoutOptions,
-	type BuiltInWidget,
-	blocksLayout,
-	boolean,
-	type CollectionConfig,
-	config,
-	contentAssetPath,
-	date,
-	datetime,
-	enumeration,
-	type FieldMeta,
-	type FieldUi,
-	type FieldUiOptions,
-	type FieldUiRegistryEntry,
-	field,
-	fieldUiFromOptions,
-	fieldUiRegistry,
-	getFieldUiDefault,
-	type I18nOptions,
-	type ImageOptions,
-	i18n,
-	image,
-	imageFolderFromCanonical,
-	isFieldUi,
-	isUiComponent,
-	markdown,
-	number,
-	object,
-	type ResolvedBlock,
-	type ResolveLocaleOptions,
-	readFieldMeta,
-	reference,
-	registerFieldUi,
-	resolveBlock,
-	resolveFieldUi,
-	resolveLocale,
-	type SamplePostsInput,
-	samplePostsSchema,
-	select,
-	string,
-	stripUiFromJsonSchema,
-	text,
-	toFormSchemas,
-	toJsonSchema,
-	toUiSchema,
-	type UiSchemaNode,
-	withFieldUi,
-	z,
-} from "./fields";
+export { contentAssetPath, imageFolderFromCanonical } from "./image-path";
 export { memoryWriter } from "./memory-writer";
 export { nodeFsWriter } from "./node-fs-writer";
 export type {

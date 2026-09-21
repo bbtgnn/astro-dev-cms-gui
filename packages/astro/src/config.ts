@@ -9,8 +9,8 @@ import {
 	type CmsBuilders,
 	type CmsConfigInput,
 	type ComponentsCatalog,
-	type EmptyComponents,
 	createCmsBuilders,
+	type EmptyComponents,
 } from "@cms/authoring/config";
 
 export type {

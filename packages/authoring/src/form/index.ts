@@ -1,9 +1,9 @@
 /**
  * @cms/authoring — form shell wrap around svelte-jsonschema-form.
- * Resolves FieldUi widget defaults and meta.ui Component overrides.
- * IR form-model lowering + stock-by-kind registry (ADR-0019 slice 5).
+ * IR form-model lowering + stock-by-kind registry (ADR-0019).
  */
 export { default as CmsForm } from "./CmsForm.svelte";
+export { editorCollectionsFromFormModels } from "./editor-collections";
 export type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,
@@ -13,7 +13,6 @@ export {
 	type LowerFormModelOptions,
 	lowerFormModelToSjsf,
 } from "./lower-sjsf";
-export { editorCollectionsFromFormModels } from "./editor-collections";
 export {
 	getStockEditor,
 	type LiveBindingResolver,

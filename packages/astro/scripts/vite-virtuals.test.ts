@@ -7,13 +7,11 @@ import { createCmsIntegration } from "../src/integration";
 import {
 	CMS_COMPONENTS_VIRTUAL_ID,
 	CMS_CONFIG_VIRTUAL_ID,
-	CMS_CONTENT_CONFIG_VIRTUAL_ID,
 	CMS_HOST_VIRTUAL_ID,
 	CMS_INTEGRATION_OPTIONS_VIRTUAL_ID,
 	CMS_SCHEMA_PARTITION_VIRTUAL_ID,
 	cmsComponentsVitePlugin,
 	cmsConfigVitePlugin,
-	cmsContentConfigVitePlugin,
 	cmsHostVitePlugin,
 	cmsIntegrationOptionsVitePlugin,
 	cmsSchemaPartitionVitePlugin,
@@ -55,9 +53,7 @@ describe("cmsComponentsVitePlugin", () => {
 		expect(resolved).toBe(`\0${CMS_COMPONENTS_VIRTUAL_ID}`);
 		if (resolved == null) throw new Error("expected resolved id");
 		const source = await plugin.load(resolved);
-		expect(source).toBe(
-			`export { default } from ${JSON.stringify(entry)};\n`,
-		);
+		expect(source).toBe(`export { default } from ${JSON.stringify(entry)};\n`);
 	});
 
 	test("emits empty catalog when entry omitted", async () => {
@@ -80,20 +76,6 @@ describe("cmsHostVitePlugin", () => {
 		const source = await plugin.load(resolved);
 		expect(source).toBe(
 			`export { createHost } from ${JSON.stringify(entry)};\n`,
-		);
-	});
-});
-
-describe("cmsContentConfigVitePlugin", () => {
-	test("re-exports collections from content.config", async () => {
-		const entry = path.resolve("/project/src/content.config.ts");
-		const plugin = cmsContentConfigVitePlugin({ entry });
-		const resolved = await plugin.resolveId(CMS_CONTENT_CONFIG_VIRTUAL_ID);
-		expect(resolved).toBe(`\0${CMS_CONTENT_CONFIG_VIRTUAL_ID}`);
-		if (resolved == null) throw new Error("expected resolved id");
-		const source = await plugin.load(resolved);
-		expect(source).toBe(
-			`export { collections } from ${JSON.stringify(entry)};\n`,
 		);
 	});
 });

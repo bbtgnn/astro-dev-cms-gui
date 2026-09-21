@@ -6,8 +6,8 @@
 
 import { describe, expect, test } from "bun:test";
 import { resolveCmsCapabilities } from "@cms/core/fetch-client";
-import { z } from "zod";
 import { createAuthoringSession } from "../src/session";
+import type { EditorCollectionInput } from "../src/types";
 import {
 	createFakeTimers,
 	sampleEntry,
@@ -15,7 +15,14 @@ import {
 } from "./authoring-test-fixtures";
 import { createFakeClient } from "./fake-client";
 
-const titleSchema = z.object({ title: z.string().min(1) });
+const titleEditor: EditorCollectionInput = {
+	schema: {
+		type: "object",
+		properties: { title: { type: "string", minLength: 1 } },
+		required: ["title"],
+		additionalProperties: false,
+	},
+};
 
 describe("authoring session", () => {
 	test("edit: guarded revision, no remount, preview after write-back", async () => {
@@ -25,7 +32,7 @@ describe("authoring session", () => {
 			client: fake.client,
 			collection: "posts",
 			mode: { kind: "edit", entry: sampleEntry },
-			schema: titleSchema,
+			schema: titleEditor,
 			capabilities: resolveCmsCapabilities({ deleteEntry: true }),
 			getPreviewUrl: (c, id) => `/${c}/${id}`,
 			debounceMs: 50,
@@ -68,7 +75,7 @@ describe("authoring session", () => {
 			client: fake.client,
 			collection: "posts",
 			mode: { kind: "create" },
-			schema: titleSchema,
+			schema: titleEditor,
 			capabilities: resolveCmsCapabilities({ deleteEntry: true }),
 			getPreviewUrl: (c, id) => `/preview/${c}/${id}`,
 			debounceMs: 50,
@@ -229,7 +236,7 @@ describe("authoring session", () => {
 			client: fake.client,
 			collection: "posts",
 			mode: { kind: "edit", entry: sampleEntry },
-			schema: titleSchema,
+			schema: titleEditor,
 			debounceMs: 50,
 			timers: clock.timers,
 		});

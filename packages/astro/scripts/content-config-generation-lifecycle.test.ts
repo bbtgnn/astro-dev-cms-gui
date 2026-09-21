@@ -17,7 +17,6 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createCmsIntegration } from "../src/integration";
 import {
 	extractEmbeddedHash,
 	generateContentConfig,
@@ -25,6 +24,7 @@ import {
 	runContentConfigGeneration,
 	SCHEMA_PARTITION_CONVENTION,
 } from "../src/generate/index.ts";
+import { createCmsIntegration } from "../src/integration";
 
 const temps: string[] = [];
 const FIXTURE_PARTITION = join(
@@ -202,7 +202,10 @@ describe("createCmsIntegration astro:config:setup generation", () => {
 		const root = tempProject();
 		writePartitionReexport(join(root, SCHEMA_PARTITION_CONVENTION));
 
-		const integration = createCmsIntegration({ shellPath: false, hostModule: false });
+		const integration = createCmsIntegration({
+			shellPath: false,
+			hostModule: false,
+		});
 		const hook = integration.hooks?.["astro:config:setup"];
 		expect(hook).toBeTypeOf("function");
 		if (hook == null) throw new Error("expected setup hook");
@@ -228,7 +231,10 @@ describe("createCmsIntegration astro:config:setup generation", () => {
 			"utf8",
 		);
 
-		const integration = createCmsIntegration({ shellPath: false, hostModule: false });
+		const integration = createCmsIntegration({
+			shellPath: false,
+			hostModule: false,
+		});
 		const hook = integration.hooks?.["astro:config:setup"];
 		if (hook == null) throw new Error("expected setup hook");
 

@@ -173,9 +173,8 @@ export type CompatibleKey<
 
 /** Catalog keys usable as aggregate `wrapper` (chrome only). */
 export type CompatibleWrapperKey<Components extends ComponentsCatalog> = {
-	[K in keyof Components & string]: Components[K] extends ShellCompatibleWrapper<
-		Components[K]
-	>
+	[K in keyof Components &
+		string]: Components[K] extends ShellCompatibleWrapper<Components[K]>
 		? K
 		: never;
 }[keyof Components & string];
