@@ -2,7 +2,8 @@
  * Authoring session against AuthoringClient (ADR-0008 / 0014).
  * Owns statuses, guarded write-back, preview eligibility, and remount rules.
  * Debounce/coalesce lives behind an internal autosave seam.
- * Draft-write eligibility is an injected opaque predicate (not Ajv/Zod here).
+ * Draft-write eligibility is an injected opaque predicate (not Ajv/Zod here);
+ * create mode also requires a non-empty create-id before write-back.
  */
 import type { CmsCapabilities, ContentEntry } from "@cms/core/fetch-client";
 import {
@@ -100,6 +101,8 @@ export function createAuthoringSession(
 		options.mode.kind === "edit" ? options.mode.entry.revision : null;
 	let formValue: Record<string, unknown> =
 		options.mode.kind === "edit" ? { ...options.mode.entry.data } : {};
+	/** Last form draft seen by the session — remount seed stays on `formValue`. */
+	let lastDraftData: Record<string, unknown> = { ...formValue };
 	let createIdDraft = "";
 	let saveStatus: AuthoringStatus = "idle";
 	let error: string | null = null;
@@ -203,6 +206,7 @@ export function createAuthoringSession(
 				entryId = entry.id;
 				createIdDraft = entry.id;
 				formValue = { ...entry.data };
+				lastDraftData = { ...entry.data };
 				formEpoch += 1;
 			}
 			notify();
@@ -225,9 +229,11 @@ export function createAuthoringSession(
 		setCreateId(id) {
 			if (!creating) return;
 			createIdDraft = id;
-			notify();
+			// Re-run the form-edit path so create-id alone can unlock write-back.
+			autosave.handleChange(lastDraftData);
 		},
 		handleChange(data) {
+			lastDraftData = data;
 			autosave.handleChange(data);
 		},
 		flushNow() {
@@ -268,6 +274,7 @@ export function createAuthoringSession(
 			}
 			revision = result.value.revision;
 			formValue = { ...result.value.data };
+			lastDraftData = { ...result.value.data };
 			entryId = result.value.id;
 			previewEligibleId = null;
 			saveStatus = "idle";

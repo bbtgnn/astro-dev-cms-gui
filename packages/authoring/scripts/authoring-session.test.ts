@@ -95,7 +95,6 @@ describe("authoring session", () => {
 
 		const epoch0 = session.getSnapshot().formEpoch;
 		session.setCreateId("brand-new");
-		session.handleChange({ title: "New" });
 		clock.advance(50);
 		await waitUntil(
 			() =>
@@ -111,6 +110,52 @@ describe("authoring session", () => {
 		expect(snap.entryId).toBe("brand-new");
 		expect(snap.formEpoch).toBeGreaterThan(epoch0);
 		expect(snap.previewUrl).toBe("/preview/posts/brand-new");
+
+		session.dispose();
+	});
+
+	test("create: setCreateId alone unlocks write-back from last draft", async () => {
+		const fake = createFakeClient({ entries: [] });
+		const clock = createFakeTimers();
+		const session = createAuthoringSession({
+			client: fake.client,
+			collection: "posts",
+			mode: { kind: "create" },
+			isClientValid: titleEligible,
+			debounceMs: 50,
+			timers: clock.timers,
+		});
+
+		session.handleChange({ title: "Draft title" });
+		clock.advance(50);
+		await waitUntil(
+			() => session.getSnapshot().saveStatus === "client_invalid",
+			"valid data without id",
+		);
+		expect(fake.upsertCalls).toHaveLength(0);
+
+		session.setCreateId("from-id-only");
+		expect(session.getSnapshot().saveStatus).toBe("idle");
+		session.setCreateId("");
+		await waitUntil(
+			() => session.getSnapshot().saveStatus === "client_invalid",
+			"cleared id invalid again",
+		);
+		clock.advance(50);
+		expect(fake.upsertCalls).toHaveLength(0);
+
+		session.setCreateId("from-id-only");
+		clock.advance(50);
+		await waitUntil(
+			() =>
+				!session.getSnapshot().creating &&
+				session.getSnapshot().saveStatus === "saved",
+			"save after setCreateId",
+		);
+		expect(fake.upsertCalls).toHaveLength(1);
+		expect(fake.upsertCalls[0]?.expectedRevision).toBeNull();
+		expect(fake.upsertCalls[0]?.data).toEqual({ title: "Draft title" });
+		expect(session.getSnapshot().entryId).toBe("from-id-only");
 
 		session.dispose();
 	});
