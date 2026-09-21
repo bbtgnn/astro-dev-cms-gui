@@ -1,6 +1,8 @@
 /**
- * Draft-write eligibility from form-model JSON Schema (AJV).
+ * Draft-write eligibility from Ajv-safe editor schema (AJV).
  * Session injects the predicate; this module owns the default adapter.
+ * Dirty Form model schemas must be lowered first (see lowerFormModelToSjsf /
+ * ajv-schema tests) — this module does not strip.
  */
 
 import { describe, expect, test } from "bun:test";
@@ -23,25 +25,5 @@ describe("createDraftEligibility", () => {
 		const eligible = createDraftEligibility(titleSchema);
 		expect(eligible({ title: "" })).toBe(false);
 		expect(eligible({})).toBe(false);
-	});
-
-	test("strips form-model ui / $schema before Ajv", () => {
-		const withUi: Record<string, unknown> = {
-			$schema: "https://json-schema.org/draft/2020-12/schema",
-			type: "object",
-			ui: { widget: "object" },
-			properties: {
-				title: {
-					type: "string",
-					minLength: 1,
-					ui: { widget: "text" },
-				},
-			},
-			required: ["title"],
-			additionalProperties: false,
-		};
-		const eligible = createDraftEligibility(withUi);
-		expect(eligible({ title: "Ok" })).toBe(true);
-		expect(eligible({ title: "" })).toBe(false);
 	});
 });

@@ -58,9 +58,11 @@ _Avoid_: form config, widget map alone, Zod meta UI, FieldUi-on-Zod
 
 **Form model**:
 The browser editor projection of the IR for one collection: JSON Schema plus
-uiSchema/layout bindings, without live Svelte values. What the form shell
-receives after compile + project.
-_Avoid_: Zod editor schema, toFormSchemas output, content.config schema
+layout and field bindings, without live Svelte values. Produced by compile +
+project. SJSF `uiSchema` is form-shell implementation after lower — not part of
+the Form model.
+_Avoid_: Zod editor schema, toFormSchemas output, content.config schema, SJSF
+uiSchema (as the Form model itself)
 
 **Field registry**:
 The map from semantic field kind to default validation helpers and stock

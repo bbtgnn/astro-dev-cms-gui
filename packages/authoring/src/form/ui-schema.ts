@@ -1,5 +1,7 @@
 /**
- * Serializable sjsf uiSchema nodes + Ajv-safe JSON Schema cleanup (ADR-0019).
+ * SJSF uiSchema nodes + Ajv-safe JSON Schema cleanup (ADR-0011 internal).
+ * Callers of the form shell use already-stripped schemas from lowering —
+ * do not strip again in CmsForm or draft-eligibility.
  */
 
 /** Minimal sjsf uiSchema node (serializable options + optional component override). */
@@ -20,6 +22,7 @@ export type UiSchemaNode = {
  *
  * Strip `$schema` (Zod 4 / draft-2020-12 keys Ajv may not resolve) and
  * presentation bags (`ui`, `config`) that belong in uiSchema / host chrome.
+ * Used by form-model lowering so editor collection schemas are Ajv-safe.
  */
 export function stripUiFromJsonSchema(
 	schema: Record<string, unknown>,

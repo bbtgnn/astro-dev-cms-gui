@@ -1,11 +1,12 @@
 /**
  * Guard: stripUiFromJsonSchema must leave JSON Schema Ajv-safe
  * (regression: draft/2020-12 $schema threw and blocked Submit).
+ * Strip lives in authoring form lowering (ADR-0011).
  */
 
 import { describe, expect, test } from "bun:test";
-import { stripUiFromJsonSchema } from "@cms/core/semantic";
 import { createFormValidator } from "@sjsf/ajv8-validator";
+import { stripUiFromJsonSchema } from "../src/form/ui-schema";
 
 const postsSchema: Record<string, unknown> = {
 	$schema: "https://json-schema.org/draft/2020-12/schema",

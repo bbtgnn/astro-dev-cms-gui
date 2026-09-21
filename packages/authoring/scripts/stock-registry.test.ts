@@ -124,4 +124,46 @@ describe("lowerFormModelToSjsf", () => {
 			}),
 		).toBe(false);
 	});
+
+	test("strips $schema / ui / config from form-model jsonSchema", () => {
+		const ir = postsIr();
+		const model = projectFormModels(ir).posts;
+		expect(model).toBeDefined();
+		if (!model) throw new Error("missing model");
+
+		const dirty = {
+			...model,
+			jsonSchema: {
+				...model.jsonSchema,
+				$schema: "https://json-schema.org/draft/2020-12/schema",
+				ui: { widget: "object" },
+				config: { label: "Posts" },
+				properties: {
+					...(model.jsonSchema.properties as Record<string, unknown>),
+					title: {
+						...((model.jsonSchema.properties as Record<string, unknown>)
+							.title as object),
+						ui: { widget: "text" },
+					},
+				},
+			},
+		};
+
+		const { schema } = lowerFormModelToSjsf(dirty);
+		expect(schema.$schema).toBeUndefined();
+		expect("ui" in schema).toBe(false);
+		expect("config" in schema).toBe(false);
+		const title = (schema.properties as Record<string, Record<string, unknown>>)
+			.title;
+		expect("ui" in title).toBe(false);
+
+		const validator = createFormValidator();
+		expect(
+			validator.isValid(schema as never, schema as never, {
+				title: "Ok",
+				author: "ada",
+				count: 1,
+			}),
+		).toBe(true);
+	});
 });

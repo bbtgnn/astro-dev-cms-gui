@@ -7,9 +7,7 @@ import type {
 	CollectionFormModel,
 	FormFieldDescriptor,
 	FormLayoutNode,
-	UiSchemaNode,
 } from "@cms/core/semantic";
-import { stripUiFromJsonSchema } from "@cms/core/semantic";
 import type { AnySvelteComponent } from "../config/contracts";
 import {
 	type LiveBindingResolver,
@@ -17,6 +15,7 @@ import {
 	type StockEditorRegistry,
 	stockEditorRegistry,
 } from "./stock-registry";
+import { stripUiFromJsonSchema, type UiSchemaNode } from "./ui-schema";
 import { wrapFieldEditorForSjsf } from "./wrap-field-editor";
 
 export type LowerFormModelOptions = {

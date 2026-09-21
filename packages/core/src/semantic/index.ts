@@ -121,7 +121,6 @@ export type {
 	SemanticKind,
 	StringConstraint,
 } from "./types";
-export { stripUiFromJsonSchema, type UiSchemaNode } from "./ui-schema";
 export {
 	type AuthoritativeParseIssue,
 	type AuthoritativeParseResult,

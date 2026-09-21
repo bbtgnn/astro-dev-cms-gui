@@ -1,9 +1,5 @@
 <!-- @cms/authoring — sjsf wrap over IR-lowered JSON Schema + uiSchema -->
 <script lang="ts">
-import {
-	stripUiFromJsonSchema,
-	type UiSchemaNode,
-} from "@cms/core/semantic";
 import { createFormValidator } from "@sjsf/ajv8-validator";
 import {
 	BasicForm,
@@ -22,6 +18,7 @@ import type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,
 } from "./ImageField.svelte";
+import type { UiSchemaNode } from "./ui-schema";
 
 let {
 	schema = null,
@@ -83,12 +80,11 @@ const form = untrack(() => {
 	liveValue = { ...value };
 	if (schema == null) return null;
 
-	const jsonSchema = stripUiFromJsonSchema(schema);
 	const uiSchema: UiSchemaNode = uiSchemaProp ?? {};
 
 	return createForm({
 		theme,
-		schema: jsonSchema as Schema,
+		schema: schema as Schema,
 		uiSchema: uiSchema as UiSchemaRoot,
 		resolver,
 		translation,
