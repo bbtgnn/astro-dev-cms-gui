@@ -9,9 +9,12 @@ uiSchema/layout). There is no transitional Zod / FieldUi-on-`.meta()` editor
 path, no `toFormSchemas(Zod)` seam, and no package default host that discovers
 editable schemas from live `content.config`.
 
-`cms()` editing requires the schema partition (`cms.config` by convention) or an
-explicit `hostModule`. Generated `content.config.ts` remains Astro’s collection
-graph and type surface — not a second editor-configuration authority.
+`cms()` editing requires editor configuration (`src/cms.config.ts` by
+convention). The package default `CmsHost` is the built-in FS adapter behind
+the CMS protocol. Custom adapters use `createCmsMiddleware` / a project
+`createHost`, or `cmsHarness` from `@cms/astro/testing` — not a second option
+on `cms()`. Generated `content.config.ts` remains Astro’s collection graph and
+type surface — not a second editor-configuration authority.
 
 Blocks, i18n, and similar capabilities return as IR kinds + FieldEditorProps /
 catalog bindings ([#29](https://github.com/bbtgnn/astro-dev-cms-gui/issues/29)),

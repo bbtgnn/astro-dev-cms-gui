@@ -3,18 +3,16 @@
  */
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
-import { createCmsIntegration } from "../src/integration";
+import { cms, cmsHarness } from "../src/integration";
 import {
 	CMS_COMPONENTS_VIRTUAL_ID,
 	CMS_CONFIG_VIRTUAL_ID,
 	CMS_HOST_VIRTUAL_ID,
 	CMS_INTEGRATION_OPTIONS_VIRTUAL_ID,
-	CMS_SCHEMA_PARTITION_VIRTUAL_ID,
 	cmsComponentsVitePlugin,
 	cmsConfigVitePlugin,
 	cmsHostVitePlugin,
 	cmsIntegrationOptionsVitePlugin,
-	cmsSchemaPartitionVitePlugin,
 	DEFAULT_CONTENT_ROOT,
 	resolveProjectEntry,
 } from "../src/vite-config-plugin";
@@ -80,20 +78,6 @@ describe("cmsHostVitePlugin", () => {
 	});
 });
 
-describe("cmsSchemaPartitionVitePlugin", () => {
-	test("re-exports collections from schema partition", async () => {
-		const entry = path.resolve("/project/src/cms.config.ts");
-		const plugin = cmsSchemaPartitionVitePlugin({ entry });
-		const resolved = await plugin.resolveId(CMS_SCHEMA_PARTITION_VIRTUAL_ID);
-		expect(resolved).toBe(`\0${CMS_SCHEMA_PARTITION_VIRTUAL_ID}`);
-		if (resolved == null) throw new Error("expected resolved id");
-		const source = await plugin.load(resolved);
-		expect(source).toBe(
-			`export { collections } from ${JSON.stringify(entry)};\n`,
-		);
-	});
-});
-
 describe("cmsIntegrationOptionsVitePlugin", () => {
 	test("emits mount, allowInProd, and contentRoot literals", async () => {
 		const contentRoot = path.resolve("/project", DEFAULT_CONTENT_ROOT);
@@ -114,22 +98,24 @@ describe("cmsIntegrationOptionsVitePlugin", () => {
 	});
 });
 
-describe("createCmsIntegration shellPath", () => {
-	test("defaults to /cms for convention-first cms()", () => {
-		const integration = createCmsIntegration();
+describe("cms() product face", () => {
+	test("defaults to /cms with zero args", () => {
+		const integration = cms();
 		expect(integration.shellPath).toBe("/cms");
 		expect(integration.name).toBe("@cms/astro");
 	});
+});
 
+describe("cmsHarness escapes", () => {
 	test("shellPath false skips inject", () => {
-		const integration = createCmsIntegration({
+		const integration = cmsHarness({
 			shellPath: false,
 		});
 		expect(integration.shellPath).toBeUndefined();
 	});
 
 	test("normalizes custom shellPath", () => {
-		const integration = createCmsIntegration({
+		const integration = cmsHarness({
 			shellPath: "admin/",
 		});
 		expect(integration.shellPath).toBe("/admin");

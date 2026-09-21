@@ -1,16 +1,16 @@
 /**
- * Package default CmsHost for CMS-first hosts (ADR-0019).
+ * Package default CmsHost — built-in FS adapter (ADR-0019 / 0020).
  *
- * Loads the Svelte-free schema partition, builds the authoritative
- * persisted-input validator (image allowlist + reference existence), and
- * derives collection bases from IR glob loaders — not from Astro `image()`
- * on generated `content.config`.
+ * Loads editor configuration from `virtual:@cms/config`, builds the
+ * authoritative persisted-input validator (image allowlist + reference
+ * existence), and derives collection bases from IR glob loaders — not from
+ * Astro `image()` on generated `content.config`.
  */
 
 import fs from "node:fs";
 import path from "node:path";
+import { collections as editorCollections } from "virtual:@cms/config";
 import { contentRoot } from "virtual:@cms/integration-options";
-import { collections as partitionCollections } from "virtual:@cms/schema-partition";
 import {
 	type CmsHost,
 	type CollectionDescriptor,
@@ -36,14 +36,14 @@ function isSafeEntryRelativePath(imagePath: string): string | null {
 	return rel;
 }
 
-function compilePartition(
-	collections: SemanticConfigInput["collections"],
+function compileEditorConfiguration(
+	tree: SemanticConfigInput["collections"],
 ): CompiledSemanticIr {
-	return compileSemanticIr({ collections });
+	return compileSemanticIr({ collections: tree });
 }
 
 export function createHost(): CmsHost {
-	const ir = compilePartition(partitionCollections);
+	const ir = compileEditorConfiguration(editorCollections);
 	const writer = nodeFsWriter();
 
 	const bases = new Map<string, string>();

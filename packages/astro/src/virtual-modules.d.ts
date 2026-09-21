@@ -1,6 +1,7 @@
 /**
  * Ambient types for Vite virtual modules registered by createCmsIntegration.
  * Real modules are generated at host Vite config time.
+ * Package-internal — consumers do not import these IDs.
  */
 
 interface ImportMetaEnv {
@@ -36,15 +37,8 @@ declare module "virtual:@cms/components" {
 declare module "virtual:@cms/host" {
 	import type { CmsHost } from "@cms/core";
 
-	/** Host factory (project override or package default). */
+	/** Host factory (package default FS adapter or project override). */
 	export function createHost(): CmsHost;
-}
-
-declare module "virtual:@cms/schema-partition" {
-	import type { SemanticConfigInput } from "@cms/core/semantic";
-
-	/** Svelte-free partition collections for the CMS-first default host. */
-	export const collections: SemanticConfigInput["collections"];
 }
 
 declare module "virtual:@cms/integration-options" {
