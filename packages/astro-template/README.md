@@ -49,7 +49,6 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 | `PUT /_cms/api/collections/posts/new-post` | Upsert (allowlisted) |
 | `DELETE /_cms/api/collections/posts/new-post` | Delete (204) |
 | `PUT` invalid posts body | Authoritative IR validator → 400 |
-| `/form-spike` | Example: legacy Zod FieldUi → JSON Schema → `@cms/authoring` |
 
 ## Allowlist check
 
