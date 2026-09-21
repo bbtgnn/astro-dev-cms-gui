@@ -56,6 +56,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@astrojs/svelte": "catalog:",
         "svelte": "catalog:",
         "svelte-check": "catalog:",
         "typescript": "catalog:",
