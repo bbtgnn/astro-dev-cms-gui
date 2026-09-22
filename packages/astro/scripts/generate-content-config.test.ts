@@ -102,6 +102,8 @@ describe("generateContentConfig", () => {
 			ir,
 			schemaSources: [partitionPath],
 		});
+		expect(first.status).toBe("generated");
+		if (first.status !== "generated") return;
 		expect(first.wrote).toBe(true);
 		expect(first.stale).toBe(true);
 
@@ -117,6 +119,8 @@ describe("generateContentConfig", () => {
 			schemaSources: [partitionPath],
 			checkOnly: true,
 		});
+		expect(checkFresh.status).toBe("generated");
+		if (checkFresh.status !== "generated") return;
 		expect(checkFresh.stale).toBe(false);
 		expect(checkFresh.wrote).toBe(false);
 
@@ -125,6 +129,8 @@ describe("generateContentConfig", () => {
 			ir,
 			schemaSources: [partitionPath],
 		});
+		expect(skip.status).toBe("generated");
+		if (skip.status !== "generated") return;
 		expect(skip.wrote).toBe(false);
 		expect(skip.stale).toBe(false);
 
@@ -139,6 +145,8 @@ describe("generateContentConfig", () => {
 			schemaSources: [partitionPath],
 			checkOnly: true,
 		});
+		expect(checkStale.status).toBe("generated");
+		if (checkStale.status !== "generated") return;
 		expect(checkStale.stale).toBe(true);
 		expect(checkStale.wrote).toBe(false);
 		expect(checkStale.sourceHash).not.toBe(first.sourceHash);
@@ -155,6 +163,8 @@ describe("generateContentConfig", () => {
 			schemaSources: [FIXTURE_PARTITION],
 			contentConfigPath: out,
 		});
+		expect(result.status).toBe("generated");
+		if (result.status !== "generated") return;
 		expect(result.wrote).toBe(true);
 		const written = readFileSync(out, "utf8");
 		expect(written).toContain("export const postsSchema");

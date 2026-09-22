@@ -119,6 +119,17 @@ async function main(): Promise<number> {
 		checkOnly: parsed.checkOnly,
 	});
 
+	if (result.status === "skipped") {
+		const partition =
+			parsed.schemaPartitionPath ?? SCHEMA_PARTITION_CONVENTION;
+		process.stderr.write(
+			result.reason === "disabled"
+				? `content.config generation is disabled\n`
+				: `Schema partition not found: ${partition}\n`,
+		);
+		return 1;
+	}
+
 	if (parsed.checkOnly) {
 		if (result.stale) {
 			process.stderr.write(

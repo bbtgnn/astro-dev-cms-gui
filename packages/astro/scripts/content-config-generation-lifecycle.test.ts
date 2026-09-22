@@ -1,7 +1,7 @@
 /**
  * cms() generation lifecycle in astro:config:setup (ADR-0016 / 0019).
  *
- * Seam: runContentConfigGeneration + cms / cmsHarness setup hooks.
+ * Seam: generateContentConfig + cms / cmsHarness setup hooks.
  * Does not require the Astro binary; invokes the hook with mocked params.
  */
 
@@ -21,7 +21,6 @@ import {
 	extractEmbeddedHash,
 	generateContentConfig,
 	HASH_MARKER,
-	runContentConfigGeneration,
 	SCHEMA_PARTITION_CONVENTION,
 } from "../src/generate/index.ts";
 import { cms } from "../src/integration";
@@ -89,30 +88,30 @@ function mockSetupParams(root: string) {
 	};
 }
 
-describe("runContentConfigGeneration", () => {
+describe("generateContentConfig lifecycle", () => {
 	test("writes content.config.ts from convention partition when missing", async () => {
 		const root = tempProject();
 		writePartitionReexport(join(root, SCHEMA_PARTITION_CONVENTION));
 
-		const outcome = await runContentConfigGeneration({ projectRoot: root });
+		const outcome = await generateContentConfig({ projectRoot: root });
 		expect(outcome.status).toBe("generated");
 		if (outcome.status !== "generated") return;
 
 		const contentConfigPath = join(root, "src/content.config.ts");
 		expect(existsSync(contentConfigPath)).toBe(true);
-		expect(outcome.result.wrote).toBe(true);
-		expect(outcome.result.contentConfigPath).toBe(contentConfigPath);
+		expect(outcome.wrote).toBe(true);
+		expect(outcome.contentConfigPath).toBe(contentConfigPath);
 
 		const written = readFileSync(contentConfigPath, "utf8");
 		expect(written).toContain(`// ${HASH_MARKER}`);
 		expect(written).toContain("export const postsSchema");
 		expect(written).toContain('reference("authors")');
-		expect(extractEmbeddedHash(written)).toBe(outcome.result.sourceHash);
+		expect(extractEmbeddedHash(written)).toBe(outcome.sourceHash);
 	});
 
 	test("skips cleanly when no schema partition exists", async () => {
 		const root = tempProject();
-		const outcome = await runContentConfigGeneration({ projectRoot: root });
+		const outcome = await generateContentConfig({ projectRoot: root });
 		expect(outcome).toEqual({
 			status: "skipped",
 			reason: "no-partition",
@@ -124,9 +123,9 @@ describe("runContentConfigGeneration", () => {
 		const root = tempProject();
 		writePartitionReexport(join(root, SCHEMA_PARTITION_CONVENTION));
 
-		const outcome = await runContentConfigGeneration({
+		const outcome = await generateContentConfig({
 			projectRoot: root,
-			schemaPartition: false,
+			schemaPartitionPath: false,
 		});
 		expect(outcome).toEqual({
 			status: "skipped",
@@ -140,7 +139,7 @@ describe("runContentConfigGeneration", () => {
 		const partitionPath = join(root, SCHEMA_PARTITION_CONVENTION);
 		writePartitionReexport(partitionPath);
 
-		const first = await runContentConfigGeneration({ projectRoot: root });
+		const first = await generateContentConfig({ projectRoot: root });
 		expect(first.status).toBe("generated");
 		if (first.status !== "generated") return;
 
@@ -157,15 +156,17 @@ describe("runContentConfigGeneration", () => {
 			projectRoot: root,
 			checkOnly: true,
 		});
+		expect(staleCheck.status).toBe("generated");
+		if (staleCheck.status !== "generated") return;
 		expect(staleCheck.stale).toBe(true);
 		expect(staleCheck.wrote).toBe(false);
 		expect(readFileSync(contentConfigPath, "utf8")).toBe(before);
 
-		const second = await runContentConfigGeneration({ projectRoot: root });
+		const second = await generateContentConfig({ projectRoot: root });
 		expect(second.status).toBe("generated");
 		if (second.status !== "generated") return;
-		expect(second.result.wrote).toBe(true);
-		expect(second.result.sourceHash).not.toBe(first.result.sourceHash);
+		expect(second.wrote).toBe(true);
+		expect(second.sourceHash).not.toBe(first.sourceHash);
 		expect(readFileSync(contentConfigPath, "utf8")).not.toBe(before);
 	});
 
@@ -178,22 +179,22 @@ describe("runContentConfigGeneration", () => {
 		);
 
 		await expect(
-			runContentConfigGeneration({ projectRoot: root }),
+			generateContentConfig({ projectRoot: root }),
 		).rejects.toThrow(/missing "collections" or "ir"/);
 	});
 
-	test("honors explicit schemaPartition path", async () => {
+	test("honors explicit schemaPartitionPath", async () => {
 		const root = tempProject();
 		const custom = join(root, "src/custom-schema.ts");
 		writePartitionReexport(custom);
 
-		const outcome = await runContentConfigGeneration({
+		const outcome = await generateContentConfig({
 			projectRoot: root,
-			schemaPartition: custom,
+			schemaPartitionPath: custom,
 		});
 		expect(outcome.status).toBe("generated");
 		if (outcome.status !== "generated") return;
-		expect(outcome.result.schemaPartitionPath).toBe(custom);
+		expect(outcome.schemaPartitionPath).toBe(custom);
 		expect(existsSync(join(root, "src/content.config.ts"))).toBe(true);
 	});
 });

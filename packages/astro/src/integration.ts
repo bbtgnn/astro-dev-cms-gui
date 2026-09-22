@@ -19,7 +19,7 @@
  * Protocol-only: {@link createCmsMiddleware} from `@cms/astro`.
  */
 import { fileURLToPath } from "node:url";
-import { runContentConfigGeneration } from "./generate/run-content-config-generation";
+import { generateContentConfig } from "./generate/generate-content-config";
 import {
 	type CmsDispatcherOptions,
 	type CmsMiddlewareHandler,
@@ -202,9 +202,9 @@ export function createCmsIntegration(
 			}
 
 			if (options.generate !== false) {
-				await runContentConfigGeneration({
+				await generateContentConfig({
 					projectRoot: root,
-					schemaPartition: configEntry ?? false,
+					schemaPartitionPath: configEntry ?? false,
 				});
 			}
 
