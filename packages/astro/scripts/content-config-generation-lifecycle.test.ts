@@ -24,7 +24,8 @@ import {
 	runContentConfigGeneration,
 	SCHEMA_PARTITION_CONVENTION,
 } from "../src/generate/index.ts";
-import { cms, cmsHarness } from "../src/integration";
+import { cms } from "../src/integration";
+import { cmsHarness } from "../src/testing";
 
 const temps: string[] = [];
 const FIXTURE_PARTITION = join(

@@ -19,11 +19,7 @@ import {
 	type SemanticConfigInput,
 } from "@cms/core/semantic";
 
-/**
- * Convention path (project-relative) for the Svelte-free schema partition.
- * Same module as the browser unified tree (`src/cms.config.ts`).
- */
-export const SCHEMA_PARTITION_CONVENTION = "src/cms.config.ts";
+export { SCHEMA_PARTITION_CONVENTION } from "../conventions";
 
 /**
  * Expected exports from a schema partition module.
@@ -35,13 +31,14 @@ export type SchemaPartitionExport = {
 };
 
 function isCompiledIr(value: unknown): value is CompiledSemanticIr {
+	if (typeof value !== "object" || value === null) return false;
+	if (!("collections" in value) || !("persisted" in value)) return false;
+	const record = value as { collections: unknown; persisted: unknown };
 	return (
-		typeof value === "object" &&
-		value !== null &&
-		"collections" in value &&
-		"persisted" in value &&
-		typeof (value as CompiledSemanticIr).collections === "object" &&
-		typeof (value as CompiledSemanticIr).persisted === "object"
+		typeof record.collections === "object" &&
+		record.collections !== null &&
+		typeof record.persisted === "object" &&
+		record.persisted !== null
 	);
 }
 

@@ -41,7 +41,7 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 |------|---------|
 | `/` | Reference host home |
 | `/cms` | Authoring shell (`createFetchClient` + host-compiled editor config) |
-| `/_cms/ok` | API heartbeat (via `createCmsIntegration`) |
+| `/_cms/ok` | API heartbeat (via `cms()`) |
 | `/_cms/api/collections` | List collections (`authors`, `posts`) |
 | `/_cms/api/collections/posts` | FS-scan entries under `src/content/posts` |
 | `/_cms/api/collections/authors` | FS-scan entries under `src/content/authors` |

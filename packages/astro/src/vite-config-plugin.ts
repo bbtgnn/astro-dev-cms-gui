@@ -13,6 +13,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
+export {
+	CMS_COMPONENTS_CONVENTION,
+	CMS_CONFIG_CONVENTION,
+	CONTENT_CONFIG_CONVENTION,
+	DEFAULT_CONTENT_ROOT,
+	SCHEMA_PARTITION_CONVENTION,
+} from "./conventions";
+
 export const CMS_CONFIG_VIRTUAL_ID = "virtual:@cms/config";
 const CMS_CONFIG_RESOLVED_ID = `\0${CMS_CONFIG_VIRTUAL_ID}`;
 
@@ -25,36 +33,6 @@ const CMS_HOST_RESOLVED_ID = `\0${CMS_HOST_VIRTUAL_ID}`;
 export const CMS_INTEGRATION_OPTIONS_VIRTUAL_ID =
 	"virtual:@cms/integration-options";
 const CMS_INTEGRATION_OPTIONS_RESOLVED_ID = `\0${CMS_INTEGRATION_OPTIONS_VIRTUAL_ID}`;
-
-/** Convention paths for the Node-safe unified tree (ADR-0016 / 0019). */
-export const CMS_CONFIG_CONVENTION = [
-	"src/cms.config.ts",
-	"src/cms.config.mjs",
-	"src/cms.config.js",
-] as const;
-
-/**
- * Schema partition for generation — same files as {@link CMS_CONFIG_CONVENTION}.
- * Kept as an alias for the generate CLI / loader wording.
- */
-export const SCHEMA_PARTITION_CONVENTION = CMS_CONFIG_CONVENTION;
-
-/** Vite-only live components catalog (optional; empty map when absent). */
-export const CMS_COMPONENTS_CONVENTION = [
-	"src/cms.components.ts",
-	"src/cms.components.mjs",
-	"src/cms.components.js",
-] as const;
-
-/** Convention paths for Astro content collections (ADR-0004 / 0016). */
-export const CONTENT_CONFIG_CONVENTION = [
-	"src/content.config.ts",
-	"src/content.config.mjs",
-	"src/content.config.js",
-] as const;
-
-/** Default write-back root relative to the Astro project root. */
-export const DEFAULT_CONTENT_ROOT = "src/content";
 
 export type CmsConfigVitePluginOptions = {
 	/** Absolute path to the Node-safe unified tree module. */
