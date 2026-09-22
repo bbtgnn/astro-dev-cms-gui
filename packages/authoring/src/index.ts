@@ -23,6 +23,10 @@ export {
 	type AuthoringSessionSnapshot,
 	createAuthoringSession,
 } from "./session";
+export {
+	type OpenAuthoringSessionOptions,
+	openAuthoringSession,
+} from "./open-authoring-session";
 export type {
 	AuthoringClient,
 	EditorCollectionInput,

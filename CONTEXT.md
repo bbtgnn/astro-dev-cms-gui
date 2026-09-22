@@ -41,7 +41,9 @@ statuses, draft-write eligibility (schema gate plus create-id when creating),
 guarded write-back (revision chaining), preview eligibility after successful
 save, form remount rules (create→edit, conflict reload), and the
 authoring-facing asset upload (file → field path | message). Debounced autosave
-is an internal seam. The Shell UI is a thin view over the session.
+is an internal seam. Opening a session for authoring requires a collection form
+model (editor schema); without one there is no session. The Shell UI is a thin
+view over the session.
 _Avoid_: autosave controller (as the public face), editor store, form state manager
 
 **Field schema**:

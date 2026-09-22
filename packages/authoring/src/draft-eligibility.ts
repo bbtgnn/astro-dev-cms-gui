@@ -2,6 +2,7 @@
  * Default draft-write eligibility from Ajv-safe editor schema (ADR-0014).
  * Lives in authoring so @cms/core stays free of SJSF/Ajv (ADR-0008 / 0018).
  * Session takes the opaque predicate — does not import this module.
+ * {@link openAuthoringSession} wires this for fail-closed open.
  *
  * Input must already be Ajv-safe (`EditorCollectionInput.schema` after
  * {@link lowerFormModelToSjsf} / {@link editorCollectionsFromTree}).

@@ -4,6 +4,8 @@
  * Debounce/coalesce lives behind an internal autosave seam.
  * Draft-write eligibility is an injected opaque predicate (not Ajv/Zod here);
  * create mode also requires a non-empty create-id before write-back.
+ * Prefer {@link openAuthoringSession} for fail-closed open when schema may
+ * be missing — this factory always starts a session given a predicate.
  */
 import type { CmsCapabilities, ContentEntry } from "@cms/core/fetch-client";
 import {
