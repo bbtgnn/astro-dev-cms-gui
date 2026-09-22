@@ -13,15 +13,9 @@ export type {
 	CmsEntryContext,
 } from "./form/ImageField.svelte";
 export {
-	type DraftEligibility,
-	createDraftEligibility,
-} from "./draft-eligibility";
-export {
 	type AuthoringSession,
 	type AuthoringSessionMode,
-	type AuthoringSessionOptions,
 	type AuthoringSessionSnapshot,
-	createAuthoringSession,
 } from "./session";
 export {
 	type OpenAuthoringSessionOptions,

@@ -1,7 +1,7 @@
 /**
- * Fail-closed authoring session open (ADR-0014).
+ * Fail-closed Authoring session open — public product face (ADR-0014).
  * Missing editor schema → no session; present schema → draft eligibility
- * wired into {@link createAuthoringSession}.
+ * wired into the package-private session factory.
  */
 import type { CmsCapabilities } from "@cms/core/fetch-client";
 import type { AutosaveTimers } from "./autosave";

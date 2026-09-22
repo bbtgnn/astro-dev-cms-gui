@@ -37,7 +37,7 @@ export type AutosaveControllerOptions = {
 	isClientValid: (data: Record<string, unknown>) => boolean;
 	/**
 	 * Guarded write. Caller supplies current expectedRevision at call time
-	 * (controller does not store revision; EntryEditor owns that).
+	 * (controller does not store revision; the Authoring session owns that).
 	 */
 	save: (data: Record<string, unknown>) => Promise<AutosaveSaveResult>;
 	onStatus: (status: AuthoringStatus) => void;
