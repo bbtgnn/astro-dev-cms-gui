@@ -14,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { compileSemanticIr, s } from "@cms/core/semantic";
+import { compileSemanticIr, projectFormModels, s } from "@cms/core/semantic";
 import {
 	atomicWriteFile,
 	extractEmbeddedHash,
@@ -66,12 +66,10 @@ function sampleIr() {
 describe("loadSchemaPartition", () => {
 	test("loads collections from a Svelte-free partition module", async () => {
 		const ir = await loadSchemaPartition(FIXTURE_PARTITION);
-		expect(Object.keys(ir.persisted).sort()).toEqual(["authors", "posts"]);
-		expect(ir.persisted.posts?.fields.map((f) => f.id)).toEqual([
-			"title",
-			"cover",
-			"author",
-		]);
+		expect(Object.keys(ir.collections).sort()).toEqual(["authors", "posts"]);
+		expect(
+			Object.keys(projectFormModels(ir).posts?.fields ?? {}).sort(),
+		).toEqual(["author", "cover", "title"]);
 	});
 
 	test("rejects modules without collections or ir", async () => {

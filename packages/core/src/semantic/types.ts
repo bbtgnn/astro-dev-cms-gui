@@ -223,14 +223,26 @@ export type IrCollection = {
 	readonly schema: IrTreeNode;
 };
 
+/**
+ * Public compiled IR face — collection trees only.
+ * The presentation-stripped persisted partition is package-internal
+ * (`CompiledSemanticIrInternal`); cross-package callers use product seams
+ * (`persistedProjections`, form model, validator, emit).
+ */
 export type CompiledSemanticIr = {
 	readonly collections: Readonly<Record<string, IrCollection>>;
-	/** Persisted shape with presentation stripped (no Astro emission). */
+};
+
+/**
+ * Internal compile output: public IR plus persisted partition.
+ * Not re-exported from `@cms/core/semantic`.
+ */
+export type CompiledSemanticIrInternal = CompiledSemanticIr & {
 	readonly persisted: PersistedConfigShape;
 };
 
 // ---------------------------------------------------------------------------
-// Persisted shape (presentation stripped)
+// Persisted shape (presentation stripped) — package-internal format
 // ---------------------------------------------------------------------------
 
 export type PersistedSchema =

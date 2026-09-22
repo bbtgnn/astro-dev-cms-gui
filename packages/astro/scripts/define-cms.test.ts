@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { compileSemanticIr } from "@cms/core/semantic";
+import { compileSemanticIr, projectFormModels } from "@cms/core/semantic";
 import { defineCms } from "../src/config.ts";
 
 describe("defineCms", () => {
@@ -27,9 +27,8 @@ describe("defineCms", () => {
 		}));
 
 		const ir = compileSemanticIr({ collections: config.collections });
-		expect(ir.persisted.posts?.fields.map((f) => f.id)).toEqual([
-			"title",
-			"author",
-		]);
+		expect(
+			Object.keys(projectFormModels(ir).posts?.fields ?? {}).sort(),
+		).toEqual(["author", "title"]);
 	});
 });

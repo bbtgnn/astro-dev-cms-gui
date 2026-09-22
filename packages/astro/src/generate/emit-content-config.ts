@@ -2,16 +2,15 @@
  * Emit native Astro `content.config.ts` source from compiled semantic IR.
  *
  * Schema expressions come from `persistedProjections(ir).astroSchemaPlan()`
- * (ADR-0010 / 0019). This module only renders the plan + file shell.
+ * (ADR-0010 / 0019). Loaders come from `ir.collections`. This module only
+ * renders the plan + file shell — no Persisted* walkers.
  */
 
 import {
 	type AstroSchemaExpr,
 	type AstroSchemaPlan,
 	type CompiledSemanticIr,
-	type PersistedSchema,
 	persistedProjections,
-	projectAstroSchemaExpr,
 } from "@cms/core/semantic";
 import { HASH_MARKER } from "./hash";
 
@@ -90,7 +89,7 @@ function emitConstraints(
 /**
  * Render one Astro schema expression to a Zod/Astro source fragment.
  */
-export function renderAstroSchemaExpr(expr: AstroSchemaExpr): string {
+function renderAstroSchemaExpr(expr: AstroSchemaExpr): string {
 	switch (expr.tag) {
 		case "string":
 			return emitConstraints("z.string()", expr.constraints);
@@ -148,22 +147,6 @@ function emitObjectFields(
 	return `z.object({\n${lines.join("\n")}\n})`;
 }
 
-/**
- * Emit a Zod expression for one persisted schema node.
- * Projects through the shared IR walker, then renders.
- */
-export function emitPersistedSchema(schema: PersistedSchema): string {
-	try {
-		return renderAstroSchemaExpr(projectAstroSchemaExpr(schema));
-	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		if (message.includes("Unexpected persisted IR node")) {
-			throw new Error(`Unexpected persisted IR node: ${message}`);
-		}
-		throw err;
-	}
-}
-
 function emitCollectionSchemaExpr(
 	root: AstroSchemaExpr,
 	needsImage: boolean,
@@ -207,11 +190,10 @@ function renderContentConfigFile(
 	for (const id of collectionIds) {
 		const collectionPlan = plan.byCollection[id];
 		const collection = ir.collections[id];
-		const persisted = ir.persisted[id];
-		if (collectionPlan === undefined || persisted === undefined) {
-			throw new Error(`Missing persisted shape for collection "${id}"`);
+		if (collectionPlan === undefined || collection === undefined) {
+			throw new Error(`Missing collection "${id}" for content.config emit`);
 		}
-		const loader = collection?.loader ?? persisted.loader;
+		const loader = collection.loader;
 		if (loader.kind !== "glob") {
 			throw new Error(
 				`Loader "${(loader as { kind: string }).kind}" is not supported (v1 allows glob only)`,

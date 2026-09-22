@@ -3,7 +3,11 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { compileSemanticIr, persistedShape } from "@cms/core/semantic";
+import {
+	compileSemanticIr,
+	persistedProjections,
+	projectFormModels,
+} from "@cms/core/semantic";
 import { createCmsBuilders } from "../src/config";
 
 describe("createCmsBuilders → compileSemanticIr", () => {
@@ -70,30 +74,25 @@ describe("createCmsBuilders → compileSemanticIr", () => {
 
 		const ir = compileSemanticIr(config);
 		expect(ir.collections.posts?.loader.kind).toBe("glob");
-		expect(ir.persisted.posts?.fields.map((f) => f.id)).toEqual([
-			"title",
-			"body",
-			"seo",
+
+		const props = persistedProjections(ir).jsonSchemas().posts
+			?.properties as Record<string, unknown>;
+		expect(Object.keys(props ?? {}).sort()).toEqual([
 			"author",
+			"body",
 			"cover",
+			"seo",
+			"title",
 		]);
-
-		const seo = ir.persisted.posts?.fields.find((f) => f.id === "seo");
-		expect(seo?.schema.kind).toBe("object");
-		if (seo?.schema.kind === "object") {
-			expect(seo.schema.fields.map((f) => f.id)).toEqual([
-				"title",
-				"description",
-			]);
-		}
-
-		const cover = ir.persisted.posts?.fields.find((f) => f.id === "cover");
-		expect(cover?.schema).toEqual({
-			kind: "optional",
-			of: { kind: "image" },
+		expect(props?.seo).toMatchObject({
+			type: "object",
+			properties: {
+				title: expect.anything(),
+				description: expect.anything(),
+			},
 		});
 
-		expect(persistedShape(ir)).toBe(ir.persisted);
+		expect(projectFormModels(ir).posts).toBeDefined();
 
 		// Opaque bindings preserved on IR tree
 		const tabs = ir.collections.posts?.schema;

@@ -17,6 +17,7 @@ import {
 import { SemanticIrError, type SemanticIrIssue } from "./errors";
 import type {
 	CompiledSemanticIr,
+	CompiledSemanticIrInternal,
 	IrArray,
 	IrCollection,
 	IrDiscriminatedUnion,
@@ -818,11 +819,19 @@ function collectionPersisted(
 }
 
 /**
- * Derive the presentation-stripped persisted shape from compiled IR.
- * No Astro emission; no host FS existence checks.
+ * Internal accessor for the presentation-stripped partition.
+ * Not part of the `@cms/core/semantic` public face.
  */
-export function persistedShape(ir: CompiledSemanticIr): PersistedConfigShape {
-	return ir.persisted;
+export function persistedShape(
+	ir: CompiledSemanticIr,
+): PersistedConfigShape {
+	const persisted = (ir as CompiledSemanticIrInternal).persisted;
+	if (persisted === undefined || typeof persisted !== "object") {
+		throw new Error(
+			"CompiledSemanticIr missing internal persisted partition",
+		);
+	}
+	return persisted;
 }
 
 function buildPersisted(
@@ -871,7 +880,7 @@ export function compileSemanticIr(
 		throw new SemanticIrError(ctx.issues);
 	}
 
-	const compiled: CompiledSemanticIr = {
+	const compiled: CompiledSemanticIrInternal = {
 		collections,
 		persisted: buildPersisted(collections),
 	};

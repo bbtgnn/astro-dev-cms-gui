@@ -1,9 +1,9 @@
 /**
  * Closed semantic IR for CMS-first schemas (ADR-0019).
  *
- * Primary seam: `compileSemanticIr` (+ `s` builders, `persistedShape`).
+ * Primary seam: `compileSemanticIr` (+ `s` builders).
  * Projections: `persistedProjections`, `projectFormModels`, `createAuthoritativeValidator`.
- * No Svelte; no Astro emission.
+ * No Svelte; no Astro emission. Persisted* format and node walkers are package-internal.
  */
 
 export {
@@ -41,7 +41,7 @@ export {
 	type TabsNode,
 	type TreeNode,
 } from "./builders";
-export { compileSemanticIr, persistedShape } from "./compile";
+export { compileSemanticIr } from "./compile";
 export { SemanticIrError, type SemanticIrIssue } from "./errors";
 export {
 	type CollectionFormModel,
@@ -74,7 +74,6 @@ export {
 	type JsonSchema,
 	type PersistedProjections,
 	persistedProjections,
-	projectAstroSchemaExpr,
 } from "./persisted-projections";
 export type {
 	CompiledSemanticIr,
@@ -107,16 +106,6 @@ export type {
 	NumberConstraint,
 	OpaqueBinding,
 	OpaqueProps,
-	PersistedArray,
-	PersistedCollectionShape,
-	PersistedConfigShape,
-	PersistedDefault,
-	PersistedDiscriminatedUnion,
-	PersistedField,
-	PersistedNullable,
-	PersistedObject,
-	PersistedOptional,
-	PersistedSchema,
 	ScalarConstraint,
 	SemanticKind,
 	StringConstraint,

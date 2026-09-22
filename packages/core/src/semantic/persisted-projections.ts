@@ -25,6 +25,7 @@ import type {
 	SemanticKind,
 	StringConstraint,
 } from "./types";
+import { persistedShape } from "./compile";
 /** Host-injected existence checks for image / reference leaves. */
 export type AuthoritativeValidatorDeps = {
 	/**
@@ -551,7 +552,7 @@ function astroExprAlgebra(): PersistedAlgebra<AstroFold> {
 
 /**
  * Project one persisted schema node to an Astro expr (same algebra as the plan).
- * Used by `@cms/astro` node-level emit helpers / tests.
+ * Package-internal — use `persistedProjections(ir).astroSchemaPlan()` at the seam.
  */
 export function projectAstroSchemaExpr(
 	schema: PersistedSchema,
@@ -561,16 +562,17 @@ export function projectAstroSchemaExpr(
 
 /**
  * Create the projection handle. Does not walk until a method is called.
- * Reads only `ir.persisted` — never the presentation IR tree.
+ * Reads only the internal persisted partition — never the presentation IR tree.
  */
 export function persistedProjections(
 	ir: CompiledSemanticIr,
 ): PersistedProjections {
+	const persisted = persistedShape(ir);
 	return {
 		jsonSchemas() {
 			const out: Record<string, JsonSchema> = {};
 			const algebra = jsonSchemaAlgebra();
-			for (const [id, shape] of Object.entries(ir.persisted)) {
+			for (const [id, shape] of Object.entries(persisted)) {
 				out[id] = foldCollectionRoot(shape.fields, algebra);
 			}
 			return out;
@@ -578,19 +580,19 @@ export function persistedProjections(
 		zodSchemas(deps) {
 			const out: Record<string, z.ZodType> = {};
 			const algebra = zodAlgebra(deps);
-			for (const [id, shape] of Object.entries(ir.persisted)) {
+			for (const [id, shape] of Object.entries(persisted)) {
 				out[id] = foldCollectionRoot(shape.fields, algebra);
 			}
 			return out;
 		},
 		astroSchemaPlan() {
 			const algebra = astroExprAlgebra();
-			const collectionIds = Object.keys(ir.persisted).sort();
+			const collectionIds = Object.keys(persisted).sort();
 			const byCollection: Record<string, AstroCollectionSchemaPlan> = {};
 			let needsImage = false;
 			let needsReference = false;
 			for (const id of collectionIds) {
-				const shape = ir.persisted[id];
+				const shape = persisted[id];
 				if (shape === undefined) continue;
 				const folded = foldCollectionRoot(shape.fields, algebra);
 				byCollection[id] = {

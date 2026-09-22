@@ -9,7 +9,6 @@ export { atomicWriteFile } from "./atomic-write";
 export {
 	type EmitContentConfigOptions,
 	emitContentConfig,
-	emitPersistedSchema,
 } from "./emit-content-config";
 export {
 	type GenerateContentConfigOptions,

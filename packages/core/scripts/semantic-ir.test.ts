@@ -1,12 +1,13 @@
 /**
  * Semantic IR compile seam (ADR-0019 slice 1).
- * Behavior is exercised only through `compileSemanticIr` / `persistedShape` / `s`.
+ * Behavior is exercised through `compileSemanticIr` / `s`;
+ * persisted partition via internal `persistedShape`.
  */
 
 import { describe, expect, test } from "bun:test";
+import { persistedShape } from "../src/semantic/compile.ts";
 import {
 	compileSemanticIr,
-	persistedShape,
 	SEMANTIC_NODE,
 	SemanticIrError,
 	s,
@@ -88,7 +89,7 @@ describe("compileSemanticIr", () => {
 		});
 		expect(ir.collections.posts?.schema.kind).toBe("tabs");
 
-		const titleField = ir.persisted.posts?.fields.find((f) => f.id === "title");
+		const titleField = persistedShape(ir).posts?.fields.find((f) => f.id === "title");
 		expect(titleField?.semanticKind).toBe("string");
 		expect(titleField?.schema).toEqual({
 			kind: "string",
@@ -98,10 +99,10 @@ describe("compileSemanticIr", () => {
 			],
 		});
 
-		const bodyField = ir.persisted.posts?.fields.find((f) => f.id === "body");
+		const bodyField = persistedShape(ir).posts?.fields.find((f) => f.id === "body");
 		expect(bodyField?.semanticKind).toBe("string");
 
-		const seo = ir.persisted.posts?.fields.find((f) => f.id === "seo");
+		const seo = persistedShape(ir).posts?.fields.find((f) => f.id === "seo");
 		expect(seo?.semanticKind).toBe("object");
 		expect(seo?.schema.kind).toBe("object");
 		if (seo?.schema.kind === "object") {
@@ -111,7 +112,7 @@ describe("compileSemanticIr", () => {
 			]);
 		}
 
-		expect(persistedShape(ir)).toBe(ir.persisted);
+		expect(persistedShape(ir).posts?.fields.length).toBeGreaterThan(0);
 	});
 
 	test("strips presentation nodes from persisted shape", () => {
@@ -143,11 +144,11 @@ describe("compileSemanticIr", () => {
 			},
 		});
 
-		expect(ir.persisted.posts?.fields.map((f) => f.id)).toEqual([
+		expect(persistedShape(ir).posts?.fields.map((f) => f.id)).toEqual([
 			"title",
 			"draft",
 		]);
-		const kinds = JSON.stringify(ir.persisted);
+		const kinds = JSON.stringify(persistedShape(ir));
 		expect(kinds).not.toContain('"header"');
 		expect(kinds).not.toContain('"separator"');
 		expect(kinds).not.toContain('"tabs"');
@@ -181,7 +182,7 @@ describe("compileSemanticIr", () => {
 			},
 		});
 
-		const hero = ir.persisted.posts?.fields.find((f) => f.id === "hero");
+		const hero = persistedShape(ir).posts?.fields.find((f) => f.id === "hero");
 		expect(hero?.schema.kind).toBe("discriminatedUnion");
 		if (hero?.schema.kind !== "discriminatedUnion") {
 			throw new Error("expected discriminatedUnion");
@@ -252,7 +253,7 @@ describe("compileSemanticIr", () => {
 				}),
 			},
 		});
-		expect(ir.persisted.posts?.fields.map((f) => f.id)).toEqual([
+		expect(persistedShape(ir).posts?.fields.map((f) => f.id)).toEqual([
 			"title",
 			"seo",
 		]);
@@ -396,7 +397,7 @@ describe("compileSemanticIr", () => {
 			},
 		});
 
-		const slug = ir.persisted.posts?.fields.find((f) => f.id === "slug");
+		const slug = persistedShape(ir).posts?.fields.find((f) => f.id === "slug");
 		expect(slug?.schema).toEqual({
 			kind: "string",
 			constraints: [
@@ -406,7 +407,7 @@ describe("compileSemanticIr", () => {
 			],
 		});
 
-		const score = ir.persisted.posts?.fields.find((f) => f.id === "score");
+		const score = persistedShape(ir).posts?.fields.find((f) => f.id === "score");
 		expect(score?.schema).toEqual({
 			kind: "number",
 			constraints: [
@@ -416,14 +417,14 @@ describe("compileSemanticIr", () => {
 			],
 		});
 
-		const kind = ir.persisted.posts?.fields.find((f) => f.id === "kind");
+		const kind = persistedShape(ir).posts?.fields.find((f) => f.id === "kind");
 		expect(kind?.schema).toEqual({ kind: "enum", values: ["a", "b"] });
 		expect(kind?.semanticKind).toBe("enum");
 
-		const flag = ir.persisted.posts?.fields.find((f) => f.id === "flag");
+		const flag = persistedShape(ir).posts?.fields.find((f) => f.id === "flag");
 		expect(flag?.schema).toEqual({ kind: "literal", value: true });
 
-		const tags = ir.persisted.posts?.fields.find((f) => f.id === "tags");
+		const tags = persistedShape(ir).posts?.fields.find((f) => f.id === "tags");
 		expect(tags?.schema).toEqual({
 			kind: "array",
 			of: { kind: "string", constraints: [] },
