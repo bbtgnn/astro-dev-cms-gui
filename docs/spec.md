@@ -155,6 +155,8 @@ These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
   paths, discovery fallback, and allowlisting.
 - [ADR-0014](adr/0014-working-tree-is-the-local-draft.md) — valid changes write
   to the working tree with atomic, revision-guarded write-back.
+- [ADR-0021](adr/0021-draft-eligibility-stays-on-session-open.md) — default
+  draft-write eligibility is wired at session open, not on EditorCollectionInput.
 - [ADR-0015](adr/0015-store-original-assets-astro-optimizes.md) — authoring stores
   original assets; Astro optimizes images at render (no Sharp upload pipeline).
 
@@ -172,6 +174,7 @@ Active design questions:
 - [#8 — recursive form layout contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/8)
 - [#9 — preview surface and unsaved draft transport](https://github.com/bbtgnn/astro-dev-cms-gui/issues/9)
 - [#10 — invalid browser-state recovery](https://github.com/bbtgnn/astro-dev-cms-gui/issues/10)
+- [#31 — entry list sort, filter, search, and pagination](https://github.com/bbtgnn/astro-dev-cms-gui/issues/31)
 
 Closed (keep linked):
 
