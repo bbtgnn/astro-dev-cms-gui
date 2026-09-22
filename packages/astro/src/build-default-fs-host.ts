@@ -1,9 +1,10 @@
 /**
  * Pure package-default CmsHost assembly (ADR-0016 / 0019 / 0020).
  *
- * Owns IR compile → write bases → allowPaths → authoritative validator →
- * collection descriptors → createCmsHost. Callers inject Writer + fileExists;
- * no Vite virtuals, no node:fs.
+ * Documented face: Editor configuration collections + content root + Writer +
+ * fileExists → CmsHost. Owns IR compile → write bases → allowPaths →
+ * authoritative validator → collection descriptors → createCmsHost.
+ * No Vite virtuals, no node:fs. Exported from `@cms/astro/testing`.
  */
 
 import path from "node:path";
@@ -19,7 +20,6 @@ import {
 	createAuthoritativeValidator,
 	type SemanticConfigInput,
 } from "@cms/core/semantic";
-import { writeBaseFromGlob } from "./write-base-from-glob";
 
 export type BuildDefaultFsHostOptions = {
 	collections: SemanticConfigInput["collections"];
@@ -28,6 +28,18 @@ export type BuildDefaultFsHostOptions = {
 	/** True when `absPath` exists and is a regular file. */
 	fileExists: (absPath: string) => boolean;
 };
+
+/**
+ * Map IR glob loader bases onto write-mode collection folders.
+ * Glob `base` is project-relative for Astro (`./src/content/posts`);
+ * write-mode bases are relative to `contentRoot` (`posts`).
+ */
+function writeBaseFromGlob(loaderBase: string, collectionId: string): string {
+	const normalized = loaderBase.replace(/\\/g, "/").replace(/\/+$/, "");
+	const last = normalized.split("/").filter(Boolean).pop();
+	if (last && last !== "." && last !== "..") return last;
+	return collectionId;
+}
 
 function isSafeEntryRelativePath(imagePath: string): string | null {
 	const rel = imagePath.replace(/^\.\//, "").replace(/\\/g, "/");

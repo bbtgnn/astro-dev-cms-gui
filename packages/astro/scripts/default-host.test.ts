@@ -1,13 +1,12 @@
 /**
- * CMS-first default host helpers (ADR-0019 slice 6) + pure builder (candidate #3).
+ * Package-default CmsHost assembly via `@cms/astro/testing` (ADR-0016 / 0019).
  */
 
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { memoryWriter } from "@cms/core";
 import { s } from "@cms/core/semantic";
-import { buildDefaultFsHost } from "../src/build-default-fs-host.ts";
-import { writeBaseFromGlob } from "../src/write-base-from-glob.ts";
+import { buildDefaultFsHost } from "../src/testing.ts";
 
 const fixtureCollections = {
 	posts: s.collection({
@@ -30,19 +29,13 @@ const fixtureCollections = {
 	}),
 };
 
-describe("writeBaseFromGlob", () => {
-	test("uses last path segment of Astro project-relative glob base", () => {
-		expect(writeBaseFromGlob("./src/content/posts", "posts")).toBe("posts");
-		expect(writeBaseFromGlob("./src/content/authors", "authors")).toBe(
-			"authors",
-		);
-	});
-
-	test("falls back to collection id when base is empty-ish", () => {
-		expect(writeBaseFromGlob(".", "posts")).toBe("posts");
-		expect(writeBaseFromGlob("", "authors")).toBe("authors");
-	});
-});
+/** Empty-ish glob base falls back to collection id for the write folder. */
+const fallbackBaseCollections = {
+	posts: s.collection({
+		loader: s.glob({ base: ".", pattern: "**/*.json" }),
+		schema: s.field({ id: "title", schema: s.string().min(1) }),
+	}),
+};
 
 describe("buildDefaultFsHost", () => {
 	const contentRoot = path.resolve("/cms-default-fs-host-test");
@@ -61,6 +54,50 @@ describe("buildDefaultFsHost", () => {
 			"authors",
 			"posts",
 		]);
+	});
+
+	test("maps project-relative glob base to contentRoot-relative write folder", async () => {
+		const writer = memoryWriter();
+		await writer.writeText(
+			path.join(contentRoot, "authors", "ada.json"),
+			JSON.stringify({ name: "Ada" }),
+		);
+		const host = buildDefaultFsHost({
+			collections: fixtureCollections,
+			contentRoot,
+			writer,
+			fileExists: () => false,
+		});
+		const ok = await host.protocol.upsertEntry({
+			collection: "posts",
+			id: "hello",
+			data: { title: "Hello", author: "ada" },
+			expectedRevision: null,
+		});
+		expect(ok.ok).toBe(true);
+		expect(writer.store.has(path.join(contentRoot, "posts", "hello.json"))).toBe(
+			true,
+		);
+	});
+
+	test("falls back to collection id when glob base is empty-ish", async () => {
+		const writer = memoryWriter();
+		const host = buildDefaultFsHost({
+			collections: fallbackBaseCollections,
+			contentRoot,
+			writer,
+			fileExists: () => false,
+		});
+		const ok = await host.protocol.upsertEntry({
+			collection: "posts",
+			id: "fallback",
+			data: { title: "Hi" },
+			expectedRevision: null,
+		});
+		expect(ok.ok).toBe(true);
+		expect(
+			writer.store.has(path.join(contentRoot, "posts", "fallback.json")),
+		).toBe(true);
 	});
 
 	test("entryExists accepts ids found under collection base", async () => {

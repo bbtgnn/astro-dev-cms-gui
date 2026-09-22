@@ -3,8 +3,15 @@
  *
  * Prefer zero-arg `cms()` from `@cms/astro` for real hosts.
  * Use this module only in fixtures and advanced layouts.
+ *
+ * {@link buildDefaultFsHost} — IR / editor collections → CmsHost without Vite
+ * (memoryWriter + injectable fileExists).
  */
 
+export {
+	type BuildDefaultFsHostOptions,
+	buildDefaultFsHost,
+} from "./build-default-fs-host";
 export {
 	type CmsHarnessOptions,
 	type CmsIntegration,

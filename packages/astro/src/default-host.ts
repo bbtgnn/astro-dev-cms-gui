@@ -11,8 +11,6 @@ import { contentRoot } from "virtual:@cms/integration-options";
 import { type CmsHost, nodeFsWriter } from "@cms/core";
 import { buildDefaultFsHost } from "./build-default-fs-host";
 
-export { writeBaseFromGlob } from "./write-base-from-glob";
-
 function nodeFileExists(absPath: string): boolean {
 	try {
 		return fs.existsSync(absPath) && fs.statSync(absPath).isFile();
