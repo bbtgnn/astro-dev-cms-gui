@@ -1,104 +1,31 @@
 /**
- * Package default CmsHost — built-in FS adapter (ADR-0019 / 0020).
+ * Package default CmsHost — Vite adapter over {@link buildDefaultFsHost}.
  *
- * Loads editor configuration from `virtual:@cms/config`, builds the
- * authoritative persisted-input validator (image allowlist + reference
- * existence), and derives collection bases from IR glob loaders — not from
- * Astro `image()` on generated `content.config`.
+ * Reads editor configuration and content root from virtual modules, injects
+ * Node FS Writer + fileExists, then delegates assembly (ADR-0016 / 0019 / 0020).
  */
 
 import fs from "node:fs";
-import path from "node:path";
 import { collections as editorCollections } from "virtual:@cms/config";
 import { contentRoot } from "virtual:@cms/integration-options";
-import {
-	type CmsHost,
-	type CollectionDescriptor,
-	createCmsHost,
-	nodeFsWriter,
-	scanEntryIds,
-} from "@cms/core";
-import {
-	type CompiledSemanticIr,
-	compileSemanticIr,
-	createAuthoritativeValidator,
-	type SemanticConfigInput,
-} from "@cms/core/semantic";
-import { writeBaseFromGlob } from "./write-base-from-glob";
+import { type CmsHost, nodeFsWriter } from "@cms/core";
+import { buildDefaultFsHost } from "./build-default-fs-host";
 
 export { writeBaseFromGlob } from "./write-base-from-glob";
 
-function isSafeEntryRelativePath(imagePath: string): string | null {
-	const rel = imagePath.replace(/^\.\//, "").replace(/\\/g, "/");
-	if (!rel || rel.startsWith("/") || rel.split("/").includes("..")) {
-		return null;
+function nodeFileExists(absPath: string): boolean {
+	try {
+		return fs.existsSync(absPath) && fs.statSync(absPath).isFile();
+	} catch {
+		return false;
 	}
-	return rel;
-}
-
-function compileEditorConfiguration(
-	tree: SemanticConfigInput["collections"],
-): CompiledSemanticIr {
-	return compileSemanticIr({ collections: tree });
 }
 
 export function createHost(): CmsHost {
-	const ir = compileEditorConfiguration(editorCollections);
-	const writer = nodeFsWriter();
-
-	const bases = new Map<string, string>();
-	for (const [name, collection] of Object.entries(ir.collections)) {
-		bases.set(name, writeBaseFromGlob(collection.loader.base, name));
-	}
-
-	const allowPaths = [...new Set(bases.values())];
-
-	const validator = createAuthoritativeValidator(ir, {
-		entryExists: async (collection, id) => {
-			const base = bases.get(collection);
-			if (!base) return false;
-			const ids = await scanEntryIds(writer, path.join(contentRoot, base));
-			return ids.includes(id);
-		},
-		isAcceptedImageAsset: (imagePath) => {
-			const rel = isSafeEntryRelativePath(imagePath);
-			if (!rel) return false;
-			for (const base of allowPaths) {
-				const abs = path.join(contentRoot, base, rel);
-				try {
-					if (fs.existsSync(abs) && fs.statSync(abs).isFile()) {
-						return true;
-					}
-				} catch {
-					// continue
-				}
-			}
-			return false;
-		},
-	});
-
-	const collections: CollectionDescriptor[] = [...bases.entries()].map(
-		([name, base]) => {
-			const schema = validator.schemas[name];
-			if (!schema) {
-				throw new Error(
-					`Authoritative validator missing schema for collection "${name}"`,
-				);
-			}
-			return {
-				name,
-				base,
-				schema,
-				config: { base, extension: "json" },
-			};
-		},
-	);
-
-	return createCmsHost({
-		root: contentRoot,
-		allowPaths,
-		writer,
-		collections,
-		schemas: { ...validator.schemas },
+	return buildDefaultFsHost({
+		collections: editorCollections,
+		contentRoot,
+		writer: nodeFsWriter(),
+		fileExists: nodeFileExists,
 	});
 }
