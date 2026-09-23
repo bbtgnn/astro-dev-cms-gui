@@ -2,10 +2,11 @@
  * Optional overlay editor configuration (schema-first).
  *
  * Dual registration: same schema record as content.config (from
- * @cms/astro-demo-simple/schemas). Overlay is presentation-only — labels,
- * nested field chrome, catalog editor keys. No IR `s.field` algebra.
+ * @cms/astro-demo-simple/schemas). Options are presentation-only — labels,
+ * nested field chrome, catalog editor keys, preview. No IR `s.field` algebra.
  *
  * Convention path `src/cms.config.ts` → `virtual:@cms/config`.
+ * Prefer `export default defineCms(...)` only; Vite soft-binds named faces.
  * Live Svelte editors live in `src/cms.components.ts`.
  */
 import { defineCms } from "@cms/astro/config";
@@ -20,28 +21,22 @@ const schemas = {
 	posts: postsSchemaInput,
 };
 
-/**
- * Derive the real Astro site route for a content entry (ADR-0013).
- * Host-compiled only — identity in, site path out; no form/draft payload.
- */
-export function getPreviewUrl(collection: string, id: string): string | null {
-	const trimmed = id.trim();
-	if (!trimmed) return null;
-	if (collection === "posts") {
-		return `/posts/${encodeURIComponent(trimmed)}`;
-	}
-	return null;
-}
-
-const cms = defineCms(schemas, {
-	overlays: {
-		authors: {
+export default defineCms(schemas, {
+	authors: {
+		ui: {
 			name: {
 				label: "Author name",
 				editor: "AuthorNameEditor",
 			},
 		},
-		posts: {
+	},
+	posts: {
+		previewUrl: (id) => {
+			const trimmed = id.trim();
+			if (!trimmed) return null;
+			return `/posts/${encodeURIComponent(trimmed)}`;
+		},
+		ui: {
 			title: { label: "Post title" },
 			draft: { label: "Draft" },
 			body: { label: "Body" },
@@ -55,9 +50,4 @@ const cms = defineCms(schemas, {
 			},
 		},
 	},
-	getPreviewUrl,
 });
-
-export const collections = cms.collections;
-export const overlays = cms.overlays;
-export default cms;

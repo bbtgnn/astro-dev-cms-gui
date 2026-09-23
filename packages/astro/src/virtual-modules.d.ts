@@ -30,13 +30,16 @@ declare module "virtual:@cms/config" {
 
 	/** Optional schema record when using defineCms(collections, …). */
 	export const collections: Readonly<Record<string, unknown>>;
-	/** Nested overlay chrome per collection (empty when cms.config absent). */
+	/** Nested field chrome per collection (normalized from options.*.ui). */
 	export const overlays: Readonly<Record<string, SchemaFormOverlay>>;
+	/** Per-collection editor mode (normalized from options.*.type). */
+	export const types: Readonly<Record<string, "collection" | "singleton">>;
 	/** Host-compiled entry → site preview URL; null when unsupported. */
 	export function getPreviewUrl(collection: string, id: string): string | null;
 	const config: {
 		collections?: Readonly<Record<string, unknown>>;
 		overlays?: Readonly<Record<string, SchemaFormOverlay>>;
+		types?: Readonly<Record<string, "collection" | "singleton">>;
 		getPreviewUrl?: (collection: string, id: string) => string | null;
 	};
 	export default config;

@@ -162,25 +162,21 @@ export function cmsConfigVitePlugin(
 				return [
 					"export const overlays = {};",
 					"export const collections = {};",
+					"export const types = {};",
 					"export function getPreviewUrl(_collection, _id) { return null; }",
-					"export default { overlays, collections, getPreviewUrl };",
+					"export default { overlays, collections, types, getPreviewUrl };",
 				].join("\n");
 			}
-			// Soft-bind: new defineCms exports overlays; legacy IR may omit them.
+			// Prefer default export (defineCms result); named exports are legacy fallback.
 			return [
 				`import * as __cmsConfig from ${entryLiteral};`,
-				"export const collections = __cmsConfig.collections ?? {};",
-				"export const overlays =",
-				"  __cmsConfig.overlays ?? __cmsConfig.default?.overlays ?? {};",
+				"const __cfg = __cmsConfig.default ?? __cmsConfig;",
+				"export const collections = __cfg.collections ?? {};",
+				"export const overlays = __cfg.overlays ?? {};",
+				"export const types = __cfg.types ?? {};",
 				"export const getPreviewUrl =",
-				"  __cmsConfig.getPreviewUrl ??",
-				"  __cmsConfig.default?.getPreviewUrl ??",
-				"  ((_collection, _id) => null);",
-				"export default __cmsConfig.default ?? {",
-				"  collections,",
-				"  overlays,",
-				"  getPreviewUrl,",
-				"};",
+				"  __cfg.getPreviewUrl ?? ((_collection, _id) => null);",
+				"export default __cfg;",
 			].join("\n");
 		},
 	};

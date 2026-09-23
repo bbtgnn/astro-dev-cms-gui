@@ -49,8 +49,10 @@ describe("cmsConfigVitePlugin", () => {
 		if (resolved == null) throw new Error("expected resolved id");
 		const source = await plugin.load(resolved);
 		expect(source).toContain(`from ${JSON.stringify(entry)}`);
+		expect(source).toContain("__cfg = __cmsConfig.default ?? __cmsConfig");
 		expect(source).toContain("export const overlays =");
 		expect(source).toContain("export const getPreviewUrl =");
+		expect(source).toContain("export const types =");
 	});
 
 	test("emits stub overlays when entry omitted", async () => {
@@ -60,6 +62,7 @@ describe("cmsConfigVitePlugin", () => {
 		if (resolved == null) throw new Error("expected resolved id");
 		const source = await plugin.load(resolved);
 		expect(source).toContain("export const overlays = {};");
+		expect(source).toContain("export const types = {};");
 		expect(source).toContain("export function getPreviewUrl");
 	});
 });

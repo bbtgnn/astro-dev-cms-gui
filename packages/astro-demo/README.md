@@ -30,7 +30,7 @@ Layout:
 
 - `src/content.config.ts` — hand-authored Astro collections (schemas from
   `@cms/astro-demo-simple/schemas`)
-- `src/cms.config.ts` — `defineCms(schemas, { overlays, getPreviewUrl })`
+- `src/cms.config.ts` — `export default defineCms(schemas, { authors: { ui }, posts: { previewUrl, ui } })`
 - `src/cms.components.ts` — live Svelte catalog (`AuthorNameEditor`)
 - `src/content/` — JSON entries (seeded from simple; optional `seo` on posts)
 
@@ -40,11 +40,11 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 
 | Feature | Where |
 |---------|--------|
-| Multi-collection overlays | `authors` + `posts` in `cms.config` |
-| Nested object field chrome | `posts.seo` → `seo.description` label |
-| Custom editor | `authors.name` → `AuthorNameEditor` via catalog |
-| Preview URL | `getPreviewUrl("posts", id)` → `/posts/:id` |
-| Singleton editor flag | skipped — `CollectionConfig.kind: "singleton"` still reserved / unimplemented |
+| Multi-collection options | `authors` + `posts` keys in `defineCms` options |
+| Nested object field chrome | `posts.ui.seo` → `seo.description` label |
+| Custom editor | `authors.ui.name` → `AuthorNameEditor` via catalog |
+| Preview URL | `posts.previewUrl(id)` → `/posts/:id` |
+| Collection type | `type?: "collection" \| "singleton"` (stored; shell wiring later) |
 
 ## Useful endpoints
 
