@@ -33,6 +33,7 @@ export const CONTENT_FIELD_STAMP = Symbol.for("@cms/astro.contentFieldStamp");
 
 export type ContentFieldStampMeta =
 	| { readonly kind: "image" }
+	| { readonly kind: "file" }
 	| { readonly kind: "reference"; readonly collection: string };
 
 /** Nested path chrome — mergeable without re-authoring the Zod schema. */
@@ -78,6 +79,7 @@ function readCmsMeta(schema: unknown): ContentFieldStampMeta | undefined {
 	const stamped = schema as StampedSchema;
 	const stamp = stamped[CONTENT_FIELD_STAMP];
 	if (stamp?.kind === "image") return { kind: "image" };
+	if (stamp?.kind === "file") return { kind: "file" };
 	if (stamp?.kind === "reference") {
 		return { kind: "reference", collection: stamp.collection };
 	}
@@ -92,6 +94,7 @@ function readCmsMeta(schema: unknown): ContentFieldStampMeta | undefined {
 	}
 	const cms = (meta as CmsMeta | undefined)?.cms;
 	if (cms?.kind === "image") return { kind: "image" };
+	if (cms?.kind === "file") return { kind: "file" };
 	if (cms?.kind === "reference" && typeof cms.collection === "string") {
 		return { kind: "reference", collection: cms.collection };
 	}

@@ -7,5 +7,14 @@
 		"skipLibCheck": true,
 		"types": ["node"]
 	},
-	"include": ["./form-tree.fixtures.ts", "../src/form-tree.ts", "../src/semantic/types.ts"]
+	"include": [
+		"./form-tree.fixtures.ts",
+		"./define-cms.fixtures.ts",
+		"../src/form-tree.ts",
+		"../src/define-cms.ts",
+		"../src/collection-descriptors.ts",
+		"../src/semantic/types.ts",
+		"../src/semantic/schema-form-projection.ts",
+		"../src/semantic/form-model.ts"
+	]
 }

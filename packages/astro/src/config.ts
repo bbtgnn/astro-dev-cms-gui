@@ -4,6 +4,10 @@
  * {@link defineCms}`(options)` — presentation only (previewUrl, type, form).
  * Prefer `export default defineCms({ … })`.
  *
+ * Does **not** accept `schema` or `location` — those stay on Astro
+ * `content.config` + content-proxy stamps. Portable non-Astro hosts use
+ * `defineCms` from `@cms/core/define-cms` instead.
+ *
  * Validation schemas come from `content.config` (stamped host / shell form
  * models). Form-tree field refs type against Input keys via `cms sync` /
  * Vite emit (`@cms/astro/collection-types`). Stamped image/ref → CmsImage /

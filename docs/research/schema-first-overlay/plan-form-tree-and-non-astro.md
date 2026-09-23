@@ -77,7 +77,7 @@
 - [ ] Form tree with tabs (objects), columns (arrays), group, object callback scopes — typed field refs  
 - [ ] Schema-first projection applies form tree layout (unplaced keys → default stack)  
 - [ ] Astro overlay demo uses `form` (or dual-accept during migrate)  
-- [ ] Non-Astro `defineCms` on `@cms/core` joins schema + location + form → host descriptors  
+- [x] Non-Astro `defineCms` on `@cms/core` joins schema + location + form → host descriptors  
 - [ ] Workspace: product libs in `packages/`; self-host apps in `demos/`  
 - [ ] `bun run --filter @cms/sveltekit-demo dev` → `/cms` edits FS-backed entries without Astro  
 - [ ] GitHub #1 unchanged; no superseding ADR in these tickets

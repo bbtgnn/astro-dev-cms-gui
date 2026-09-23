@@ -20,6 +20,20 @@ export {
 	createCmsHost,
 	createCmsProtocol,
 } from "./create-cms-protocol";
+export type {
+	ChromeFor,
+	CmsCollectionBuilt,
+	CmsCollectionOptions,
+	CmsCollectionType,
+	CmsFile,
+	CmsHelpers,
+	CmsImage,
+	CmsReference,
+	CollectionLocation,
+	DefineCmsResult,
+	FormBuilderFor,
+} from "./define-cms";
+export { defineCms } from "./define-cms";
 export { parseEntryFile, serializeEntryFile } from "./entry-file";
 export {
 	type CmsFetchClient,
