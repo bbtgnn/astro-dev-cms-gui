@@ -30,3 +30,18 @@ Stamped schemas project to editor form models via
 `@cms/authoring` (`editorCollectionsFromSchemas`). See
 [`packages/core/src/semantic/schema-form.md`](../../../core/src/semantic/schema-form.md)
 (Ajv client vs authoritative Zod parse).
+
+## Host join (ticket 04)
+
+After Vite boot (or a shim-evaluated fixture), pass the content.config
+`collections` export through
+`collectionsFromContentConfigExport` → `buildFsHostFromStampedCollections`
+(`@cms/astro/testing`):
+
+1. Read `LOADER_STAMP` → write base under `contentRoot` (ADR-0007)
+2. Rewrite stamped image/ref leaves to persisted **Input** strings for
+   authoritative validate (ADR-0010); return `stampedSchemas` for form projection
+3. **Fail closed** if a loader has no stamp, unless `locations[name] = { base }`
+4. `file()` collections throw a clear unsupported error (v1 is glob + JSON)
+
+Product `cms()` still uses the IR host until ticket 05.

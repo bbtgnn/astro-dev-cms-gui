@@ -6,12 +6,24 @@
  *
  * {@link buildDefaultFsHost} — IR / editor collections → CmsHost without Vite
  * (memoryWriter + injectable fileExists).
+ *
+ * {@link buildFsHostFromStampedCollections} — stamped content.config collections
+ * → CmsHost (schema-first path; keep IR builder until ticket 05 flips `cms()`).
  */
 
 export {
 	type BuildDefaultFsHostOptions,
 	buildDefaultFsHost,
 } from "./build-default-fs-host";
+export {
+	type BuildFsHostFromStampedOptions,
+	type BuildFsHostFromStampedResult,
+	type CollectionLocationOverride,
+	type MaterializedStampedCollection,
+	type StampedCollectionConfig,
+	buildFsHostFromStampedCollections,
+	collectionsFromContentConfigExport,
+} from "./build-fs-host-from-stamped";
 export {
 	type CmsHarnessOptions,
 	type CmsIntegration,
