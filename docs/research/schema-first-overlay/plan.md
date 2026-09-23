@@ -1,6 +1,6 @@
 # Plan — schema-first happy-path flip
 
-**Status:** planned (not executing)  
+**Status:** happy-path flip executed on branch (demos 06/07 + rename 09 + generate removal 08 resolved); remaining research stubs only  
 **Branch:** `explore/schema-first-overlay`  
 **Map:** [map.md](./map.md)
 
