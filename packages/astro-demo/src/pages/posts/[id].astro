@@ -1,0 +1,74 @@
+---
+/**
+ * Real Astro site route for posts — default preview target (ADR-0013).
+ * Cover uses Astro `image()` output when present; body/title stay plain fields.
+ */
+import { Image } from "astro:assets";
+import { getCollection, getEntry } from "astro:content";
+
+export async function getStaticPaths() {
+	const posts = await getCollection("posts");
+	return posts.map((post) => ({
+		params: { id: post.id },
+	}));
+}
+
+const { id } = Astro.params;
+if (!id) {
+	return Astro.redirect("/");
+}
+
+const entry = await getEntry("posts", id);
+if (!entry) {
+	return new Response(null, { status: 404, statusText: "Not Found" });
+}
+
+const data = entry.data;
+const title = data.title;
+const body = data.body;
+const draft = data.draft;
+const cover = data.cover;
+const authorRef = data.author;
+const authorId =
+	authorRef && typeof authorRef === "object" && "id" in authorRef
+		? String(authorRef.id)
+		: null;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>{title}</title>
+	</head>
+	<body>
+		<p><a href="/">← home</a> · <a href="/cms">cms</a></p>
+		<article>
+			<header>
+				<h1>{title}</h1>
+				{draft ? (
+					<p>
+						<small>draft</small>
+					</p>
+				) : null}
+				{authorId ? (
+					<p>
+						<small>author: {authorId}</small>
+					</p>
+				) : null}
+			</header>
+
+			{cover ? (
+				<figure>
+					<Image src={cover} alt="" />
+				</figure>
+			) : null}
+
+			{body ? (
+				<section>
+					<pre>{body}</pre>
+				</section>
+			) : null}
+		</article>
+	</body>
+</html>

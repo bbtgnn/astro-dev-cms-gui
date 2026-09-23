@@ -1,0 +1,29 @@
+---
+/**
+ * Dev preview of a persisted image path via the allowlisted CMS asset route.
+ * Site pages that need Astro optimization should use Astro `<Image>` / `image()`
+ * on the host projection (ADR-0015).
+ */
+import { contentAssetPath } from "@cms/core";
+
+type Props = {
+	/** Entry-relative path, e.g. `./hello/cover/photo.jpg`. */
+	src: string;
+	/** Collection content base (allowlisted folder under src/content). */
+	base?: string;
+	alt?: string;
+	/** Asset URL prefix (dev CMS asset route). */
+	assetBase?: string;
+};
+
+const {
+	src,
+	base = "posts",
+	alt = "",
+	assetBase = "/_cms/api/assets",
+} = Astro.props as Props;
+
+const imgSrc = `${assetBase.replace(/\/+$/, "")}/${contentAssetPath(base, src)}`;
+---
+
+<img src={imgSrc} alt={alt} loading="lazy" />

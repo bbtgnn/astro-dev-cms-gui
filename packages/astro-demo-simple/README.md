@@ -24,6 +24,7 @@ Happy path: `http://127.0.0.1:4321/cms` (shell via `injectRoute`) and `/_cms`
 Layout:
 
 - `src/content.config.ts` — hand-authored Astro collections (`authors`, `posts`)
+- `src/schemas.ts` — shared Zod schemas (exported as `@cms/astro-demo-simple/schemas` for the overlay demo)
 - `src/content/` — JSON entries (`posts`, `authors`)
 - **No** `src/cms.config.ts` / `cms.components.ts`
 

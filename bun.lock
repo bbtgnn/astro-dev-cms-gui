@@ -32,6 +32,24 @@
         "svelte": "catalog:",
       },
     },
+    "packages/astro-demo": {
+      "name": "@cms/astro-demo",
+      "version": "0.0.0",
+      "dependencies": {
+        "@astrojs/svelte": "catalog:",
+        "@cms/astro": "workspace:*",
+        "@cms/astro-demo-simple": "workspace:*",
+        "@cms/authoring": "workspace:*",
+        "@cms/core": "workspace:*",
+        "astro": "catalog:",
+        "svelte": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@astrojs/check": "^0.9.10",
+        "typescript": "catalog:",
+      },
+    },
     "packages/astro-demo-simple": {
       "name": "@cms/astro-demo-simple",
       "version": "0.0.0",
@@ -201,6 +219,8 @@
     "@clack/prompts": ["@clack/prompts@1.8.1", "", { "dependencies": { "@clack/core": "1.5.1", "fast-string-width": "^3.0.2", "fast-wrap-ansi": "^0.2.0", "sisteransi": "^1.0.5" } }, "sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ=="],
 
     "@cms/astro": ["@cms/astro@workspace:packages/astro"],
+
+    "@cms/astro-demo": ["@cms/astro-demo@workspace:packages/astro-demo"],
 
     "@cms/astro-demo-simple": ["@cms/astro-demo-simple@workspace:packages/astro-demo-simple"],
 

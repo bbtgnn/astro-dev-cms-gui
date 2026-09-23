@@ -1,0 +1,49 @@
+---
+/**
+ * Cover image from authored original beside posts/hello (ADR-0015).
+ */
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import CmsImage from "../components/CmsImage.astro";
+
+type HelloDoc = {
+	title?: string;
+	cover?: string;
+};
+
+const entryPath = join(
+	dirname(fileURLToPath(import.meta.url)),
+	"../content/posts/hello.json",
+);
+const doc = JSON.parse(readFileSync(entryPath, "utf8")) as HelloDoc;
+const cover = typeof doc.cover === "string" ? doc.cover : null;
+const coverFs = cover
+	? join(dirname(entryPath), cover.replace(/^\.\//, ""))
+	: null;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>image render — {doc.title ?? "hello"}</title>
+	</head>
+	<body>
+		<p><a href="/">← home</a></p>
+		<h1>{doc.title}</h1>
+		{
+			cover && coverFs && existsSync(coverFs) ? (
+				<figure>
+					<CmsImage src={cover} base="posts" alt="Cover" />
+					<figcaption><code>{cover}</code></figcaption>
+				</figure>
+			) : (
+				<p>
+					No cover yet — upload via <a href="/cms">/cms</a> posts/hello, then
+					refresh.
+				</p>
+			)
+		}
+	</body>
+</html>

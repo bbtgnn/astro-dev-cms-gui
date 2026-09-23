@@ -1,0 +1,69 @@
+# @cms/astro-demo
+
+**Demo / self-host fixture** for schema-first CMS with optional overlay:
+native Astro `content.config` + `defineCms(collections, overlay)` +
+`cms.components`. Not a starter to copy into products.
+
+Proves the custom integration ladder — nested field chrome, catalog editors,
+preview URLs — while Astro/Zod Input remains validation authority.
+
+Companion: [`@cms/astro-demo-simple`](../astro-demo-simple) (same schemas, no
+overlay).
+
+## Run
+
+From repo root:
+
+```bash
+bun install
+bun run --filter @cms/astro-demo dev
+```
+
+Happy path: `http://127.0.0.1:4322/cms` (shell via `injectRoute`) and `/_cms`
+(JSON API via default host middleware). Port **4322** so it can run beside
+simple demo on 4321.
+
+`astro.config.mjs` uses `cms()` plus a monorepo-only Vite tweak so workspace
+`@cms/*` TypeScript source loads (not part of the published `@cms/astro` API).
+
+Layout:
+
+- `src/content.config.ts` — hand-authored Astro collections (schemas from
+  `@cms/astro-demo-simple/schemas`)
+- `src/cms.config.ts` — `defineCms(schemas, { overlays, getPreviewUrl })`
+- `src/cms.components.ts` — live Svelte catalog (`AuthorNameEditor`)
+- `src/content/` — JSON entries (seeded from simple; optional `seo` on posts)
+
+Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
+
+## Overlay features
+
+| Feature | Where |
+|---------|--------|
+| Multi-collection overlays | `authors` + `posts` in `cms.config` |
+| Nested object field chrome | `posts.seo` → `seo.description` label |
+| Custom editor | `authors.name` → `AuthorNameEditor` via catalog |
+| Preview URL | `getPreviewUrl("posts", id)` → `/posts/:id` |
+| Singleton editor flag | skipped — `CollectionConfig.kind: "singleton"` still reserved / unimplemented |
+
+## Useful endpoints
+
+| Path | Purpose |
+|------|---------|
+| `/` | Demo home |
+| `/cms` | Authoring shell (overlay labels + custom editors) |
+| `/_cms/ok` | API heartbeat (via `cms()`) |
+| `/_cms/api/collections` | List collections (`authors`, `posts`) |
+| `/_cms/api/collections/authors/ada` | Author entry (custom name editor in shell) |
+| `/_cms/api/collections/posts/hello` | Post entry (SEO nested chrome in shell) |
+| `PUT` invalid posts body | Authoritative schema Input validate → 400 |
+
+## Curl smoke (with `dev` running)
+
+```bash
+# overlay still validates via Astro/Zod Input
+curl -sS -o /tmp/cms-400.json -w "%{http_code}\n" -X PUT \
+  http://127.0.0.1:4322/_cms/api/collections/posts/smoke-temp \
+  -H 'content-type: application/json' \
+  -d '{"id":"smoke-temp","collection":"posts","data":{"title":1}}'
+```

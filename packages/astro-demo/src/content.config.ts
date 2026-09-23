@@ -1,10 +1,14 @@
 /**
  * Hand-authored Astro content collections (schema-first).
+ * Same schemas as @cms/astro-demo-simple (+ nested seo for overlay chrome).
  * CMS stamps `glob` / `image` / `reference` via content-proxy; no generate.
  */
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
-import { authorsSchema, postsSchema } from "./schemas";
+import {
+	authorsSchema,
+	postsSchema,
+} from "@cms/astro-demo-simple/schemas";
 
 const authors = defineCollection({
 	loader: glob({
@@ -23,4 +27,3 @@ const posts = defineCollection({
 });
 
 export const collections = { authors, posts };
-export { authorsSchema, postsSchema, postsSchemaInput } from "./schemas";
