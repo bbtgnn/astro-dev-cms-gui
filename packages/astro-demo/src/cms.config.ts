@@ -1,18 +1,17 @@
 /**
  * Optional overlay editor configuration (schema-first).
  *
- * Pass Astro `collections` from content.config — defineCms materializes schemas.
+ * Presentation only — schemas live in `content.config`.
  * Run `cms sync` (or `astro dev` via cms()) for Input types / ui path safety.
- * Image/ref become CmsImage / CmsReference in generated cms-collections.d.ts.
+ * Image/ref become CmsImage / CmsReference in generated cms.types.d.ts.
  *
  * Convention path `src/cms.config.ts` → `virtual:@cms/config`.
  * Prefer `export default defineCms(...)` only; Vite soft-binds named faces.
  * Live Svelte editors live in `src/cms.components.ts`.
  */
 import { defineCms } from "@cms/astro/config";
-import { collections } from "./content.config";
 
-export default defineCms(collections, {
+export default defineCms({
 	authors: {
 		ui: {
 			name: {

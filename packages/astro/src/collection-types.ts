@@ -1,7 +1,7 @@
 /**
  * CMS Input collection types — branded leaves + typed overlay chrome.
  *
- * Projects augment {@link CmsCollections} via generated `src/cms-collections.d.ts`
+ * Projects augment {@link CmsCollections} via generated `src/cms.types.d.ts`
  * (`cms sync` / Vite emit). Stamped image/ref become {@link CmsImage} /
  * {@link CmsReference} so `ui` chrome can discriminate kinds.
  */

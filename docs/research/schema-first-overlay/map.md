@@ -6,12 +6,13 @@
 
 ## Destination
 
-Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is validation + location authority; `@cms/astro` intercepts loaders/`image`/`reference` via content-proxy; optional `defineCms(collections, overlay)` for presentation; two demo packages (simple + overlay); no generated `content.config` on product `cms()`.
+Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is validation + location authority; `@cms/astro` intercepts loaders/`image`/`reference` via content-proxy; optional `defineCms` overlay for presentation; self-host apps under top-level `demos/`; portable non-Astro `defineCms` on `@cms/core` with a SvelteKit demo. No generated `content.config` on product `cms()`.
 
 ## Notes
 
 - Research: [schema-first-overlay.md](../schema-first-overlay.md), [astro-loader-extraction.md](../astro-loader-extraction.md)
-- Full plan: [plan.md](./plan.md)
+- Astro flip plan: [plan.md](./plan.md) (tickets 01–10 — largely done)
+- Next phase: [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md) (tickets 11–17)
 - Breakage on this branch is accepted (Q22).
 - Do not edit GitHub wayfinder map #1 while exploring.
 
@@ -20,19 +21,22 @@ Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is
 - Schema-first + CMS overlay (sharper model); JSON Schema is form wire, not public seam.
 - Astro Input for CMS values; Output is render-only.
 - Image/ref kinds via stamp/proxy (astro-decap style); layout/singleton/editors via overlay — not FieldUi-on-Zod.
-- `defineCms(collections, config)` multi-collection; nested field scoping; same shape Astro + non-Astro (location API differs).
+- Astro `defineCms(options)` presentation-only; schemas from content.config; types via `cms.types.d.ts` module augmentation.
+- Options-only cleanup: no collections arg on Astro face; host reads stamped content.config.
+- **Form tree** (next): one fluent structure (field refs + tabs/columns/group); tabs as objects; object enter = callback scope.
+- **Non-Astro** `defineCms(cms => …)` on `@cms/core` with schema + location + form + leaf helpers.
+- **demos/** top-level for self-host apps; `packages/` for libraries only.
 - `defineCms` optional; singleton = editor flag; id↔path = host (ADR-0007).
-- Two demos: `@cms/astro-demo-simple`, `@cms/astro-demo`; rename away from “template”.
 - Full happy-path flip of `cms()` (kill generation); Q19–Q23 locked in parent research note.
 
 ## Frontier (local tickets)
 
-See task list in [plan.md](./plan.md) § Tickets. Open / unblocked first wins.
+**Next:** [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md) — open first: **12** (form tree builders) and **16** (demos/ workspace, can parallel).
 
-**Next (types):** [codegen-input-types-plan.md](./codegen-input-types-plan.md) — Input types from `content.config` for full `defineCms` `ui` safety (`cms sync` + Vite emit).
+Prior phase tickets 01–10: see [plan.md](./plan.md). Codegen Input types: [codegen-input-types-plan.md](./codegen-input-types-plan.md) (implemented; Astro `ui` path — migrating to `form` in 14).
 
 ## Out of scope here
 
 - Superseding ADR-0019 on `main` / map #1
-- Non-Astro location API implementation (ticket 10 Answer: host-only join; stub only)
+- Accordion / blocks / i18n layout in form-tree v1
 - MD/MDX body serialization, hosted git CMS

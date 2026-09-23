@@ -1,5 +1,5 @@
 /**
- * Emit `src/cms-collections.d.ts` augmenting `@cms/astro/collection-types`.
+ * Emit `src/cms.types.d.ts` augmenting `@cms/astro/collection-types`.
  */
 
 import type { z } from "zod";
@@ -9,7 +9,7 @@ import {
 	printZodInputType,
 } from "./zod-input-type";
 
-export const CMS_COLLECTION_TYPES_FILENAME = "cms-collections.d.ts";
+export const CMS_COLLECTION_TYPES_FILENAME = "cms.types.d.ts";
 
 export function printCollectionTypesFile(
 	collections: Readonly<Record<string, z.ZodType>>,

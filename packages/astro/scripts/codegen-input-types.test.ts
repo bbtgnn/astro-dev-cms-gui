@@ -10,7 +10,6 @@ import {
 	stampRelationSchema,
 } from "../src/content-proxy/stamp-helpers";
 import { defineCms } from "../src/config.ts";
-import { collectionsFromContentConfigExport } from "../src/testing.ts";
 
 describe("printZodInputType", () => {
 	test("maps stamped image/ref to CmsImage / CmsReference", () => {
@@ -53,11 +52,9 @@ describe("printCollectionTypesFile", () => {
 	});
 });
 
-describe("defineCms with Astro-shaped collections", () => {
-	test("materializes fixture collections and applies ui overlay", async () => {
-		const mod = await import("./fixtures/authors-posts-content.config.ts");
-		const loaded = collectionsFromContentConfigExport(mod);
-		const cms = defineCms(loaded, {
+describe("defineCms options overlay", () => {
+	test("applies ui + previewUrl without schemas", () => {
+		const cms = defineCms({
 			posts: {
 				previewUrl: (id) => `/posts/${id}`,
 				ui: {
@@ -68,6 +65,5 @@ describe("defineCms with Astro-shaped collections", () => {
 		});
 		expect(cms.getPreviewUrl("posts", "x")).toBe("/posts/x");
 		expect(cms.overlays.posts?.title?.label).toBe("Title");
-		expect(typeof cms.collections.posts.parse).toBe("function");
 	});
 });

@@ -11,7 +11,8 @@ The UI an editor uses at author-time to create and change content entries. Not a
 _Avoid_: CMS server, admin panel, dashboard
 
 **Self-host validation**:
-Running the authoring shell on a real local Astro project (especially the reference host demos `@cms/astro-demo-simple` / `@cms/astro-demo`) to prove integration and write-back — not only via docs.
+Running the authoring shell on a real local host app under `demos/` (Astro and/or
+SvelteKit reference hosts) to prove integration and write-back — not only via docs.
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
@@ -28,11 +29,35 @@ editors live in `src/cms.components.ts` (`virtual:@cms/components`).
 _Avoid_: cms.config as a server discovery registry, content.config (for the browser edge)
 
 **Reference host**:
-The in-repo Astro demos used to exercise and validate the product: `@cms/astro-demo-simple` (content.config-only) and `@cms/astro-demo` (optional overlay + components). Sample consumers, not the product identity. On branch `explore/schema-first-overlay`, these demos explore schema-first hosting vs ADR-0019 generate.
+The in-repo self-host apps used to exercise and validate the product. On
+`explore/schema-first-overlay` they live under top-level `demos/` (libraries
+stay in `packages/`). Astro: content.config-only and optional overlay demos;
+non-Astro: SvelteKit demo via portable `defineCms`. Sample consumers, not the
+product identity.
 _Avoid_: dogfood app, prototype template (as the product name), `@cms/astro-template` (removed)
 
+**Form tree**:
+The presentation tree for one collection’s editor: layout nodes (tabs, columns,
+group, default stack) plus **field refs** with fluent chrome. Does not declare
+persisted shape; schema (Zod / Astro content.config) remains validation
+authority. Schema-first overlay exploration; not the CMS-first unified IR tree.
+_Avoid_: ui+layout maps (as two peer authoring surfaces), FieldUi-on-Zod, IR `s.field` algebra (as the user face)
+
+**Field ref**:
+A typed reference to a key in a collection’s persisted Input shape, used inside
+a form tree for placement and chrome (label, editor catalog key, kind hints).
+Entering a nested object rebinds the helper via a callback scope for type
+safety. Not a durable schema node.
+_Avoid_: Field schema, s.field, form field (SJSF sense)
+
+**Collection**:
+A named set of content entries the shell can list and edit. On Astro hosts, an
+Astro content collection; on non-Astro hosts, a host-declared schema + location
+joined at `createCmsHost`.
+_Avoid_: content type, model (Payload sense)
+
 **Shell UI**:
-The Svelte interface rendered inside the Astro-hosted authoring shell.
+The Svelte interface rendered inside the host-mounted authoring shell.
 _Avoid_: admin SPA, CMS frontend
 
 **Authoring session**:
@@ -50,20 +75,21 @@ _Avoid_: autosave controller (as the public face), editor store, form state mana
 A durable node in the CMS semantic tree: persisted input type, semantic kind,
 validation constraints, and optional editor binding (`component` / `props`).
 Projected to browser form model, authoritative validator, and native Astro Zod.
-_Avoid_: Astro schema alone, Zod schema alone, form config
+_Avoid_: Astro schema alone, Zod schema alone, form config, Field ref
 
 **FieldUi**:
 Authoring UI on a field or aggregate: stock editor from semantic kind, optional
 catalog-key `component`, optional `wrapper` on objects/arrays, and explicit
-`props`. Authored in the unified tree. Keys resolve to live Svelte modules via
-the host components catalog.
+`props`. Authored in the unified tree (ADR-0019). Keys resolve to live Svelte
+modules via the host components catalog. Schema-first exploration prefers form
+tree field-ref chrome over FieldUi-on-Zod.
 _Avoid_: form config, widget map alone, Zod meta UI, FieldUi-on-Zod
 
 **Form model**:
-The browser editor projection of the IR for one collection: JSON Schema plus
-layout and field bindings, without live Svelte values. Produced by compile +
-project. SJSF `uiSchema` is form-shell implementation after lower — not part of
-the Form model.
+The browser editor projection for one collection: JSON Schema plus layout and
+field bindings, without live Svelte values. Produced by IR compile + project, or
+by schema-first projection (+ optional form tree). SJSF `uiSchema` is form-shell
+implementation after lower — not part of the Form model.
 _Avoid_: Zod editor schema, toFormSchemas output, content.config schema, SJSF
 uiSchema (as the Form model itself)
 
@@ -77,16 +103,12 @@ The path by which edits from the authoring shell land in project files (or a loc
 _Avoid_: persistence, save API, storage backend
 
 **CMS protocol**:
-The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + collection descriptors (from compiled IR on the default host). Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
+The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + collection descriptors (from compiled IR on the default host, or stamped/host-declared schemas on schema-first paths). Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
 _Avoid_: save API, REST CRUD, WriteMode (as a public API), content.config discovery (as the editor seam)
 
 **Content entry**:
 One unit of content addressed by the shell (a file or logical document in a collection).
 _Avoid_: page, document, post (unless collection-specific)
-
-**Collection**:
-An Astro content collection whose entries the shell can list and edit.
-_Avoid_: content type, model (Payload sense)
 
 **Form shell**:
 The Svelte UI that turns a form model into an editable form for one content entry.

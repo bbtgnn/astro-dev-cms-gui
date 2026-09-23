@@ -43,7 +43,7 @@ export type StampedCollectionConfig = {
 	loader?: unknown;
 	/**
 	 * Zod schema or Astro function schema. Typed loosely so Astro
-	 * `SchemaContext` (rich `image()`) assigns into defineCms(collections).
+	 * `SchemaContext` (rich `image()`) assigns into stamped content.config.
 	 */
 	schema?:
 		| z.ZodType

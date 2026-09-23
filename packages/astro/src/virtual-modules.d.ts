@@ -28,8 +28,6 @@ declare module "virtual:@cms/content-config" {
 declare module "virtual:@cms/config" {
 	import type { SchemaFormOverlay } from "@cms/core/semantic";
 
-	/** Optional schema record when using defineCms(collections, …). */
-	export const collections: Readonly<Record<string, unknown>>;
 	/** Nested field chrome per collection (normalized from options.*.ui). */
 	export const overlays: Readonly<Record<string, SchemaFormOverlay>>;
 	/** Per-collection editor mode (normalized from options.*.type). */
@@ -37,7 +35,6 @@ declare module "virtual:@cms/config" {
 	/** Host-compiled entry → site preview URL; null when unsupported. */
 	export function getPreviewUrl(collection: string, id: string): string | null;
 	const config: {
-		collections?: Readonly<Record<string, unknown>>;
 		overlays?: Readonly<Record<string, SchemaFormOverlay>>;
 		types?: Readonly<Record<string, "collection" | "singleton">>;
 		getPreviewUrl?: (collection: string, id: string) => string | null;

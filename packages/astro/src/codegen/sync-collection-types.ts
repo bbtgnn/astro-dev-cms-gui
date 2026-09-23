@@ -25,7 +25,7 @@ export type SyncCollectionTypesOptions = {
 	projectRoot: string;
 	/** Absolute path to content.config; default convention resolve. */
 	contentConfigEntry?: string;
-	/** Absolute output path; default `<projectRoot>/src/cms-collections.d.ts`. */
+	/** Absolute output path; default `<projectRoot>/src/cms.types.d.ts`. */
 	outFile?: string;
 };
 

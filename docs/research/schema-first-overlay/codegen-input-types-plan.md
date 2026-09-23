@@ -1,6 +1,6 @@
 # Plan — CMS Input types from `content.config` (codegen)
 
-**Status:** implemented (codegen + brands + defineCms(collections))  
+**Status:** implemented (codegen + brands + options-only `defineCms`)  
 **Branch:** `explore/schema-first-overlay`  
 **Depends on:** content-proxy + stamped host (done); flattened `defineCms` options (done)  
 **Parent:** [schema-first-overlay.md](../schema-first-overlay.md), [plan.md](./plan.md)
@@ -16,15 +16,14 @@ Codegen detects content-proxy stamps and emits:
 
 ## Goal
 
-Full **`ui` path type safety** for `defineCms(collections, options)` derived from **`export const collections`** in user `content.config` — **Input** shape (persisted paths/ids), not Astro query Output.
+Full **`ui` path type safety** for `defineCms(options)` via module augmentation of `CmsCollections` from user `content.config` — **Input** shape (persisted paths/ids), not Astro query Output.
 
 Lean consumer API:
 
 ```ts
-import { collections } from "./content.config";
 import { defineCms } from "@cms/astro/config";
 
-export default defineCms(collections, {
+export default defineCms({
   posts: {
     previewUrl: (id) => `/posts/${encodeURIComponent(id)}`,
     ui: {
@@ -35,7 +34,7 @@ export default defineCms(collections, {
 });
 ```
 
-No hand-built parallel `schemas` / `postsSchemaInput` object.
+Schemas stay in `content.config`; no parallel schema object in the overlay.
 
 ## Non-goals
 
@@ -72,20 +71,20 @@ src/content.config.ts
   (objects, arrays, optionals; image/ref stamps → string)
         │
         ▼
-  emit  src/cms-collections.d.ts   (convention; gitignore or commit — TBD)
+  emit  src/cms.types.d.ts   (convention; gitignore or commit — TBD)
   or    virtual module ambient merge
         │
         ▼
-  defineCms(collections, options)
+  defineCms(options)
     options[K].ui : ChromeFor<CmsCollections[K]>
 ```
 
-**Runtime `defineCms`:** still materializes function schemas when given Astro collection configs (map `.schema`). Types come from codegen; runtime Zod for any leftover use of `result.collections` stays materialized Input. Form projection / validate continue to prefer stamped `virtual:@cms/content-config` (unchanged).
+**Runtime `defineCms`:** presentation only (`overlays`, `types`, `getPreviewUrl`). Schemas stay on stamped `virtual:@cms/content-config`.
 
 ## Emitted contract
 
 ```ts
-// src/cms-collections.d.ts  (generated)
+// src/cms.types.d.ts  (generated)
 declare module "@cms/astro/collection-types" {
   export type CmsCollections = {
     authors: { name: string };
@@ -110,27 +109,23 @@ declare module "@cms/astro/collection-types" {
 2. **`cms sync` CLI** (secondary): same emit for CI / editors without dev server.
 3. Demo `tsconfig` includes the emitted file.
 
-**Artifact policy (default):** `src/cms-collections.d.ts` **gitignored** + regenerate on `dev`/`check`, with `cms sync` in package `check` scripts. Alternative: commit the file (noisier diffs).
+**Artifact policy (default):** `src/cms.types.d.ts` **gitignored** + regenerate on `dev`/`check`, with `cms sync` in package `check` scripts. Alternative: commit the file (noisier diffs).
 
-## `defineCms` API change
+## `defineCms` API
 
 ```ts
-defineCms(
-  collections: AstroCollections,
-  options?: {
-    [K in keyof CmsCollections]?: {
-      previewUrl?: (id: string) => string | null;
-      type?: "collection" | "singleton";
-      ui?: ChromeFor<CmsCollections[K]>;
-    };
-  },
-);
+defineCms(options?: {
+  [K in keyof CmsCollections]?: {
+    previewUrl?: (id: string) => string | null;
+    type?: "collection" | "singleton";
+    ui?: ChromeFor<CmsCollections[K]>;
+  };
+});
 ```
 
-- First arg: **Astro `collections` export** (not a hand Zod map).
-- Options keys: `keyof CmsCollections` from generated module; if generation missing, fall back to `keyof typeof collections` + loose `ui`.
-- Drop demo imports of `postsSchemaInput` / parallel `schemas` object.
-- Keep normalizing to `{ overlays, getPreviewUrl, types }` for Vite soft-bind.
+- Options keys: `keyof CmsCollections` from module augmentation; before sync, loose `Record<string, CmsCollectionOptions>`.
+- No collections arg — schemas live in `content.config`.
+- Normalize to `{ overlays, getPreviewUrl, types }` for Vite soft-bind.
 
 ## Workstreams
 
@@ -150,12 +145,12 @@ defineCms(
 ### C — Type surface + `defineCms`
 
 - `ChromeFor<T>` + wire options to `CmsCollections`.
-- Accept Astro collections at runtime; materialize internally.
-- Ambient module `@cms/astro/collection-types` with empty stub in package; project emit augments/replaces via local `.d.ts`.
+- Options-only `defineCms`; no runtime schema map on the overlay result.
+- Ambient module `@cms/astro/collection-types` with empty stub in package; project emit augments via local `.d.ts`.
 
 ### D — Demos + DX
 
-- Overlay demo: `defineCms(collections, { … })` only.
+- Overlay demo: `defineCms({ … })` only.
 - Simple demo: no cms.config (unchanged).
 - README: sync / `dev` before editing overlay; remove dual-schema docs.
 - Prune `postsSchemaInput` if unused.
@@ -170,7 +165,7 @@ defineCms(
 12 Zod Input type printer + stamp→string + goldens
         │
         ▼
-13 cms sync emit src/cms-collections.d.ts + convention/gitignore
+13 cms sync emit src/cms.types.d.ts + convention/gitignore
         │
         ▼
 14 Vite emit in cms() + ui: ChromeFor<CmsCollections[K]>
@@ -211,8 +206,8 @@ defineCms(
 
 ## Open decisions (resolve in 13/14)
 
-1. Emit path: `src/cms-collections.d.ts` vs `.astro/cms-collections.d.ts`
+1. Emit path: `src/cms.types.d.ts` vs `.astro/cms.types.d.ts`
 2. Module id: ambient `@cms/astro/collection-types` vs global `CmsCollections`
 3. Gitignore vs commit generated file
 
-**Suggested defaults:** `src/cms-collections.d.ts`, gitignore, ambient `@cms/astro/collection-types`.
+**Suggested defaults:** `src/cms.types.d.ts`, gitignore, ambient `@cms/astro/collection-types`.

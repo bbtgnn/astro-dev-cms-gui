@@ -161,3 +161,7 @@ Tickets `02` and `03` can parallel. `06` needs `05` (or a thin spike harness). P
 | 10 | [issues/10-stub-non-astro-location-api.md](./issues/10-stub-non-astro-location-api.md) | research | 01 |
 
 `09` may merge with rename steps inside `06`/`07` if cleaner; keep as checklist owner for CONTEXT/AGENTS/root package.json.
+
+## Next phase
+
+Form tree + non-Astro `defineCms` + top-level `demos/`: see [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md) (tickets 11–17).

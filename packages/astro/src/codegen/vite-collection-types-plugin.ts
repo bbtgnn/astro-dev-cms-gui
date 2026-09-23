@@ -23,7 +23,7 @@ type ViteDevServer = {
 };
 
 /**
- * Emits `src/cms-collections.d.ts` after server listen / content.config change.
+ * Emits `src/cms.types.d.ts` after server listen / content.config change.
  * Types-only — does not affect runtime host.
  */
 export function cmsCollectionTypesVitePlugin(

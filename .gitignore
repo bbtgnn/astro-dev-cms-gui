@@ -11,7 +11,7 @@ dist/
 .cache/
 
 # CMS Input types from content.config (cms sync / cms() Vite emit)
-**/src/cms-collections.d.ts
+**/src/cms.types.d.ts
 
 # env / secrets
 .env

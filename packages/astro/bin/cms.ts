@@ -11,10 +11,10 @@ import { syncCmsCollectionTypes } from "../src/codegen/sync-collection-types.ts"
 
 function printHelp(): void {
 	process.stdout.write(`Usage:
-  cms sync       Emit src/cms-collections.d.ts from content.config (CMS Input types)
+  cms sync       Emit src/cms.types.d.ts from content.config (CMS Input types)
   cms generate   (removed)
 
-Hand-authored src/content.config.ts + optional defineCms(collections, options).
+Hand-authored src/content.config.ts + optional defineCms(options) overlay.
 `);
 }
 

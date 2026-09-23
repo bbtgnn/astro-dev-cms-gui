@@ -1,8 +1,8 @@
 # @cms/astro-demo
 
 **Demo / self-host fixture** for schema-first CMS with optional overlay:
-native Astro `content.config` + `defineCms(collections, options)` +
-`cms.components`. Not a starter to copy into products.
+native Astro `content.config` + `defineCms(options)` + `cms.components`.
+Not a starter to copy into products.
 
 Proves the custom integration ladder — nested field chrome, catalog editors,
 preview URLs — while Astro/Zod Input remains validation authority.
@@ -31,9 +31,9 @@ Layout:
 
 - `src/content.config.ts` — hand-authored Astro collections (schemas from
   `@cms/astro-demo-simple/schemas`)
-- `src/cms.config.ts` — `export default defineCms(collections, { authors, posts })`
+- `src/cms.config.ts` — `export default defineCms({ authors, posts })`
 - `src/cms.components.ts` — live Svelte catalog (`AuthorNameEditor`)
-- `src/cms-collections.d.ts` — generated Input types (`cms sync` / gitignored)
+- `src/cms.types.d.ts` — generated Input types (`cms sync` / gitignored)
 - `src/content/` — JSON entries (seeded from simple; optional `seo` on posts)
 
 Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.

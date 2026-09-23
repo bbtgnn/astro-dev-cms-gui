@@ -161,17 +161,15 @@ export function cmsConfigVitePlugin(
 			if (entryLiteral == null) {
 				return [
 					"export const overlays = {};",
-					"export const collections = {};",
 					"export const types = {};",
 					"export function getPreviewUrl(_collection, _id) { return null; }",
-					"export default { overlays, collections, types, getPreviewUrl };",
+					"export default { overlays, types, getPreviewUrl };",
 				].join("\n");
 			}
 			// Prefer default export (defineCms result); named exports are legacy fallback.
 			return [
 				`import * as __cmsConfig from ${entryLiteral};`,
 				"const __cfg = __cmsConfig.default ?? __cmsConfig;",
-				"export const collections = __cfg.collections ?? {};",
 				"export const overlays = __cfg.overlays ?? {};",
 				"export const types = __cfg.types ?? {};",
 				"export const getPreviewUrl =",
