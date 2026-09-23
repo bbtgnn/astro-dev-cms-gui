@@ -7,7 +7,7 @@ browser **form models**, then lower to `EditorCollectionInput` for `@cms/authori
 
 | Package | API | Output |
 | --- | --- | --- |
-| `@cms/core/semantic` | `projectSchemaFormModel(s)` / `applySchemaFormOverlay` | `CollectionFormModel` (thin internal form IR) |
+| `@cms/core/semantic` | `projectSchemaFormModel(s)` / `applySchemaFormOverlay` | `CollectionFormModel` (thin internal form IR); optional `form` tree lowers layout + field-ref chrome |
 | `@cms/authoring` | `editorCollectionsFromSchemas(collections, catalog, { overlays? })` | `EditorCollectionInput` per collection |
 
 Stamps (`Symbol.for("@cms/astro.contentFieldStamp")` + `.meta.cms`) mark `image` /

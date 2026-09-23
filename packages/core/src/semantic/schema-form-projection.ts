@@ -9,10 +9,16 @@
  *
  * Image / reference kinds come from content-proxy stamps (`Symbol.for` + `.meta.cms`),
  * not from inventing FieldUi-on-Zod as the overlay API. Nested overlay chrome
- * (label, editor key) merges via {@link applySchemaFormOverlay}.
+ * (label, editor key) merges via {@link applySchemaFormOverlay}. Optional **form tree**
+ * lowers layout + field-ref chrome; path-map overlay remains until Astro migrates.
  */
 
 import { z } from "zod";
+import type {
+	FormTree,
+	FormTreeFieldChrome,
+	FormTreeNode,
+} from "../form-tree";
 import type {
 	CollectionFormModel,
 	FormConstraintSummary,
@@ -43,10 +49,13 @@ export type SchemaFormOverlay = Readonly<Record<string, SchemaFormFieldChrome>>;
 export type ProjectSchemaFormOptions = {
 	readonly collectionId?: string;
 	readonly overlay?: SchemaFormOverlay;
+	/** Optional form tree — layout + field-ref chrome (ticket 13). */
+	readonly form?: FormTree;
 };
 
 export type ProjectSchemaFormModelsOptions = {
 	readonly overlays?: Readonly<Record<string, SchemaFormOverlay>>;
+	readonly forms?: Readonly<Record<string, FormTree>>;
 };
 
 type CmsMeta = {
@@ -221,6 +230,10 @@ function clientLeafSchema(
 
 type WalkState = {
 	fields: Record<string, FormFieldDescriptor>;
+	/** Default schema-derived layout node per durable path (for form-tree placement). */
+	defaultLayoutByPath: Record<string, FormLayoutNode>;
+	/** Ordered direct child keys for object paths (`""` = collection root). */
+	childKeysByPath: Record<string, string[]>;
 };
 
 function projectProperty(
@@ -257,8 +270,10 @@ function projectProperty(
 			Array.isArray(jsonNode.required) ? (jsonNode.required as string[]) : [],
 		);
 		const zodShape = zodObjectShape(inner);
+		const childKeys = Object.keys(props);
+		state.childKeysByPath[path] = childKeys;
 		const content: FormLayoutNode[] = [];
-		for (const key of Object.keys(props)) {
+		for (const key of childKeys) {
 			const childJson = asObject(props[key]);
 			if (!childJson) continue;
 			content.push(
@@ -272,7 +287,9 @@ function projectProperty(
 				),
 			);
 		}
-		return { kind: "object", path, content };
+		const layout: FormLayoutNode = { kind: "object", path, content };
+		state.defaultLayoutByPath[path] = layout;
+		return layout;
 	}
 
 	if (kind === "array" && !stamp) {
@@ -299,8 +316,10 @@ function projectProperty(
 				optional: false,
 				nullable: false,
 			};
+			const itemChildKeys = Object.keys(itemProps);
+			state.childKeysByPath[itemPath] = itemChildKeys;
 			const content: FormLayoutNode[] = [];
-			for (const key of Object.keys(itemProps)) {
+			for (const key of itemChildKeys) {
 				const childJson = asObject(itemProps[key]);
 				if (!childJson) continue;
 				content.push(
@@ -315,16 +334,141 @@ function projectProperty(
 				);
 			}
 			item = { kind: "object", path: itemPath, content };
+			state.defaultLayoutByPath[itemPath] = item;
 		}
-		return {
+		const layout: FormLayoutNode = {
 			kind: "array",
 			path,
 			...(item !== undefined ? { item } : {}),
 		};
+		state.defaultLayoutByPath[path] = layout;
+		return layout;
 	}
 
 	state.fields[path] = base;
-	return { kind: "field", path };
+	const layout: FormLayoutNode = { kind: "field", path };
+	state.defaultLayoutByPath[path] = layout;
+	return layout;
+}
+
+function applyFieldRefChrome(
+	fields: Record<string, FormFieldDescriptor>,
+	path: string,
+	chrome: FormTreeFieldChrome | undefined,
+): void {
+	if (!chrome) return;
+	const existing = fields[path];
+	if (!existing) return;
+	fields[path] = {
+		...existing,
+		...(chrome.label !== undefined ? { label: chrome.label } : {}),
+		...(chrome.editor !== undefined ? { component: chrome.editor } : {}),
+		...(chrome.kind !== undefined ? { semanticKind: chrome.kind } : {}),
+	};
+}
+
+function cloneLayout(node: FormLayoutNode): FormLayoutNode {
+	return structuredClone(node);
+}
+
+/**
+ * Lower a form-tree scope (root stack or object `.fields` / `.form`) into layout
+ * nodes. Unplaced schema keys at this scope append after explicit placement
+ * (ADR-0011 vertical fallback). Layout containers share the same key space.
+ */
+function lowerFormTreeScope(
+	nodes: readonly FormTreeNode[],
+	pathPrefix: string,
+	state: WalkState,
+): FormLayoutNode[] {
+	const placedKeys = new Set<string>();
+	const content: FormLayoutNode[] = [];
+
+	for (const node of nodes) {
+		content.push(lowerFormTreeNode(node, pathPrefix, state, placedKeys));
+	}
+
+	const scopeKeys = state.childKeysByPath[pathPrefix] ?? [];
+	for (const key of scopeKeys) {
+		if (placedKeys.has(key)) continue;
+		const path = joinPath(pathPrefix, key);
+		const fallback = state.defaultLayoutByPath[path];
+		if (fallback) content.push(cloneLayout(fallback));
+	}
+
+	return content;
+}
+
+function lowerFormTreeNode(
+	node: FormTreeNode,
+	pathPrefix: string,
+	state: WalkState,
+	placedKeys: Set<string>,
+): FormLayoutNode {
+	switch (node.type) {
+		case "field": {
+			const path = joinPath(pathPrefix, node.key);
+			if (!(path in state.fields)) {
+				throw new Error(
+					`Unknown field key in form tree: "${path}" (not in collection schema)`,
+				);
+			}
+			placedKeys.add(node.key);
+			applyFieldRefChrome(state.fields, path, node.chrome);
+
+			if (node.content !== undefined) {
+				return {
+					kind: "object",
+					path,
+					content: lowerFormTreeScope(node.content, path, state),
+				};
+			}
+
+			const defaults = state.defaultLayoutByPath[path];
+			if (!defaults) {
+				throw new Error(
+					`Missing default layout for form tree field "${path}"`,
+				);
+			}
+			return cloneLayout(defaults);
+		}
+		case "tabs":
+			return {
+				kind: "tabs",
+				content: node.content.map((tab) => ({
+					kind: "tab" as const,
+					id: tab.id,
+					label: tab.label ?? tab.id,
+					content: tab.content.map((child) =>
+						lowerFormTreeNode(child, pathPrefix, state, placedKeys),
+					),
+				})),
+			};
+		case "columns":
+			return {
+				kind: "columns",
+				content: node.content.map((col, index) => ({
+					kind: "column" as const,
+					id: `col-${index}`,
+					width: 1,
+					content: col.map((child) =>
+						lowerFormTreeNode(child, pathPrefix, state, placedKeys),
+					),
+				})),
+			};
+		case "group":
+			return {
+				kind: "group",
+				...(node.label !== undefined ? { label: node.label } : {}),
+				content: node.content.map((child) =>
+					lowerFormTreeNode(child, pathPrefix, state, placedKeys),
+				),
+			};
+		default: {
+			const _exhaustive: never = node;
+			return _exhaustive;
+		}
+	}
 }
 
 function zodObjectShape(schema: unknown): Record<string, unknown> | undefined {
@@ -390,6 +534,8 @@ function rewriteClientJsonSchema(
 /**
  * Project one collection Zod object schema into a serializable form model.
  * Thin internal form IR — not a user-authored algebra.
+ * Optional {@link ProjectSchemaFormOptions.form} lowers a form tree into layout
+ * and merges field-ref chrome onto descriptors.
  */
 export function projectSchemaFormModel(
 	schema: z.ZodType,
@@ -401,12 +547,17 @@ export function projectSchemaFormModel(
 	}) as JsonSchemaNode;
 
 	const jsonSchema = rewriteClientJsonSchema(rawJson, schema);
-	const state: WalkState = { fields: {} };
+	const state: WalkState = {
+		fields: {},
+		defaultLayoutByPath: {},
+		childKeysByPath: {},
+	};
 	const props = asObject(jsonSchema.properties) ?? {};
 	const required = new Set(
 		Array.isArray(jsonSchema.required) ? (jsonSchema.required as string[]) : [],
 	);
 	const shape = zodObjectShape(unwrapZod(schema).inner) ?? {};
+	const rootKeys: string[] = [];
 	const content: FormLayoutNode[] = [];
 	for (const key of Object.keys(props)) {
 		const childJson = asObject(props[key]);
@@ -415,6 +566,7 @@ export function projectSchemaFormModel(
 		// stamps are recovered from Zod, kinds from rewritten + stamp.
 		const rawProps = asObject(rawJson.properties) ?? {};
 		const rawChild = asObject(rawProps[key]) ?? childJson;
+		rootKeys.push(key);
 		content.push(
 			projectProperty(
 				key,
@@ -427,13 +579,19 @@ export function projectSchemaFormModel(
 			),
 		);
 	}
+	state.childKeysByPath[""] = rootKeys;
 
 	// Fix field descriptors that used raw json for constraints but ensure
 	// image/ref kinds win from stamps (already handled via stamp in kindFromJson).
 
+	const layout: FormLayoutNode =
+		options?.form !== undefined
+			? { kind: "stack", content: lowerFormTreeScope(options.form, "", state) }
+			: { kind: "stack", content };
+
 	let model: CollectionFormModel = {
 		collectionId,
-		layout: { kind: "stack", content },
+		layout,
 		fields: state.fields,
 		jsonSchema: {
 			type: "object",
@@ -464,6 +622,9 @@ export function projectSchemaFormModels(
 			collectionId: id,
 			...(options?.overlays?.[id] !== undefined
 				? { overlay: options.overlays[id] }
+				: {}),
+			...(options?.forms?.[id] !== undefined
+				? { form: options.forms[id] }
 				: {}),
 		});
 	}

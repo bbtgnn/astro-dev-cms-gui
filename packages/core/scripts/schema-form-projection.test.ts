@@ -1,9 +1,11 @@
 /**
  * Schema-first form projection: stamped Zod Input → CollectionFormModel.
  * Client JSON Schema is Ajv-oriented; authoritative parse stays on the Zod schema.
+ * Optional form tree (ticket 13) lowers layout + field-ref chrome onto the model.
  */
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
+import { createFormTreeHelpers } from "../src/form-tree";
 import {
 	applySchemaFormOverlay,
 	projectSchemaFormModel,
@@ -135,5 +137,153 @@ describe("projectSchemaFormModels", () => {
 		);
 		expect(models.posts?.fields.title?.label).toBe("Post title");
 		expect(models.posts?.fields.author?.referenceCollection).toBe("authors");
+	});
+});
+
+type PostsData = {
+	title: string;
+	draft: boolean;
+	count: number;
+	tags: string[];
+	seo: { description: string };
+	cover?: unknown;
+	author: string;
+};
+
+describe("projectSchemaFormModel with form tree", () => {
+	test("lowers tabs + nested seo scope and merges field-ref chrome", () => {
+		const { field, tabs } = createFormTreeHelpers<PostsData>();
+		const form = [
+			tabs([
+				{
+					id: "content",
+					label: "Content",
+					content: [
+						field("title").label("Post title"),
+						field("draft").label("Draft"),
+						field("seo")
+							.label("SEO")
+							.fields((f) => [
+								f("description").label("Meta description"),
+							]),
+					],
+				},
+				{
+					id: "media",
+					label: "Media",
+					content: [
+						field("cover").label("Cover image").kind("image"),
+						field("author").label("Author").editor("AuthorPicker"),
+					],
+				},
+			]),
+		];
+
+		const model = projectSchemaFormModel(postsLikeSchema(), {
+			collectionId: "posts",
+			form,
+		});
+
+		expect(model.layout.kind).toBe("stack");
+		if (model.layout.kind !== "stack") throw new Error("expected stack");
+		expect(model.layout.content[0]?.kind).toBe("tabs");
+		const tabsNode = model.layout.content[0];
+		if (tabsNode?.kind !== "tabs") throw new Error("expected tabs");
+		expect(tabsNode.content.map((t) => t.id)).toEqual(["content", "media"]);
+		expect(tabsNode.content[0]?.label).toBe("Content");
+
+		const contentTab = tabsNode.content[0];
+		expect(contentTab?.content.some((n) => n.kind === "field" && n.path === "title")).toBe(
+			true,
+		);
+		const seoNode = contentTab?.content.find((n) => n.kind === "object");
+		expect(seoNode).toMatchObject({
+			kind: "object",
+			path: "seo",
+		});
+		if (seoNode?.kind !== "object") throw new Error("expected seo object");
+		expect(seoNode.content).toEqual([
+			{ kind: "field", path: "seo.description" },
+		]);
+
+		expect(model.fields.title?.label).toBe("Post title");
+		expect(model.fields.draft?.label).toBe("Draft");
+		expect(model.fields.seo?.label).toBe("SEO");
+		expect(model.fields["seo.description"]?.label).toBe("Meta description");
+		expect(model.fields.cover?.label).toBe("Cover image");
+		expect(model.fields.cover?.semanticKind).toBe("image");
+		expect(model.fields.author?.label).toBe("Author");
+		expect(model.fields.author?.component).toBe("AuthorPicker");
+
+		// Unplaced top-level keys (count, tags) append to the default stack.
+		const unplaced = model.layout.content.slice(1);
+		expect(unplaced.map((n) => ("path" in n ? n.path : n.kind))).toEqual([
+			"count",
+			"tags",
+		]);
+	});
+
+	test("lowers columns and group into form-model layout kinds", () => {
+		const { field, columns, group } = createFormTreeHelpers<PostsData>();
+		const form = [
+			columns([
+				[field("title")],
+				[
+					group({
+						label: "Flags",
+						content: [field("draft")],
+					}),
+				],
+			]),
+		];
+
+		const model = projectSchemaFormModel(postsLikeSchema(), {
+			collectionId: "posts",
+			form,
+		});
+
+		if (model.layout.kind !== "stack") throw new Error("expected stack");
+		const cols = model.layout.content[0];
+		expect(cols?.kind).toBe("columns");
+		if (cols?.kind !== "columns") throw new Error("expected columns");
+		expect(cols.content).toHaveLength(2);
+		expect(cols.content[0]).toMatchObject({
+			kind: "column",
+			id: "col-0",
+			width: 1,
+		});
+		expect(cols.content[0]?.content[0]).toEqual({
+			kind: "field",
+			path: "title",
+		});
+		expect(cols.content[1]?.content[0]).toMatchObject({
+			kind: "group",
+			label: "Flags",
+		});
+	});
+
+	test("missing form tree keeps flat stack + stock-by-kind", () => {
+		const withForm = projectSchemaFormModel(postsLikeSchema(), {
+			collectionId: "posts",
+			form: undefined,
+		});
+		const without = projectSchemaFormModel(postsLikeSchema(), {
+			collectionId: "posts",
+		});
+		expect(withForm.layout).toEqual(without.layout);
+		expect(withForm.fields.title?.semanticKind).toBe("string");
+		expect(withForm.layout.kind).toBe("stack");
+	});
+
+	test("unknown field keys in the form tree fail closed at runtime", () => {
+		const { field } = createFormTreeHelpers<PostsData & { nope: string }>();
+		const form = [field("nope")];
+
+		expect(() =>
+			projectSchemaFormModel(postsLikeSchema(), {
+				collectionId: "posts",
+				form,
+			}),
+		).toThrow(/unknown field/i);
 	});
 });
