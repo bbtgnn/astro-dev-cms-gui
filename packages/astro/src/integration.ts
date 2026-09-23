@@ -78,8 +78,8 @@ export type CmsHarnessOptions = {
 	shellPath?: string | false;
 	/**
 	 * @deprecated No-op. Product `cms()` never generates `content.config`.
-	 * Escape: call `generateContentConfig` from `@cms/astro/generate` directly
-	 * (quarantined until ticket 08 removes generation).
+	 * Generation was removed (ticket 08); option kept only so old harness calls
+	 * do not break typecheck.
 	 */
 	generate?: boolean;
 	/** Mount prefix for `/_cms`. */
@@ -226,7 +226,7 @@ export function createCmsIntegration(
 					? resolveProjectEntry(options.config, root)
 					: resolveConventionEntry(root, CMS_CONFIG_CONVENTION);
 
-			// `generate` is intentionally unused (no-op / quarantined for ticket 08).
+			// `generate` is intentionally unused (removed; option ignored).
 			void options.generate;
 
 			const componentsEntry =
@@ -339,7 +339,7 @@ export function cms(): CmsIntegration {
  * Prefer {@link cms} for real hosts.
  *
  * Notes:
- * - `generate` is a no-op (use `@cms/astro/generate` if you still need IR emit).
+ * - `generate` is a no-op (generation removed).
  * - `requireConfig` is ignored; overlay cms.config is always optional.
  */
 export function cmsHarness(options: CmsHarnessOptions = {}): CmsIntegration {

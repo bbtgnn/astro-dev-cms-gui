@@ -13,8 +13,8 @@ export const CMS_CONFIG_CONVENTION = [
 ] as const;
 
 /**
- * Primary schema-partition / cms.config path — generate + CLI default.
- * Same module as the first {@link CMS_CONFIG_CONVENTION} candidate.
+ * Primary cms.config path (first {@link CMS_CONFIG_CONVENTION} candidate).
+ * Alias kept for Vite/testing imports; generation no longer uses this.
  */
 export const SCHEMA_PARTITION_CONVENTION = CMS_CONFIG_CONVENTION[0];
 
