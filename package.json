@@ -8,8 +8,8 @@
 			"packages/core",
 			"packages/authoring",
 			"packages/astro",
-			"packages/astro-demo-simple",
-			"packages/astro-demo"
+			"demos/astro-simple",
+			"demos/astro-overlay"
 		],
 		"catalog": {
 			"typescript": "^5.9.0",

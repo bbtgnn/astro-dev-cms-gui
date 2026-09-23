@@ -1,6 +1,6 @@
 # @cms/astro-demo-simple
 
-**Demo / self-host fixture** for schema-first CMS: native Astro `content.config`
+**Demo / self-host fixture** at `demos/astro-simple` for schema-first CMS: native Astro `content.config`
 only, zero-arg `cms()` in `astro.config`. Not a starter to copy into products.
 
 Proves the simple integration ladder — stock editors from stamped schemas, no

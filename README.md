@@ -31,18 +31,18 @@ bun install
 bun run dev
 ```
 
-- Site: `http://127.0.0.1:4321/` (`@cms/astro-demo-simple`, default)
-- Overlay demo: `bun run dev:overlay` → `http://127.0.0.1:4322/` (`@cms/astro-demo`)
+- Site: `http://127.0.0.1:4321/` (`demos/astro-simple` / `@cms/astro-demo-simple`, default)
+- Overlay demo: `bun run dev:overlay` → `http://127.0.0.1:4322/` (`demos/astro-overlay` / `@cms/astro-demo`)
 - Shell UI: `/cms`
 - JSON API: `/_cms` (via middleware — Astro ignores `src/pages/_…`)
 
-`@cms/astro-demo-simple` and `@cms/astro-demo` are the in-repo Astro consumers used for self-host validation.
+`demos/astro-simple` and `demos/astro-overlay` are the in-repo Astro consumers used for self-host validation.
 
 ## Package graph
 
 ```
-@cms/authoring  →  @cms/core  ←  @cms/astro  →  @cms/astro-demo-simple
-                                           ↘  @cms/astro-demo
+@cms/authoring  →  @cms/core  ←  @cms/astro  →  demos/astro-simple (@cms/astro-demo-simple)
+                                           ↘  demos/astro-overlay (@cms/astro-demo)
 ```
 
 Three product packages match ADR-0008 layers
@@ -51,7 +51,7 @@ Three product packages match ADR-0008 layers
 - `@cms/authoring` — shell UI + form shell
 - `@cms/core` — semantic IR + CMS protocol + FS adapters
 - `@cms/astro` — `cms()` host mount + `/_cms` transport
-- demos — sample hosts (`astro-demo-simple`, `astro-demo`)
+- `demos/` — sample hosts (`astro-simple`, `astro-overlay`)
 
 Checks: `bun run check && bun run check:allowlist && bun run lint`.
 

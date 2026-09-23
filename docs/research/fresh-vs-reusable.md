@@ -210,7 +210,7 @@ SJSF is the Svelte-side cousin of the mature **RJSF** (react-jsonschema-form) sc
 - [AGENTS.md](../../AGENTS.md)
 - [docs/spec.md](../spec.md)
 - ADRs: 0001, 0005, 0007, 0008, 0010, 0011, 0012, 0013, 0014, 0015, 0016, 0017, 0018, 0019, 0020 under [docs/adr/](../adr/)
-- Packages: `packages/authoring`, `packages/core`, `packages/astro`, `packages/astro-demo-simple`, `packages/astro-demo`
+- Packages: `packages/authoring`, `packages/core`, `packages/astro`; demos: `demos/astro-simple`, `demos/astro-overlay`
 
 ### External
 

@@ -1,6 +1,6 @@
 # @cms/astro-demo
 
-**Demo / self-host fixture** for schema-first CMS with optional overlay:
+**Demo / self-host fixture** at `demos/astro-overlay` for schema-first CMS with optional overlay:
 native Astro `content.config` + `defineCms(options)` + `cms.components`.
 Not a starter to copy into products.
 
@@ -8,7 +8,7 @@ Proves the custom integration ladder — nested field chrome, catalog editors,
 preview URLs — while Astro/Zod Input remains validation authority.
 `cms sync` emits Input types (`CmsImage` / `CmsReference`) for typed `ui`.
 
-Companion: [`@cms/astro-demo-simple`](../astro-demo-simple) (same schemas, no
+Companion: [`@cms/astro-demo-simple`](../astro-simple) (same schemas, no
 overlay).
 
 ## Run
