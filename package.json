@@ -9,7 +9,8 @@
 			"packages/authoring",
 			"packages/astro",
 			"demos/astro-simple",
-			"demos/astro-overlay"
+			"demos/astro-overlay",
+			"demos/sveltekit"
 		],
 		"catalog": {
 			"typescript": "^5.9.0",
@@ -27,6 +28,7 @@
 	"scripts": {
 		"dev": "bun run --filter @cms/astro-demo-simple dev",
 		"dev:overlay": "bun run --filter @cms/astro-demo dev",
+		"dev:kit": "bun run --filter @cms/sveltekit-demo dev",
 		"build": "bun run --filter @cms/astro-demo-simple build && bun run --filter @cms/astro-demo build",
 		"check": "bun run --filter @cms/core check && bun run --filter @cms/authoring check && bun run --filter @cms/astro check && bun run --filter @cms/astro-demo-simple check && bun run --filter @cms/astro-demo check",
 		"check:allowlist": "bun run --filter @cms/core check:allowlist && bun run --filter @cms/authoring check:layers && bun run --filter @cms/authoring check:allowlist",

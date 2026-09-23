@@ -31,10 +31,11 @@ _Avoid_: cms.config as a server discovery registry, content.config (for the brow
 **Reference host**:
 The in-repo self-host apps used to exercise and validate the product. On
 `explore/schema-first-overlay` they live under top-level `demos/` (libraries
-stay in `packages/`): `demos/astro-simple` (`@cms/astro-demo-simple`) and
-`demos/astro-overlay` (`@cms/astro-demo`). Astro: content.config-only and
-optional overlay demos; non-Astro: SvelteKit demo via portable `defineCms`
-(planned). Sample consumers, not the product identity.
+stay in `packages/`): `demos/astro-simple` (`@cms/astro-demo-simple`),
+`demos/astro-overlay` (`@cms/astro-demo`), and `demos/sveltekit`
+(`@cms/sveltekit-demo`). Astro: content.config-only and optional overlay
+demos; non-Astro: SvelteKit via portable `defineCms` (no `@cms/astro`).
+Sample consumers, not the product identity.
 _Avoid_: dogfood app, prototype template (as the product name), `@cms/astro-template` (removed)
 
 **Form tree**:

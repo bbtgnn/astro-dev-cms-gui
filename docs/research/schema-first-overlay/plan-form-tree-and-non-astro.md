@@ -1,6 +1,6 @@
 # Plan — form tree, non-Astro defineCms, demos/
 
-**Status:** planned (grill settled 2026-09-23)  
+**Status:** implemented (exploration; grill settled 2026-09-23)  
 **Branch:** `explore/schema-first-overlay`  
 **Parent:** [plan.md](./plan.md) (Astro happy-path flip — done), [map.md](./map.md)  
 **Authority:** exploration only. Does not supersede ADRs / GitHub #1.
@@ -74,13 +74,13 @@
 
 ## Acceptance (whole phase)
 
-- [ ] Form tree with tabs (objects), columns (arrays), group, object callback scopes — typed field refs  
-- [ ] Schema-first projection applies form tree layout (unplaced keys → default stack)  
-- [ ] Astro overlay demo uses `form` (or dual-accept during migrate)  
+- [x] Form tree with tabs (objects), columns (arrays), group, object callback scopes — typed field refs  
+- [x] Schema-first projection applies form tree layout (unplaced keys → default stack)  
+- [x] Astro overlay demo uses `form` (or dual-accept during migrate)  
 - [x] Non-Astro `defineCms` on `@cms/core` joins schema + location + form → host descriptors  
 - [x] Workspace: product libs in `packages/`; self-host apps in `demos/`  
-- [ ] `bun run --filter @cms/sveltekit-demo dev` → `/cms` edits FS-backed entries without Astro  
-- [ ] GitHub #1 unchanged; no superseding ADR in these tickets
+- [x] `bun run --filter @cms/sveltekit-demo dev` → `/cms` edits FS-backed entries without Astro  
+- [x] GitHub #1 unchanged; no superseding ADR in these tickets
 
 ## Tickets
 

@@ -1,0 +1,28 @@
+{
+	"name": "@cms/sveltekit-demo",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Non-Astro SvelteKit self-host: defineCms + form tree + createCmsHost",
+	"scripts": {
+		"dev": "vite dev --host 127.0.0.1 --port 4323",
+		"build": "vite build",
+		"preview": "vite preview --host 127.0.0.1 --port 4323",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+	},
+	"dependencies": {
+		"@cms/authoring": "workspace:*",
+		"@cms/core": "workspace:*",
+		"@sveltejs/adapter-node": "^5.5.7",
+		"@sveltejs/kit": "^2.70.3",
+		"@sveltejs/vite-plugin-svelte": "^7.0.0",
+		"svelte": "catalog:",
+		"vite": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"svelte-check": "catalog:",
+		"typescript": "catalog:"
+	}
+}
