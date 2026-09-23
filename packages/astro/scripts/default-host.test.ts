@@ -75,9 +75,9 @@ describe("buildDefaultFsHost", () => {
 			expectedRevision: null,
 		});
 		expect(ok.ok).toBe(true);
-		expect(writer.store.has(path.join(contentRoot, "posts", "hello.json"))).toBe(
-			true,
-		);
+		expect(
+			writer.store.has(path.join(contentRoot, "posts", "hello.json")),
+		).toBe(true);
 	});
 
 	test("falls back to collection id when glob base is empty-ish", async () => {

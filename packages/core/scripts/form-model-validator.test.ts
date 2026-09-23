@@ -59,10 +59,12 @@ function sampleIr() {
 								id: "cover",
 								schema: s.image().optional(),
 							}),
-							s.field({
-								id: "author",
-								schema: s.reference("authors"),
-							}).editor("AuthorPicker"),
+							s
+								.field({
+									id: "author",
+									schema: s.reference("authors"),
+								})
+								.editor("AuthorPicker"),
 						],
 					}),
 				]),

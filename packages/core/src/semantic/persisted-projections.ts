@@ -6,6 +6,7 @@
  */
 
 import { z } from "zod";
+import { persistedShape } from "./compile";
 import type {
 	CompiledSemanticIr,
 	IrEnum,
@@ -25,7 +26,6 @@ import type {
 	SemanticKind,
 	StringConstraint,
 } from "./types";
-import { persistedShape } from "./compile";
 /** Host-injected existence checks for image / reference leaves. */
 export type AuthoritativeValidatorDeps = {
 	/**

@@ -17,10 +17,12 @@ describe("editorCollectionsFromTree", () => {
 						label: "Title",
 						schema: s.string().min(1),
 					}),
-					s.field({
-						id: "author",
-						schema: s.reference("authors"),
-					}).editor("AuthorPickerToken"),
+					s
+						.field({
+							id: "author",
+							schema: s.reference("authors"),
+						})
+						.editor("AuthorPickerToken"),
 				]),
 			}),
 		};

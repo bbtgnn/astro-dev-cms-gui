@@ -11,9 +11,9 @@ import path from "node:path";
 import {
 	type CmsHost,
 	type CollectionDescriptor,
-	type Writer,
 	createCmsHost,
 	scanEntryIds,
+	type Writer,
 } from "@cms/core";
 import {
 	compileSemanticIr,

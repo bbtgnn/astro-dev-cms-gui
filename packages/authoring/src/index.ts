@@ -13,14 +13,14 @@ export type {
 	CmsEntryContext,
 } from "./form/ImageField.svelte";
 export {
-	type AuthoringSession,
-	type AuthoringSessionMode,
-	type AuthoringSessionSnapshot,
-} from "./session";
-export {
 	type OpenAuthoringSessionOptions,
 	openAuthoringSession,
 } from "./open-authoring-session";
+export type {
+	AuthoringSession,
+	AuthoringSessionMode,
+	AuthoringSessionSnapshot,
+} from "./session";
 export type {
 	AuthoringClient,
 	EditorCollectionInput,

@@ -28,10 +28,12 @@ function postsIr() {
 						id: "cover",
 						schema: s.image().optional(),
 					}),
-					s.field({
-						id: "author",
-						schema: s.reference("authors"),
-					}).editor("AuthorPickerToken"),
+					s
+						.field({
+							id: "author",
+							schema: s.reference("authors"),
+						})
+						.editor("AuthorPickerToken"),
 					s.field({
 						id: "count",
 						schema: s.number().int(),

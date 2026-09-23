@@ -3,11 +3,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import {
-	compileSemanticIr,
-	persistedProjections,
-	s,
-} from "../src/semantic";
+import { compileSemanticIr, persistedProjections, s } from "../src/semantic";
 import { projectAstroSchemaExpr } from "../src/semantic/persisted-projections.ts";
 
 function sampleIr() {

@@ -6,8 +6,8 @@
 
 import {
 	compileSemanticIr,
-	projectFormModels,
 	type FormModelsByCollection,
+	projectFormModels,
 	type SemanticConfigInput,
 } from "@cms/core/semantic";
 import type { EditorCollections } from "../types";

@@ -120,8 +120,7 @@ async function main(): Promise<number> {
 	});
 
 	if (result.status === "skipped") {
-		const partition =
-			parsed.schemaPartitionPath ?? SCHEMA_PARTITION_CONVENTION;
+		const partition = parsed.schemaPartitionPath ?? SCHEMA_PARTITION_CONVENTION;
 		process.stderr.write(
 			result.reason === "disabled"
 				? `content.config generation is disabled\n`

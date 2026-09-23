@@ -822,14 +822,10 @@ function collectionPersisted(
  * Internal accessor for the presentation-stripped partition.
  * Not part of the `@cms/core/semantic` public face.
  */
-export function persistedShape(
-	ir: CompiledSemanticIr,
-): PersistedConfigShape {
+export function persistedShape(ir: CompiledSemanticIr): PersistedConfigShape {
 	const persisted = (ir as CompiledSemanticIrInternal).persisted;
 	if (persisted === undefined || typeof persisted !== "object") {
-		throw new Error(
-			"CompiledSemanticIr missing internal persisted partition",
-		);
+		throw new Error("CompiledSemanticIr missing internal persisted partition");
 	}
 	return persisted;
 }

@@ -14,4 +14,8 @@ export {
 	createCmsDispatcher,
 	createCmsMiddleware,
 } from "./http";
-export { type CmsIntegration, type CmsIntegrationOptions, cms } from "./integration";
+export {
+	type CmsIntegration,
+	type CmsIntegrationOptions,
+	cms,
+} from "./integration";

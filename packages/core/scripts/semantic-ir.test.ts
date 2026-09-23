@@ -5,13 +5,13 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { persistedShape } from "../src/semantic/compile.ts";
 import {
 	compileSemanticIr,
 	SEMANTIC_NODE,
 	SemanticIrError,
 	s,
 } from "../src/semantic";
+import { persistedShape } from "../src/semantic/compile.ts";
 
 function brand<T extends object>(
 	node: T,
@@ -39,36 +39,42 @@ describe("compileSemanticIr", () => {
 									label: "Title",
 									schema: s.string().min(1).max(70),
 								}),
-								s.field({
-									id: "body",
-									label: "Body",
-									schema: s.string(),
-								}).editor("MarkdownEditor", { toolbar: ["bold", "link"] }),
-								s.object({
-									id: "seo",
-									label: "SEO",
-									content: [
-										s.field({
-											id: "title",
-											label: "SEO title",
-											schema: s.string().max(70),
-										}),
-										s.field({
-											id: "description",
-											schema: s.string().max(160),
-										}),
-									],
-								}).wrapper("SeoCard"),
+								s
+									.field({
+										id: "body",
+										label: "Body",
+										schema: s.string(),
+									})
+									.editor("MarkdownEditor", { toolbar: ["bold", "link"] }),
+								s
+									.object({
+										id: "seo",
+										label: "SEO",
+										content: [
+											s.field({
+												id: "title",
+												label: "SEO title",
+												schema: s.string().max(70),
+											}),
+											s.field({
+												id: "description",
+												schema: s.string().max(160),
+											}),
+										],
+									})
+									.wrapper("SeoCard"),
 							],
 						}),
 						s.tab({
 							id: "publishing",
 							label: "Publishing",
 							content: [
-								s.field({
-									id: "author",
-									schema: s.reference("authors"),
-								}).editor("AuthorPicker"),
+								s
+									.field({
+										id: "author",
+										schema: s.reference("authors"),
+									})
+									.editor("AuthorPicker"),
 								s.field({
 									id: "cover",
 									schema: s.image().optional(),
@@ -89,7 +95,9 @@ describe("compileSemanticIr", () => {
 		});
 		expect(ir.collections.posts?.schema.kind).toBe("tabs");
 
-		const titleField = persistedShape(ir).posts?.fields.find((f) => f.id === "title");
+		const titleField = persistedShape(ir).posts?.fields.find(
+			(f) => f.id === "title",
+		);
 		expect(titleField?.semanticKind).toBe("string");
 		expect(titleField?.schema).toEqual({
 			kind: "string",
@@ -99,7 +107,9 @@ describe("compileSemanticIr", () => {
 			],
 		});
 
-		const bodyField = persistedShape(ir).posts?.fields.find((f) => f.id === "body");
+		const bodyField = persistedShape(ir).posts?.fields.find(
+			(f) => f.id === "body",
+		);
 		expect(bodyField?.semanticKind).toBe("string");
 
 		const seo = persistedShape(ir).posts?.fields.find((f) => f.id === "seo");
@@ -407,7 +417,9 @@ describe("compileSemanticIr", () => {
 			],
 		});
 
-		const score = persistedShape(ir).posts?.fields.find((f) => f.id === "score");
+		const score = persistedShape(ir).posts?.fields.find(
+			(f) => f.id === "score",
+		);
 		expect(score?.schema).toEqual({
 			kind: "number",
 			constraints: [

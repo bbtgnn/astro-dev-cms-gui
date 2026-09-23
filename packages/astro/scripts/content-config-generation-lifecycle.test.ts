@@ -178,9 +178,9 @@ describe("generateContentConfig lifecycle", () => {
 			"utf8",
 		);
 
-		await expect(
-			generateContentConfig({ projectRoot: root }),
-		).rejects.toThrow(/missing "collections" or "ir"/);
+		await expect(generateContentConfig({ projectRoot: root })).rejects.toThrow(
+			/missing "collections" or "ir"/,
+		);
 	});
 
 	test("honors explicit schemaPartitionPath", async () => {
