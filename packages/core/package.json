@@ -7,6 +7,7 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./fetch-client": "./src/fetch-client.ts",
+		"./form-tree": "./src/form-tree.ts",
 		"./protocol": "./src/protocol.ts",
 		"./semantic": "./src/semantic/index.ts"
 	},
@@ -17,8 +18,8 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p .",
-		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts ./scripts/schema-form-projection.test.ts",
-		"test:semantic": "bun test ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts ./scripts/schema-form-projection.test.ts"
+		"check": "tsc -p . && bunx tsc -p ./scripts/tsconfig.fixtures.json",
+		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts ./scripts/schema-form-projection.test.ts ./scripts/form-tree.test.ts",
+		"test:semantic": "bun test ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts ./scripts/schema-form-projection.test.ts ./scripts/form-tree.test.ts"
 	}
 }

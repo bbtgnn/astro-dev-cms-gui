@@ -2,6 +2,7 @@
  * @cms/core — CMS protocol, FS write-back adapters, and semantic IR.
  * Filesystem write-back sits behind createCmsProtocol / createCmsHost (ADR-0005).
  * Editor configuration is CMS-first IR only (ADR-0019 / 0020).
+ * Schema-first exploration also exports form-tree builders (field refs + layout).
  */
 
 export type {
@@ -26,6 +27,23 @@ export {
 	createFetchClient,
 	isCmsFetchError,
 } from "./fetch-client";
+export type {
+	FieldFn,
+	FieldRefBuilder,
+	FormTree,
+	FormTreeColumnsNode,
+	FormTreeFieldChrome,
+	FormTreeFieldNode,
+	FormTreeGroupNode,
+	FormTreeHelpers,
+	FormTreeKindHint,
+	FormTreeNode,
+	FormTreeTabEntry,
+	FormTreeTabsNode,
+	ObjectInputOf,
+	ScopedFormTreeHelpers,
+} from "./form-tree";
+export { createFormTreeHelpers } from "./form-tree";
 export { contentAssetPath, imageFolderFromCanonical } from "./image-path";
 export { memoryWriter } from "./memory-writer";
 export { nodeFsWriter } from "./node-fs-writer";
