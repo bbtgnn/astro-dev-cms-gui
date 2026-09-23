@@ -18,7 +18,7 @@
 	},
 	"scripts": {
 		"check": "tsc -p .",
-		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts",
-		"test:semantic": "bun test ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts"
+		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts ./scripts/schema-form-projection.test.ts",
+		"test:semantic": "bun test ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts ./scripts/schema-form-projection.test.ts"
 	}
 }

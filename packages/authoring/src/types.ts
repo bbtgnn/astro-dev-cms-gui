@@ -24,8 +24,9 @@ export type AuthoringClient = Pick<
 /**
  * One collection's editor inputs for the form shell.
  * Lowered IR form models only: Ajv-safe JSON Schema + optional uiSchema
- * (ADR-0011 / 0019). Use {@link editorCollectionsFromTree} / lowering — do
- * not pass raw Form model jsonSchema here.
+ * (ADR-0011 / 0019). Use {@link editorCollectionsFromTree},
+ * {@link editorCollectionsFromSchemas}, or lowering — do not pass raw Form
+ * model jsonSchema here.
  */
 export type EditorCollectionInput = {
 	/** Ajv-safe JSON Schema (post-lower). */

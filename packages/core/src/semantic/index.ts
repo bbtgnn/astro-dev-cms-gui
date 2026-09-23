@@ -116,3 +116,14 @@ export {
 	type AuthoritativeValidator,
 	createAuthoritativeValidator,
 } from "./validator";
+export {
+	CONTENT_FIELD_STAMP,
+	type ContentFieldStampMeta,
+	type ProjectSchemaFormModelsOptions,
+	type ProjectSchemaFormOptions,
+	type SchemaFormFieldChrome,
+	type SchemaFormOverlay,
+	applySchemaFormOverlay,
+	projectSchemaFormModel,
+	projectSchemaFormModels,
+} from "./schema-form-projection";

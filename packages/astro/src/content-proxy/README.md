@@ -22,3 +22,11 @@ this package face into the browser authoring shell.
 | Direct deep imports of Astro’s loader implementation files | **No** |
 
 Optional esbuild emit for CLI/host-without-Vite is deferred.
+
+## Form projection
+
+Stamped schemas project to editor form models via
+`@cms/core/semantic` (`projectSchemaFormModels`) and
+`@cms/authoring` (`editorCollectionsFromSchemas`). See
+[`packages/core/src/semantic/schema-form.md`](../../../core/src/semantic/schema-form.md)
+(Ajv client vs authoritative Zod parse).

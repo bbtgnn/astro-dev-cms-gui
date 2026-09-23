@@ -57,13 +57,13 @@
         "@sjsf/ajv8-validator": "catalog:",
         "@sjsf/basic-theme": "catalog:",
         "@sjsf/form": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@astrojs/svelte": "catalog:",
         "svelte": "catalog:",
         "svelte-check": "catalog:",
         "typescript": "catalog:",
-        "zod": "catalog:",
       },
       "peerDependencies": {
         "svelte": "catalog:",
