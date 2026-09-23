@@ -8,7 +8,8 @@
 			"packages/core",
 			"packages/authoring",
 			"packages/astro",
-			"packages/astro-template"
+			"packages/astro-template",
+			"packages/astro-demo-simple"
 		],
 		"catalog": {
 			"typescript": "^5.9.0",
@@ -25,7 +26,7 @@
 	"scripts": {
 		"dev": "bun run --filter @cms/astro-template dev",
 		"build": "bun run --filter @cms/astro-template build",
-		"check": "bun run --filter @cms/core check && bun run --filter @cms/authoring check && bun run --filter @cms/astro check && bun run --filter @cms/astro-template check",
+		"check": "bun run --filter @cms/core check && bun run --filter @cms/authoring check && bun run --filter @cms/astro check && bun run --filter @cms/astro-template check && bun run --filter @cms/astro-demo-simple check",
 		"check:allowlist": "bun run --filter @cms/core check:allowlist && bun run --filter @cms/authoring check:layers && bun run --filter @cms/authoring check:allowlist",
 		"check:image": "bun run --filter @cms/astro-template check:image",
 		"lint": "biome check .",
