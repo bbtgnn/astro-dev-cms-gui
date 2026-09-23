@@ -10,6 +10,7 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./config": "./src/config.ts",
+		"./content-proxy": "./src/content-proxy/index.ts",
 		"./generate": "./src/generate/index.ts",
 		"./testing": "./src/testing.ts",
 		"./middleware-entry": "./src/middleware-entry.ts",
@@ -28,9 +29,11 @@
 		"astro": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"zod": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-cms.test.ts ./scripts/emit-content-config.test.ts ./scripts/generate-content-config.test.ts ./scripts/content-config-generation-lifecycle.test.ts ./scripts/default-host.test.ts"
+		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-cms.test.ts ./scripts/emit-content-config.test.ts ./scripts/generate-content-config.test.ts ./scripts/content-config-generation-lifecycle.test.ts ./scripts/default-host.test.ts ./scripts/content-proxy.test.ts",
+		"test:content-proxy": "bun test ./scripts/content-proxy.test.ts"
 	}
 }

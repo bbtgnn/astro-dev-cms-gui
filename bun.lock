@@ -13,6 +13,9 @@
     "packages/astro": {
       "name": "@cms/astro",
       "version": "0.0.0",
+      "bin": {
+        "cms": "./bin/cms.ts",
+      },
       "dependencies": {
         "@cms/authoring": "workspace:*",
         "@cms/core": "workspace:*",
@@ -22,6 +25,7 @@
         "svelte": "catalog:",
         "svelte-check": "catalog:",
         "typescript": "catalog:",
+        "zod": "catalog:",
       },
       "peerDependencies": {
         "astro": "catalog:",
