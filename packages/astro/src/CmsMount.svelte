@@ -1,6 +1,6 @@
 <!--
   Thin host mount: wire protocol client + SSR form models into AuthoringApp.
-  Catalog keys from overlays resolve through virtual:@cms/components.
+  Catalog keys from form-tree editor bindings resolve through virtual:@cms/components.
 -->
 <script lang="ts">
 import components from "virtual:@cms/components";

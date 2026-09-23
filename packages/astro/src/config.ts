@@ -1,18 +1,24 @@
 /**
  * Host facade for `src/cms.config.ts` (schema-first overlay).
  *
- * {@link defineCms}`(options)` — presentation only (previewUrl, type, ui).
+ * {@link defineCms}`(options)` — presentation only (previewUrl, type, form).
  * Prefer `export default defineCms({ … })`.
  *
  * Validation schemas come from `content.config` (stamped host / shell form
- * models). `ui` path safety: generate Input types via `cms sync` / Vite emit
- * (`@cms/astro/collection-types`). Stamped image/ref → CmsImage / CmsReference.
+ * models). Form-tree field refs type against Input keys via `cms sync` /
+ * Vite emit (`@cms/astro/collection-types`). Stamped image/ref → CmsImage /
+ * CmsReference.
  */
 
-import type { SchemaFormOverlay } from "@cms/core/semantic";
 import type {
-	ChromeFor,
-	CmsCollectionOptionsFor,
+	FormTree,
+	ScopedFormTreeHelpers,
+} from "@cms/core/form-tree";
+import {
+	createFormTreeHelpers,
+	createScopedFormTreeHelpers,
+} from "@cms/core/form-tree";
+import type {
 	CmsCollectionType,
 	CmsCollections,
 	DefineCmsOptionsFromGenerated,
@@ -28,6 +34,7 @@ export type {
 	CmsImage,
 	CmsReference,
 	DefineCmsOptionsFromGenerated,
+	FormBuilderFor,
 } from "./collection-types";
 
 export type {
@@ -53,17 +60,37 @@ export {
 	SHELL_OWNED_KEYS,
 } from "@cms/authoring/config";
 
+export type {
+	FieldFn,
+	FieldRefBuilder,
+	FormTree,
+	FormTreeColumnsNode,
+	FormTreeFieldChrome,
+	FormTreeFieldNode,
+	FormTreeGroupNode,
+	FormTreeHelpers,
+	FormTreeKindHint,
+	FormTreeNode,
+	FormTreeTabEntry,
+	FormTreeTabsNode,
+	ObjectInputOf,
+	ScopedFormTreeHelpers,
+} from "@cms/core/form-tree";
+export { createFormTreeHelpers, createScopedFormTreeHelpers };
+
 /**
- * Per-collection presentation options (loose `ui` when codegen absent).
+ * Per-collection presentation options (loose `form` when codegen absent).
  */
 export type CmsCollectionOptions = {
 	readonly previewUrl?: (id: string) => string | null;
 	readonly type?: CmsCollectionType;
-	readonly ui?: SchemaFormOverlay | ChromeFor<Record<string, unknown>>;
+	readonly form?:
+		| FormTree
+		| ((f: ScopedFormTreeHelpers<Record<string, unknown>>) => FormTree);
 };
 
 /**
- * Overlay options: strict {@link ChromeFor} when `CmsCollections` is augmented;
+ * Overlay options: strict form builders when `CmsCollections` is augmented;
  * loose record before `cms sync`.
  */
 export type DefineCmsOptions = [keyof CmsCollections] extends [never]
@@ -71,8 +98,8 @@ export type DefineCmsOptions = [keyof CmsCollections] extends [never]
 	: DefineCmsOptionsFromGenerated;
 
 export type DefineCmsResult = {
-	readonly overlays: {
-		readonly [K in string]?: SchemaFormOverlay;
+	readonly forms: {
+		readonly [K in string]?: FormTree;
 	};
 	readonly getPreviewUrl: (collection: string, id: string) => string | null;
 	readonly types: {
@@ -80,13 +107,25 @@ export type DefineCmsResult = {
 	};
 };
 
+function resolveForm(
+	form:
+		| FormTree
+		| ((f: ScopedFormTreeHelpers<Record<string, unknown>>) => FormTree),
+): FormTree {
+	if (typeof form === "function") {
+		return form(createScopedFormTreeHelpers<Record<string, unknown>>());
+	}
+	return form;
+}
+
 /**
  * Schema-first overlay entry for `src/cms.config.ts`.
  *
  * Presentation only — schemas live in `content.config`.
+ * Path-map `ui` was removed; use {@link CmsCollectionOptions.form}.
  */
 export function defineCms(options: DefineCmsOptions = {}): DefineCmsResult {
-	const overlays: Record<string, SchemaFormOverlay | undefined> = {};
+	const forms: Record<string, FormTree | undefined> = {};
 	const types: Record<string, CmsCollectionType | undefined> = {};
 	const previewByCollection = new Map<
 		string,
@@ -97,8 +136,14 @@ export function defineCms(options: DefineCmsOptions = {}): DefineCmsResult {
 		const opt = options[name as keyof typeof options] as
 			| CmsCollectionOptions
 			| undefined;
-		if (opt?.ui !== undefined) {
-			overlays[name] = opt.ui as SchemaFormOverlay;
+		if (opt?.form !== undefined) {
+			forms[name] = resolveForm(
+				opt.form as
+					| FormTree
+					| ((
+							f: ScopedFormTreeHelpers<Record<string, unknown>>,
+					  ) => FormTree),
+			);
 		}
 		types[name] = opt?.type ?? "collection";
 		if (opt?.previewUrl !== undefined) {
@@ -107,7 +152,7 @@ export function defineCms(options: DefineCmsOptions = {}): DefineCmsResult {
 	}
 
 	return {
-		overlays,
+		forms,
 		types,
 		getPreviewUrl: (collection, id) =>
 			previewByCollection.get(collection)?.(id) ?? null,

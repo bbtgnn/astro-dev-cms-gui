@@ -26,16 +26,16 @@ declare module "virtual:@cms/content-config" {
 }
 
 declare module "virtual:@cms/config" {
-	import type { SchemaFormOverlay } from "@cms/core/semantic";
+	import type { FormTree } from "@cms/core/form-tree";
 
-	/** Nested field chrome per collection (normalized from options.*.ui). */
-	export const overlays: Readonly<Record<string, SchemaFormOverlay>>;
+	/** Per-collection form trees (normalized from options.*.form). */
+	export const forms: Readonly<Record<string, FormTree>>;
 	/** Per-collection editor mode (normalized from options.*.type). */
 	export const types: Readonly<Record<string, "collection" | "singleton">>;
 	/** Host-compiled entry → site preview URL; null when unsupported. */
 	export function getPreviewUrl(collection: string, id: string): string | null;
 	const config: {
-		overlays?: Readonly<Record<string, SchemaFormOverlay>>;
+		forms?: Readonly<Record<string, FormTree>>;
 		types?: Readonly<Record<string, "collection" | "singleton">>;
 		getPreviewUrl?: (collection: string, id: string) => string | null;
 	};

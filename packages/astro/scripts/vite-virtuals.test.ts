@@ -50,18 +50,18 @@ describe("cmsConfigVitePlugin", () => {
 		const source = await plugin.load(resolved);
 		expect(source).toContain(`from ${JSON.stringify(entry)}`);
 		expect(source).toContain("__cfg = __cmsConfig.default ?? __cmsConfig");
-		expect(source).toContain("export const overlays =");
+		expect(source).toContain("export const forms =");
 		expect(source).toContain("export const getPreviewUrl =");
 		expect(source).toContain("export const types =");
 	});
 
-	test("emits stub overlays when entry omitted", async () => {
+	test("emits stub forms when entry omitted", async () => {
 		const plugin = cmsConfigVitePlugin({});
 		const resolved = await plugin.resolveId(CMS_CONFIG_VIRTUAL_ID);
 		expect(resolved).toBe(`\0${CMS_CONFIG_VIRTUAL_ID}`);
 		if (resolved == null) throw new Error("expected resolved id");
 		const source = await plugin.load(resolved);
-		expect(source).toContain("export const overlays = {};");
+		expect(source).toContain("export const forms = {};");
 		expect(source).toContain("export const types = {};");
 		expect(source).toContain("export function getPreviewUrl");
 	});

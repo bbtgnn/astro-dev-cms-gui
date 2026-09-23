@@ -46,7 +46,7 @@ export type CmsContentConfigVitePluginOptions = {
 export type CmsConfigVitePluginOptions = {
 	/**
 	 * Absolute path to the optional overlay module (`cms.config.ts`).
-	 * Omit for a stub (empty overlays, null preview).
+	 * Omit for a stub (empty forms, null preview).
 	 */
 	entry?: string;
 };
@@ -160,17 +160,17 @@ export function cmsConfigVitePlugin(
 			if (id !== CMS_CONFIG_RESOLVED_ID) return null;
 			if (entryLiteral == null) {
 				return [
-					"export const overlays = {};",
+					"export const forms = {};",
 					"export const types = {};",
 					"export function getPreviewUrl(_collection, _id) { return null; }",
-					"export default { overlays, types, getPreviewUrl };",
+					"export default { forms, types, getPreviewUrl };",
 				].join("\n");
 			}
 			// Prefer default export (defineCms result); named exports are legacy fallback.
 			return [
 				`import * as __cmsConfig from ${entryLiteral};`,
 				"const __cfg = __cmsConfig.default ?? __cmsConfig;",
-				"export const overlays = __cfg.overlays ?? {};",
+				"export const forms = __cfg.forms ?? {};",
 				"export const types = __cfg.types ?? {};",
 				"export const getPreviewUrl =",
 				"  __cfg.getPreviewUrl ?? ((_collection, _id) => null);",

@@ -53,17 +53,27 @@ describe("printCollectionTypesFile", () => {
 });
 
 describe("defineCms options overlay", () => {
-	test("applies ui + previewUrl without schemas", () => {
+	test("applies form + previewUrl without schemas", () => {
 		const cms = defineCms({
 			posts: {
 				previewUrl: (id) => `/posts/${id}`,
-				ui: {
-					title: { label: "Title" },
-					cover: { label: "Cover", kind: "image" },
-				},
+				form: (f) => [
+					f.field("title").label("Title"),
+					f.field("cover").label("Cover").kind("image"),
+				],
 			},
 		});
 		expect(cms.getPreviewUrl("posts", "x")).toBe("/posts/x");
-		expect(cms.overlays.posts?.title?.label).toBe("Title");
+		expect(cms.forms.posts).toHaveLength(2);
+		expect(cms.forms.posts?.[0]).toMatchObject({
+			type: "field",
+			key: "title",
+			chrome: { label: "Title" },
+		});
+		expect(cms.forms.posts?.[1]).toMatchObject({
+			type: "field",
+			key: "cover",
+			chrome: { label: "Cover", kind: "image" },
+		});
 	});
 });

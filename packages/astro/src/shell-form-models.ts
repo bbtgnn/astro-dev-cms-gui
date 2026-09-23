@@ -1,16 +1,16 @@
 /**
- * Astro SSR seam: project stamped content.config schemas (+ optional overlay)
+ * Astro SSR seam: project stamped content.config schemas (+ optional form tree)
  * to serializable form models for the client shell (ADR-0008 — browser never
  * imports content.config).
  */
 
-import { overlays } from "virtual:@cms/config";
+import { forms } from "virtual:@cms/config";
 import { collections } from "virtual:@cms/content-config";
 import {
 	type FormModelsByCollection,
 	projectSchemaFormModels,
-	type SchemaFormOverlay,
 } from "@cms/core/semantic";
+import type { FormTree } from "@cms/core/form-tree";
 import {
 	collectionsFromContentConfigExport,
 	type StampedCollectionConfig,
@@ -29,6 +29,6 @@ export function loadShellFormModels(): FormModelsByCollection {
 		schemas[name] = config.schema;
 	}
 	return projectSchemaFormModels(schemas, {
-		overlays: overlays as Readonly<Record<string, SchemaFormOverlay>>,
+		forms: forms as Readonly<Record<string, FormTree>>,
 	});
 }

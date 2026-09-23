@@ -129,7 +129,7 @@ describe("cms() schema-first setup", () => {
 		writeFileSync(contentConfig, handwritten, "utf8");
 		writeFileSync(
 			join(root, "src/cms.config.ts"),
-			`export const overlays = {};\nexport function getPreviewUrl() { return null; }\nexport default { overlays, getPreviewUrl };\n`,
+			`export const forms = {};\nexport function getPreviewUrl() { return null; }\nexport default { forms, getPreviewUrl };\n`,
 			"utf8",
 		);
 
@@ -187,7 +187,7 @@ describe("cms() schema-first setup", () => {
 		);
 		writeFileSync(
 			join(root, "src/cms.config.ts"),
-			`export const overlays = { posts: { title: { label: "T" } } };\nexport function getPreviewUrl() { return null; }\nexport default { overlays, getPreviewUrl };\n`,
+			`export const forms = {};\nexport function getPreviewUrl() { return null; }\nexport default { forms, getPreviewUrl };\n`,
 			"utf8",
 		);
 
@@ -216,7 +216,7 @@ describe("cmsHarness escapes", () => {
 		const root = tempProject();
 		writeFileSync(
 			join(root, "src/cms.config.ts"),
-			`export const overlays = {};\nexport default { overlays };\n`,
+			`export const forms = {};\nexport default { forms };\n`,
 			"utf8",
 		);
 

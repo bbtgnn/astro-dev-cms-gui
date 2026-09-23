@@ -172,7 +172,7 @@ const fieldRefProto: FieldRefProto = {
 		});
 	},
 	form(build) {
-		const nested = createScopedHelpers<Record<string, unknown>>();
+		const nested = createScopedFormTreeHelpers<Record<string, unknown>>();
 		return createFieldRefNode(this.key, {
 			...this[FIELD_CHROME],
 			content: normalizeContent(
@@ -213,7 +213,11 @@ function createFieldRefNode(
 	return node;
 }
 
-function createScopedHelpers<Data>(): ScopedFormTreeHelpers<Data> {
+/**
+ * Scoped helpers for collection-level `form: (f) => …` callbacks:
+ * callable as `f(key)` plus `field` / `tabs` / `columns` / `group`.
+ */
+export function createScopedFormTreeHelpers<Data>(): ScopedFormTreeHelpers<Data> {
 	const helpers = createFormTreeHelpers<Data>();
 	const call = ((key: keyof Data & string) =>
 		helpers.field(key)) as ScopedFormTreeHelpers<Data>;

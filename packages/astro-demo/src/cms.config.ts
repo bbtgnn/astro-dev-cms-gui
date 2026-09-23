@@ -2,7 +2,7 @@
  * Optional overlay editor configuration (schema-first).
  *
  * Presentation only — schemas live in `content.config`.
- * Run `cms sync` (or `astro dev` via cms()) for Input types / ui path safety.
+ * Run `cms sync` (or `astro dev` via cms()) for Input types / form field-ref safety.
  * Image/ref become CmsImage / CmsReference in generated cms.types.d.ts.
  *
  * Convention path `src/cms.config.ts` → `virtual:@cms/config`.
@@ -13,12 +13,9 @@ import { defineCms } from "@cms/astro/config";
 
 export default defineCms({
 	authors: {
-		ui: {
-			name: {
-				label: "Author name",
-				editor: "AuthorNameEditor",
-			},
-		},
+		form: (f) => [
+			f.field("name").label("Author name").editor("AuthorNameEditor"),
+		],
 	},
 	posts: {
 		previewUrl: (id) => {
@@ -26,18 +23,29 @@ export default defineCms({
 			if (!trimmed) return null;
 			return `/posts/${encodeURIComponent(trimmed)}`;
 		},
-		ui: {
-			title: { label: "Post title" },
-			draft: { label: "Draft" },
-			body: { label: "Body" },
-			cover: { label: "Cover image", kind: "image" },
-			author: { label: "Author", kind: "reference" },
-			seo: {
-				label: "SEO",
-				fields: {
-					description: { label: "Meta description" },
+		form: (f) => [
+			f.tabs([
+				{
+					id: "content",
+					label: "Content",
+					content: [
+						f.field("title").label("Post title"),
+						f.field("draft").label("Draft"),
+						f.field("body").label("Body"),
+						f.field("seo").label("SEO").fields((sf) => [
+							sf("description").label("Meta description"),
+						]),
+					],
 				},
-			},
-		},
+				{
+					id: "media",
+					label: "Media",
+					content: [
+						f.field("cover").label("Cover image").kind("image"),
+						f.field("author").label("Author").kind("reference"),
+					],
+				},
+			]),
+		],
 	},
 });

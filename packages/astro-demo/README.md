@@ -43,10 +43,10 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 | Feature | Where |
 |---------|--------|
 | Multi-collection options | `authors` + `posts` keys in `defineCms` options |
-| Nested object field chrome | `posts.ui.seo` → `seo.description` label |
-| Custom editor | `authors.ui.name` → `AuthorNameEditor` via catalog |
+| Form tree tabs + nested scope | `posts.form` → content/media tabs; `seo.fields(…)` |
+| Custom editor | `authors.form` → `.editor("AuthorNameEditor")` via catalog |
 | Preview URL | `posts.previewUrl(id)` → `/posts/:id` |
-| Image/ref kinds | codegen `CmsImage` / `CmsReference`; `ui.cover.kind: "image"` |
+| Image/ref kinds | codegen `CmsImage` / `CmsReference`; `.kind("image" \| "reference")` |
 | Collection type | `type?: "collection" \| "singleton"` (stored; shell wiring later) |
 
 ## Useful endpoints

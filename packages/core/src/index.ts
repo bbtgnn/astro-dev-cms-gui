@@ -43,7 +43,10 @@ export type {
 	ObjectInputOf,
 	ScopedFormTreeHelpers,
 } from "./form-tree";
-export { createFormTreeHelpers } from "./form-tree";
+export {
+	createFormTreeHelpers,
+	createScopedFormTreeHelpers,
+} from "./form-tree";
 export { contentAssetPath, imageFolderFromCanonical } from "./image-path";
 export { memoryWriter } from "./memory-writer";
 export { nodeFsWriter } from "./node-fs-writer";
