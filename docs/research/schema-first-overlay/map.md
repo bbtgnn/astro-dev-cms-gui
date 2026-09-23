@@ -12,7 +12,7 @@ Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is
 
 - Research: [schema-first-overlay.md](../schema-first-overlay.md), [astro-loader-extraction.md](../astro-loader-extraction.md)
 - Astro flip plan: [plan.md](./plan.md) (tickets 01–10 — largely done)
-- Next phase: [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md) (tickets 11–17)
+- Form-tree phase: [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md) (tickets 11–17 — implemented on this branch)
 - Breakage on this branch is accepted (Q22).
 - Do not edit GitHub wayfinder map #1 while exploring.
 
@@ -23,17 +23,17 @@ Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is
 - Image/ref kinds via stamp/proxy (astro-decap style); layout/singleton/editors via overlay — not FieldUi-on-Zod.
 - Astro `defineCms(options)` presentation-only; schemas from content.config; types via `cms.types.d.ts` module augmentation.
 - Options-only cleanup: no collections arg on Astro face; host reads stamped content.config.
-- **Form tree** (next): one fluent structure (field refs + tabs/columns/group); tabs as objects; object enter = callback scope.
+- **Form tree:** one fluent structure (field refs + tabs/columns/group); tabs as objects; object enter = callback scope; lowers into `CollectionFormModel`.
 - **Non-Astro** `defineCms(cms => …)` on `@cms/core` with schema + location + form + leaf helpers.
-- **demos/** top-level for self-host apps; `packages/` for libraries only.
+- **demos/** top-level for self-host apps (`astro-simple`, `astro-overlay`, `sveltekit`); `packages/` for libraries only.
 - `defineCms` optional; singleton = editor flag; id↔path = host (ADR-0007).
 - Full happy-path flip of `cms()` (kill generation); Q19–Q23 locked in parent research note.
 
 ## Frontier (local tickets)
 
-**Next:** [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md) — open first: **12** (form tree builders) and **16** (demos/ workspace, can parallel).
+**Form-tree phase (11–17) done** on this branch — see [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md).
 
-Prior phase tickets 01–10: see [plan.md](./plan.md). Codegen Input types: [codegen-input-types-plan.md](./codegen-input-types-plan.md) (implemented; Astro `ui` path — migrating to `form` in 14).
+Prior phase tickets 01–10: see [plan.md](./plan.md). Codegen Input types: [codegen-input-types-plan.md](./codegen-input-types-plan.md) (implemented; Astro uses `form`, not path-map `ui`).
 
 ## Out of scope here
 
