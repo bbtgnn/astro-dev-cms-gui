@@ -1,8 +1,8 @@
 /**
- * Convention paths for the Astro host install surface (ADR-0016 / 0019).
+ * Convention paths for the Astro host install surface (schema-first exploration).
  *
- * One candidate list for cms.config / schema partition; generate + CLI use the
- * primary path string; discovery uses the full list via resolveConventionEntry.
+ * content.config is user-authored (required for product cms()).
+ * cms.config / cms.components are optional overlay + catalog.
  */
 
 /** Convention paths for the Node-safe unified tree (and schema partition). */

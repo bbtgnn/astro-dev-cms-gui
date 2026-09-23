@@ -2,8 +2,8 @@
  * Host-only content-proxy: stamp Astro `glob`/`file` location options and
  * `reference` / function-schema `image` kinds without changing user import paths.
  *
- * Wire into product `cms()` later (schema-first overlay ticket 05). Until then,
- * hosts may call {@link vitePluginsForBoot} + {@link viteAliasesForBoot} manually.
+ * Product `cms()` installs {@link vitePluginsForBoot} + {@link viteAliasesForBoot}
+ * in `astro:config:setup` before Content Layer evaluates `content.config`.
  *
  * Never import this module (or `content.config`) from the browser authoring shell.
  */

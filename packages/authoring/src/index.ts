@@ -13,6 +13,7 @@ export {
 	editorCollectionsFromTree,
 	type EditorCollectionsFromSchemasOptions,
 } from "./form/editor-collections";
+export { resolveCatalogBinding } from "./form/stock-registry";
 export type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,

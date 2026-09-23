@@ -41,7 +41,7 @@ describe("schema partition convention", () => {
 });
 
 describe("cmsConfigVitePlugin", () => {
-	test("re-exports editor config entry", async () => {
+	test("soft-binds overlay exports from cms.config entry", async () => {
 		const entry = path.resolve("/project/src/cms.config.ts");
 		const plugin = cmsConfigVitePlugin({ entry });
 		const resolved = await plugin.resolveId(CMS_CONFIG_VIRTUAL_ID);
@@ -49,7 +49,18 @@ describe("cmsConfigVitePlugin", () => {
 		if (resolved == null) throw new Error("expected resolved id");
 		const source = await plugin.load(resolved);
 		expect(source).toContain(`from ${JSON.stringify(entry)}`);
-		expect(source).toContain("export { collections, default }");
+		expect(source).toContain("export const overlays =");
+		expect(source).toContain("export const getPreviewUrl =");
+	});
+
+	test("emits stub overlays when entry omitted", async () => {
+		const plugin = cmsConfigVitePlugin({});
+		const resolved = await plugin.resolveId(CMS_CONFIG_VIRTUAL_ID);
+		expect(resolved).toBe(`\0${CMS_CONFIG_VIRTUAL_ID}`);
+		if (resolved == null) throw new Error("expected resolved id");
+		const source = await plugin.load(resolved);
+		expect(source).toContain("export const overlays = {};");
+		expect(source).toContain("export function getPreviewUrl");
 	});
 });
 

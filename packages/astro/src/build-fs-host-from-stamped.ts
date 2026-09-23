@@ -15,7 +15,7 @@
  * `collections` through {@link collectionsFromContentConfigExport}. Tests may
  * import fixtures that already use the loaders shim.
  *
- * Keeps {@link buildDefaultFsHost} (IR path) available until ticket 05 flips `cms()`.
+ * Keeps {@link buildDefaultFsHost} (IR path) available until ticket 08 removes it.
  */
 
 import path from "node:path";

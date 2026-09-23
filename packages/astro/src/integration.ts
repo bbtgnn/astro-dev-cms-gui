@@ -1,5 +1,5 @@
 /**
- * Astro host integration — consumer mount seam (ADR-0016 / 0019 / 0020).
+ * Astro host integration — consumer mount seam (schema-first overlay exploration).
  *
  * Happy path:
  *
@@ -11,15 +11,19 @@
  * });
  * ```
  *
- * Conventions: `src/cms.config.ts` (required), optional `src/cms.components.ts`,
- * generated `src/content.config.ts`, content under `src/content/`.
- * Package default CmsHost is the built-in FS adapter; virtual IDs stay internal.
+ * Conventions: user-authored `src/content.config.ts` (required), optional
+ * `src/cms.config.ts` / `src/cms.components.ts` overlay, content under
+ * `src/content/`. Product `cms()` installs content-proxy stamps, never
+ * generates `content.config`.
  *
  * Tests / non-convention layouts: {@link cmsHarness} from `@cms/astro/testing`.
  * Protocol-only: {@link createCmsMiddleware} from `@cms/astro`.
  */
 import { fileURLToPath } from "node:url";
-import { generateContentConfig } from "./generate/generate-content-config";
+import {
+	viteAliasesForBoot,
+	vitePluginsForBoot,
+} from "./content-proxy/boot";
 import {
 	type CmsDispatcherOptions,
 	type CmsMiddlewareHandler,
@@ -32,6 +36,7 @@ import {
 	CONTENT_CONFIG_CONVENTION,
 	cmsComponentsVitePlugin,
 	cmsConfigVitePlugin,
+	cmsContentConfigVitePlugin,
 	cmsHostVitePlugin,
 	cmsIntegrationOptionsVitePlugin,
 	DEFAULT_CONTENT_ROOT,
@@ -48,10 +53,8 @@ export type CmsIntegrationOptions = Record<string, never>;
  */
 export type CmsHarnessOptions = {
 	/**
-	 * Editor configuration module (project-relative or absolute).
+	 * Optional overlay module (project-relative or absolute).
 	 * Defaults to `src/cms.config.*` when present.
-	 * Required for a useful harness; missing config with `requireConfig: true`
-	 * (product `cms()`) hard-fails.
 	 */
 	config?: string;
 	/**
@@ -61,25 +64,36 @@ export type CmsHarnessOptions = {
 	componentsCatalog?: string | false;
 	/**
 	 * Project module exporting `createHost(): CmsHost`.
-	 * - omit → package default CmsHost (requires resolved config)
+	 * - omit → package default CmsHost (requires resolved content.config)
 	 * - string → that module
 	 * - `false` → skip protocol middleware / host virtual
 	 */
 	host?: string | false;
 	/** Write-back root. Defaults to `src/content`. */
 	contentRoot?: string;
-	/** Shell page pattern. Defaults to `/cms` when config resolves; `false` skips. */
+	/**
+	 * Shell page pattern. Defaults to `/cms` when content.config resolves;
+	 * `false` skips.
+	 */
 	shellPath?: string | false;
-	/** When `false`, skip content.config generation. */
-	generate?: false;
+	/**
+	 * @deprecated No-op. Product `cms()` never generates `content.config`.
+	 * Escape: call `generateContentConfig` from `@cms/astro/generate` directly
+	 * (quarantined until ticket 08 removes generation).
+	 */
+	generate?: boolean;
 	/** Mount prefix for `/_cms`. */
 	mount?: string;
 	allowInProd?: boolean;
 	/**
-	 * Product mode: hard-fail in setup when editor configuration is missing.
-	 * {@link cms} sets this; harness defaults to false.
+	 * @deprecated Ignored. Product mode requires `content.config`, not cms.config.
 	 */
 	requireConfig?: boolean;
+	/**
+	 * Product mode: hard-fail in setup when `src/content.config.*` is missing.
+	 * {@link cms} sets this; harness defaults to false.
+	 */
+	requireContentConfig?: boolean;
 } & Partial<Pick<CmsDispatcherOptions, "protocol" | "isDev" | "readAsset">>;
 
 /** Minimal Astro `astro:config:setup` hook params we use. */
@@ -88,6 +102,7 @@ type AstroConfigSetupParams = {
 	updateConfig: (config: {
 		vite?: {
 			plugins?: unknown[];
+			resolve?: { alias?: unknown };
 		};
 	}) => void;
 	addMiddleware: (middleware: {
@@ -133,13 +148,14 @@ function defaultHostEntry(): string {
 	return fileURLToPath(new URL("./default-host.ts", import.meta.url));
 }
 
-function missingConfigMessage(projectRoot: string): string {
-	const expected = CMS_CONFIG_CONVENTION.map((p) => `  - ${p}`).join("\n");
+function missingContentConfigMessage(projectRoot: string): string {
+	const expected = CONTENT_CONFIG_CONVENTION.map((p) => `  - ${p}`).join("\n");
 	return [
-		`@cms/astro: cms() requires editor configuration under the project root.`,
+		`@cms/astro: cms() requires src/content.config.* under the project root.`,
 		`Looked in ${projectRoot} for:`,
 		expected,
-		`Add src/cms.config.ts (ADR-0016 / 0019), or use cmsHarness from @cms/astro/testing for fixtures.`,
+		`Author Astro collections there (schema-first). Overlay cms.config is optional.`,
+		`Use cmsHarness from @cms/astro/testing for fixtures without content.config.`,
 	].join("\n");
 }
 
@@ -153,7 +169,7 @@ export function createCmsIntegration(
 	const mount = (options.mount ?? "/_cms").replace(/\/+$/, "") || "/_cms";
 	const allowInProd = options.allowInProd;
 	const shellPathOption = options.shellPath;
-	const requireConfig = options.requireConfig === true;
+	const requireContentConfig = options.requireContentConfig === true;
 
 	const integration: CmsIntegration = {
 		name: "@cms/astro",
@@ -192,21 +208,26 @@ export function createCmsIntegration(
 		}) {
 			const root = projectRootFromAstroConfig(config.root);
 
+			// Content-proxy must land before Content Layer evaluates content.config.
+			const proxyPlugins = vitePluginsForBoot() as CmsVitePlugin[];
+			const proxyAliases = viteAliasesForBoot();
+
+			const contentConfigEntry = resolveConventionEntry(
+				root,
+				CONTENT_CONFIG_CONVENTION,
+			);
+
+			if (requireContentConfig && contentConfigEntry == null) {
+				throw new Error(missingContentConfigMessage(root));
+			}
+
 			const configEntry =
 				options.config != null
 					? resolveProjectEntry(options.config, root)
 					: resolveConventionEntry(root, CMS_CONFIG_CONVENTION);
 
-			if (requireConfig && configEntry == null) {
-				throw new Error(missingConfigMessage(root));
-			}
-
-			if (options.generate !== false) {
-				await generateContentConfig({
-					projectRoot: root,
-					schemaPartitionPath: configEntry ?? false,
-				});
-			}
+			// `generate` is intentionally unused (no-op / quarantined for ticket 08).
+			void options.generate;
 
 			const componentsEntry =
 				options.componentsCatalog === false
@@ -215,13 +236,10 @@ export function createCmsIntegration(
 						? resolveProjectEntry(options.componentsCatalog, root)
 						: resolveConventionEntry(root, CMS_COMPONENTS_CONVENTION);
 
-			// Resolve after generation so a missing committed bootstrap is
-			// created in-hook when config exists.
-			void resolveConventionEntry(root, CONTENT_CONFIG_CONVENTION);
-
 			const useProjectHost =
 				typeof options.host === "string" && options.host.length > 0;
-			const useDefaultHost = options.host == null && configEntry != null;
+			const useDefaultHost =
+				options.host == null && contentConfigEntry != null;
 			const hostEntry = useProjectHost
 				? resolveProjectEntry(options.host as string, root)
 				: useDefaultHost
@@ -238,7 +256,7 @@ export function createCmsIntegration(
 					? undefined
 					: shellPathOption != null
 						? normalizeShellPath(shellPathOption)
-						: configEntry != null
+						: contentConfigEntry != null
 							? "/cms"
 							: undefined;
 
@@ -248,17 +266,26 @@ export function createCmsIntegration(
 				delete integration.shellPath;
 			}
 
-			const plugins: CmsVitePlugin[] = [];
+			const plugins: CmsVitePlugin[] = [...proxyPlugins];
 
-			if (configEntry != null) {
-				plugins.push(cmsConfigVitePlugin({ entry: configEntry }));
+			if (contentConfigEntry != null) {
+				plugins.push(
+					cmsContentConfigVitePlugin({ entry: contentConfigEntry }),
+				);
 			}
 
-			if (configEntry != null || resolvedShellPath != null) {
+			const needsShellVirtuals =
+				contentConfigEntry != null ||
+				resolvedShellPath != null ||
+				hostEntry != null;
+
+			if (needsShellVirtuals) {
+				plugins.push(
+					cmsConfigVitePlugin(
+						configEntry != null ? { entry: configEntry } : {},
+					),
+				);
 				plugins.push(cmsComponentsVitePlugin({ entry: componentsEntry }));
-			}
-
-			if (hostEntry != null || resolvedShellPath != null) {
 				plugins.push(
 					cmsIntegrationOptionsVitePlugin({
 						mount,
@@ -284,13 +311,14 @@ export function createCmsIntegration(
 				});
 			}
 
-			if (plugins.length > 0) {
-				updateConfig({
-					vite: {
-						plugins,
+			updateConfig({
+				vite: {
+					plugins,
+					resolve: {
+						alias: proxyAliases,
 					},
-				});
-			}
+				},
+			});
 		},
 	};
 
@@ -299,16 +327,21 @@ export function createCmsIntegration(
 
 /**
  * Convention-first install — zero options.
- * Requires `src/cms.config.ts` (hard-fail in `astro:config:setup` if missing).
+ * Requires `src/content.config.ts` (hard-fail in `astro:config:setup` if missing).
+ * Optional `src/cms.config.ts` overlay / `src/cms.components.ts`.
  */
 export function cms(): CmsIntegration {
-	return createCmsIntegration({ requireConfig: true });
+	return createCmsIntegration({ requireContentConfig: true });
 }
 
 /**
  * Escapes for fixtures and non-convention layouts.
  * Prefer {@link cms} for real hosts.
+ *
+ * Notes:
+ * - `generate` is a no-op (use `@cms/astro/generate` if you still need IR emit).
+ * - `requireConfig` is ignored; overlay cms.config is always optional.
  */
 export function cmsHarness(options: CmsHarnessOptions = {}): CmsIntegration {
-	return createCmsIntegration({ ...options, requireConfig: false });
+	return createCmsIntegration({ ...options, requireContentConfig: false });
 }

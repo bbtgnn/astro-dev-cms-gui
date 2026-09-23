@@ -199,32 +199,10 @@ describe("generateContentConfig lifecycle", () => {
 	});
 });
 
-describe("cms() astro:config:setup", () => {
-	test("calls generation before returning; bootstraps missing content.config", async () => {
+describe("cms() astro:config:setup (schema-first)", () => {
+	test("does not bootstrap content.config from cms.config partition", async () => {
 		const root = tempProject();
 		writePartitionReexport(join(root, SCHEMA_PARTITION_CONVENTION));
-
-		const integration = cms();
-		const hook = integration.hooks?.["astro:config:setup"];
-		expect(hook).toBeTypeOf("function");
-		if (hook == null) throw new Error("expected setup hook");
-
-		const { params, calls } = mockSetupParams(root);
-		const contentConfigPath = join(root, "src/content.config.ts");
-		expect(existsSync(contentConfigPath)).toBe(false);
-
-		await hook(params);
-
-		expect(existsSync(contentConfigPath)).toBe(true);
-		const written = readFileSync(contentConfigPath, "utf8");
-		expect(written).toContain("export const postsSchema");
-		expect(written).toContain(`// ${HASH_MARKER}`);
-		expect(calls.addMiddleware.length).toBe(1);
-		expect(calls.injectRoute.length).toBe(1);
-	});
-
-	test("hard-fails when cms.config is missing", async () => {
-		const root = tempProject();
 		writeFileSync(
 			join(root, "src/content.config.ts"),
 			`export const collections = {};\n`,
@@ -233,16 +211,22 @@ describe("cms() astro:config:setup", () => {
 
 		const integration = cms();
 		const hook = integration.hooks?.["astro:config:setup"];
+		expect(hook).toBeTypeOf("function");
 		if (hook == null) throw new Error("expected setup hook");
 
-		await expect(hook(mockSetupParams(root).params)).rejects.toThrow(
-			/requires editor configuration/,
+		const { params, calls } = mockSetupParams(root);
+		await hook(params);
+
+		expect(readFileSync(join(root, "src/content.config.ts"), "utf8")).toBe(
+			`export const collections = {};\n`,
 		);
+		expect(calls.addMiddleware.length).toBe(1);
+		expect(calls.injectRoute.length).toBe(1);
 	});
 });
 
 describe("cmsHarness escapes", () => {
-	test("generate: false disables generation in setup", async () => {
+	test("generate option does not write content.config", async () => {
 		const root = tempProject();
 		writePartitionReexport(join(root, SCHEMA_PARTITION_CONVENTION));
 
@@ -256,27 +240,5 @@ describe("cmsHarness escapes", () => {
 
 		await hook(mockSetupParams(root).params);
 		expect(existsSync(join(root, "src/content.config.ts"))).toBe(false);
-	});
-
-	test("skips generation when no config (no requireConfig)", async () => {
-		const root = tempProject();
-		writeFileSync(
-			join(root, "src/content.config.ts"),
-			`export const collections = {};\n`,
-			"utf8",
-		);
-
-		const integration = cmsHarness({
-			shellPath: false,
-			host: false,
-		});
-		const hook = integration.hooks?.["astro:config:setup"];
-		if (hook == null) throw new Error("expected setup hook");
-
-		await hook(mockSetupParams(root).params);
-
-		expect(readFileSync(join(root, "src/content.config.ts"), "utf8")).toBe(
-			`export const collections = {};\n`,
-		);
 	});
 });

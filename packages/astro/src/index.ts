@@ -1,7 +1,7 @@
 /**
- * @cms/astro — Astro host product face (ADR-0016).
+ * @cms/astro — Astro host product face.
  *
- * Happy path: zero-arg `cms()`. Protocol-only escapes stay here.
+ * Happy path: zero-arg `cms()` over user-authored content.config + optional overlay.
  * Harness / Vite plugin seams live under `@cms/astro/testing`.
  */
 

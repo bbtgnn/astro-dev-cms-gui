@@ -12,15 +12,31 @@ interface ImportMeta {
 	readonly env: ImportMetaEnv;
 }
 
-declare module "virtual:@cms/config" {
-	import type { SemanticConfigInput } from "@cms/core/semantic";
+declare module "virtual:@cms/content-config" {
+	/** User Astro content collections (host/SSR only). */
+	export const collections: Readonly<
+		Record<
+			string,
+			{
+				loader?: unknown;
+				schema?: unknown;
+			}
+		>
+	>;
+}
 
-	/** Semantic collections from the Node-safe unified tree. */
-	export const collections: SemanticConfigInput["collections"];
+declare module "virtual:@cms/config" {
+	import type { SchemaFormOverlay } from "@cms/core/semantic";
+
+	/** Optional schema record when using defineCms(collections, …). */
+	export const collections: Readonly<Record<string, unknown>>;
+	/** Nested overlay chrome per collection (empty when cms.config absent). */
+	export const overlays: Readonly<Record<string, SchemaFormOverlay>>;
 	/** Host-compiled entry → site preview URL; null when unsupported. */
 	export function getPreviewUrl(collection: string, id: string): string | null;
 	const config: {
-		collections: SemanticConfigInput["collections"];
+		collections?: Readonly<Record<string, unknown>>;
+		overlays?: Readonly<Record<string, SchemaFormOverlay>>;
 		getPreviewUrl?: (collection: string, id: string) => string | null;
 	};
 	export default config;
@@ -29,7 +45,7 @@ declare module "virtual:@cms/config" {
 declare module "virtual:@cms/components" {
 	import type { AnySvelteComponent } from "@cms/authoring/config";
 
-	/** Live Svelte catalog keyed by `cms.config` binding strings. */
+	/** Live Svelte catalog keyed by overlay binding strings. */
 	const components: Readonly<Record<string, AnySvelteComponent>>;
 	export default components;
 }

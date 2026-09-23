@@ -5,10 +5,10 @@
  * Use this module only in fixtures and advanced layouts.
  *
  * {@link buildDefaultFsHost} — IR / editor collections → CmsHost without Vite
- * (memoryWriter + injectable fileExists).
+ * (memoryWriter + injectable fileExists). Quarantined until ticket 08.
  *
  * {@link buildFsHostFromStampedCollections} — stamped content.config collections
- * → CmsHost (schema-first path; keep IR builder until ticket 05 flips `cms()`).
+ * → CmsHost (product `cms()` default path).
  */
 
 export {
@@ -35,16 +35,19 @@ export {
 	CMS_COMPONENTS_VIRTUAL_ID,
 	CMS_CONFIG_CONVENTION,
 	CMS_CONFIG_VIRTUAL_ID,
+	CMS_CONTENT_CONFIG_VIRTUAL_ID,
 	CMS_HOST_VIRTUAL_ID,
 	CMS_INTEGRATION_OPTIONS_VIRTUAL_ID,
 	type CmsComponentsVitePluginOptions,
 	type CmsConfigVitePluginOptions,
+	type CmsContentConfigVitePluginOptions,
 	type CmsHostVitePluginOptions,
 	type CmsIntegrationOptionsVitePluginOptions,
 	type CmsVitePlugin,
 	CONTENT_CONFIG_CONVENTION,
 	cmsComponentsVitePlugin,
 	cmsConfigVitePlugin,
+	cmsContentConfigVitePlugin,
 	cmsHostVitePlugin,
 	cmsIntegrationOptionsVitePlugin,
 	DEFAULT_CONTENT_ROOT,

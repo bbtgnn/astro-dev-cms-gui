@@ -44,4 +44,5 @@ After Vite boot (or a shim-evaluated fixture), pass the content.config
 3. **Fail closed** if a loader has no stamp, unless `locations[name] = { base }`
 4. `file()` collections throw a clear unsupported error (v1 is glob + JSON)
 
-Product `cms()` still uses the IR host until ticket 05.
+Product `cms()` installs content-proxy in `astro:config:setup` and builds the
+default host from stamped collections (ticket 05).
