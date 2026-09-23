@@ -7,6 +7,10 @@
  */
 import { proxyAssets } from "./assets";
 
+/** Astro 7 content virtual module (see `astro/dist/content/consts.js`). */
+const ASTRO_CONTENT_ID = "astro:content";
+/** Astro’s resolved id after its content virtual-mod plugin remaps the bare import. */
+const ASTRO_CONTENT_RESOLVED_ID = `\0${ASTRO_CONTENT_ID}`;
 const PROXY_ID = "\0@cms/astro/astro-content-proxy";
 const SKIP = "cms-astro-content-proxy";
 
@@ -22,29 +26,52 @@ type PluginContext = {
 	) => Promise<{ id: string } | null>;
 };
 
+function isAstroContentResolveId(id: string): boolean {
+	return id === ASTRO_CONTENT_ID || id === ASTRO_CONTENT_RESOLVED_ID;
+}
+
 export function astroContentBootProxy() {
 	let realId: string | undefined;
 
 	return {
 		name: "@cms/astro:content-proxy",
 		enforce: "pre" as const,
-		async resolveId(
-			this: PluginContext,
-			id: string,
-			importer: string | undefined,
-			options: ResolveIdOpts,
-		) {
-			if (id === PROXY_ID) return PROXY_ID;
-			if (id !== "astro:content") return;
-			if (options.custom?.[SKIP]) return;
+		resolveId: {
+			// Astro’s `astro-content-virtual-mod-plugin` is registered earlier in
+			// create-vite and also uses enforce:"pre". Its resolveId is an object
+			// hook *without* `order`, so Vite sorts it into the normal bucket.
+			// Hook-level `order: "pre"` makes us run first and win the bare
+			// `astro:content` import. We also remap `\0astro:content` in case a
+			// later importer already carries Astro’s resolved virtual id.
+			order: "pre" as const,
+			async handler(
+				this: PluginContext,
+				id: string,
+				importer: string | undefined,
+				options: ResolveIdOpts,
+			) {
+				if (id === PROXY_ID) return PROXY_ID;
+				if (!isAstroContentResolveId(id)) return;
+				if (options.custom?.[SKIP]) return;
 
-			const resolved = await this.resolve(id, importer, {
-				skipSelf: true,
-				custom: { [SKIP]: true },
-			});
-			if (!resolved) return;
-			realId = resolved.id;
-			return PROXY_ID;
+				// Already-resolved Astro id: remap user importers. When the proxy
+				// itself imports the real module, return the id unchanged so Vite
+				// treats it as resolved and Astro’s load can serve it (a bare
+				// `undefined` falls through to failed filesystem resolve).
+				if (id === ASTRO_CONTENT_RESOLVED_ID) {
+					if (importer === PROXY_ID) return ASTRO_CONTENT_RESOLVED_ID;
+					realId = ASTRO_CONTENT_RESOLVED_ID;
+					return PROXY_ID;
+				}
+
+				const resolved = await this.resolve(ASTRO_CONTENT_ID, importer, {
+					skipSelf: true,
+					custom: { [SKIP]: true },
+				});
+				if (!resolved) return;
+				realId = resolved.id;
+				return PROXY_ID;
+			},
 		},
 		load(id: string) {
 			if (id !== PROXY_ID || !realId) return;

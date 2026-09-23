@@ -129,6 +129,13 @@ describe("Vite boot proxy", () => {
 		const plugins = vitePluginsForBoot();
 		expect(plugins).toHaveLength(1);
 		expect(plugins[0]?.enforce).toBe("pre");
+		const resolveHook = plugins[0]?.resolveId;
+		expect(typeof resolveHook).toBe("object");
+		expect(
+			resolveHook && typeof resolveHook === "object" && "order" in resolveHook
+				? resolveHook.order
+				: undefined,
+		).toBe("pre");
 		const aliases = viteAliasesForBoot();
 		expect(aliases).toHaveLength(1);
 		expect(aliases[0]?.find).toEqual(/^astro\/loaders$/);
@@ -138,7 +145,11 @@ describe("Vite boot proxy", () => {
 	test("resolveId remaps astro:content; load wraps reference and image", async () => {
 		const plugin = astroContentBootProxy();
 		const realId = "/virtual/astro-content-real.js";
-		const resolved = await plugin.resolveId.call(
+		const resolveId = plugin.resolveId;
+		if (typeof resolveId !== "object" || resolveId == null) {
+			throw new Error("expected object resolveId hook");
+		}
+		const resolved = await resolveId.handler.call(
 			{
 				resolve: async () => ({ id: realId }),
 			},
@@ -153,5 +164,47 @@ describe("Vite boot proxy", () => {
 		expect(source).toContain("export function reference");
 		expect(source).toContain("export function defineCollection");
 		expect(source).toContain(JSON.stringify(realId));
+	});
+
+	test("resolveId remaps \\0astro:content (Astro resolved virtual id)", async () => {
+		const plugin = astroContentBootProxy();
+		const resolveId = plugin.resolveId;
+		if (typeof resolveId !== "object" || resolveId == null) {
+			throw new Error("expected object resolveId hook");
+		}
+		let resolveCalled = false;
+		const resolved = await resolveId.handler.call(
+			{
+				resolve: async () => {
+					resolveCalled = true;
+					return { id: "should-not-be-used" };
+				},
+			},
+			"\0astro:content",
+			"/project/src/content.config.ts",
+			{},
+		);
+		expect(resolved).toBe("\0@cms/astro/astro-content-proxy");
+		expect(resolveCalled).toBe(false);
+		const source = plugin.load(resolved as string);
+		expect(source).toContain("stampRelationSchema");
+		expect(source).toContain(JSON.stringify("\0astro:content"));
+	});
+
+	test("resolveId identity-resolves \\0astro:content when importer is the proxy", async () => {
+		const plugin = astroContentBootProxy();
+		const resolveId = plugin.resolveId;
+		if (typeof resolveId !== "object" || resolveId == null) {
+			throw new Error("expected object resolveId hook");
+		}
+		const resolved = await resolveId.handler.call(
+			{
+				resolve: async () => ({ id: "unused" }),
+			},
+			"\0astro:content",
+			"\0@cms/astro/astro-content-proxy",
+			{},
+		);
+		expect(resolved).toBe("\0astro:content");
 	});
 });

@@ -503,6 +503,49 @@ function rewriteClientJsonSchema(
 }
 
 /**
+ * Ensure client Ajv leaves for image/reference are `{ type: "string" }`.
+ * Stamps already rematerialize via {@link rewriteClientJsonSchema}; form-tree
+ * `.kind("image"|"reference")` chrome can also set semanticKind without a stamp.
+ */
+function setJsonSchemaAtPath(
+	root: JsonSchemaNode,
+	path: string,
+	leaf: JsonSchemaNode,
+): void {
+	const segments = path.split(".").filter((s) => s.length > 0 && s !== "[]");
+	if (segments.length === 0) return;
+
+	let cursor: JsonSchemaNode = root;
+	for (let i = 0; i < segments.length - 1; i++) {
+		const key = segments[i]!;
+		const props = asObject(cursor.properties);
+		if (!props) return;
+		const child = asObject(props[key]);
+		if (!child) return;
+		cursor = child;
+	}
+
+	const leafKey = segments[segments.length - 1]!;
+	const props = asObject(cursor.properties);
+	if (!props) return;
+	props[leafKey] = leaf;
+}
+
+function applySemanticKindJsonSchemaRewrite(
+	jsonSchema: JsonSchemaNode,
+	fields: Readonly<Record<string, FormFieldDescriptor>>,
+): void {
+	for (const field of Object.values(fields)) {
+		if (
+			field.semanticKind === "image" ||
+			field.semanticKind === "reference"
+		) {
+			setJsonSchemaAtPath(jsonSchema, field.path, { type: "string" });
+		}
+	}
+}
+
+/**
  * Project one collection Zod object schema into a serializable form model.
  * Thin internal form IR — not a user-authored algebra.
  * Optional {@link ProjectSchemaFormOptions.form} lowers a form tree into layout
@@ -560,18 +603,21 @@ export function projectSchemaFormModel(
 			? { kind: "stack", content: lowerFormTreeScope(options.form, "", state) }
 			: { kind: "stack", content };
 
+	const clientJsonSchema: JsonSchemaNode = {
+		type: "object",
+		properties: asObject(jsonSchema.properties) ?? {},
+		...(Array.isArray(jsonSchema.required)
+			? { required: jsonSchema.required }
+			: {}),
+		additionalProperties: jsonSchema.additionalProperties ?? false,
+	};
+	applySemanticKindJsonSchemaRewrite(clientJsonSchema, state.fields);
+
 	return {
 		collectionId,
 		layout,
 		fields: state.fields,
-		jsonSchema: {
-			type: "object",
-			properties: asObject(jsonSchema.properties) ?? {},
-			...(Array.isArray(jsonSchema.required)
-				? { required: jsonSchema.required }
-				: {}),
-			additionalProperties: jsonSchema.additionalProperties ?? false,
-		},
+		jsonSchema: clientJsonSchema,
 	};
 }
 

@@ -207,6 +207,9 @@ export function createCmsIntegration(
 			const root = projectRootFromAstroConfig(config.root);
 
 			// Content-proxy must land before Content Layer evaluates content.config.
+			// Plugin *array* order vs Astro’s content virtual-mod is not enough on its
+			// own (both enforce:"pre"; Astro is registered earlier). The boot proxy
+			// wins via resolveId hook `order: "pre"` + remapping `\0astro:content`.
 			const proxyPlugins = vitePluginsForBoot() as CmsVitePlugin[];
 			const proxyAliases = viteAliasesForBoot();
 

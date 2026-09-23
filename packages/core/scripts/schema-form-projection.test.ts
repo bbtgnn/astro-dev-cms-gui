@@ -257,4 +257,26 @@ describe("projectSchemaFormModel with form tree", () => {
 			}),
 		).toThrow(/unknown field/i);
 	});
+
+	test("form-tree kind(reference|image) rewrites unstamped unrepresentable leaves to string Input schema", () => {
+		const unc = z.custom((v) => typeof v === "string");
+		const { field } = createFormTreeHelpers<{
+			author: string;
+			cover: string;
+		}>();
+		const model = projectSchemaFormModel(
+			z.object({ author: unc, cover: unc }),
+			{
+				collectionId: "posts",
+				form: [
+					field("author").label("Author").kind("reference"),
+					field("cover").label("Cover").kind("image"),
+				],
+			},
+		);
+		expect(model.fields.author?.semanticKind).toBe("reference");
+		expect(model.fields.cover?.semanticKind).toBe("image");
+		expect(model.jsonSchema.properties.author).toEqual({ type: "string" });
+		expect(model.jsonSchema.properties.cover).toEqual({ type: "string" });
+	});
 });
