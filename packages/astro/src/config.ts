@@ -12,57 +12,20 @@
  * models). Form-tree field refs type against Input keys via `cms sync` /
  * Vite emit (`@cms/astro/collection-types`). Stamped image/ref → CmsImage /
  * CmsReference.
+ *
+ * Custom field editors: import `FieldEditorProps` from `@cms/authoring/config`.
  */
 
-import type {
-	FormTree,
-	ScopedFormTreeHelpers,
-} from "@cms/core/form-tree";
+import type { FormTree, ScopedFormTreeHelpers } from "@cms/core/form-tree";
 import {
 	createFormTreeHelpers,
 	createScopedFormTreeHelpers,
 } from "@cms/core/form-tree";
 import type {
-	CmsCollectionType,
 	CmsCollections,
+	CmsCollectionType,
 	DefineCmsOptionsFromGenerated,
 } from "./collection-types";
-
-export type {
-	ChromeFor,
-	CmsCollectionOptionsFor,
-	CmsCollectionType,
-	CmsCollections,
-	CmsCollectionName,
-	CmsFieldKinds,
-	CmsImage,
-	CmsReference,
-	DefineCmsOptionsFromGenerated,
-	FormBuilderFor,
-} from "./collection-types";
-
-export type {
-	AggregateWrapperProps,
-	CmsBuilders,
-	CmsConfigInput,
-	CompatibleIconKey,
-	CompatibleKey,
-	CompatibleWrapperKey,
-	ComponentsCatalog,
-	EmptyComponents,
-	FieldControl,
-	FieldEditorProps,
-	FieldError,
-	FieldIcon,
-	FieldKind,
-	ShapeOfContent,
-	ShellOwnedKey,
-} from "@cms/authoring/config";
-export {
-	createCmsBuilders,
-	createFieldControl,
-	SHELL_OWNED_KEYS,
-} from "@cms/authoring/config";
 
 export type {
 	FieldFn,
@@ -80,6 +43,17 @@ export type {
 	ObjectInputOf,
 	ScopedFormTreeHelpers,
 } from "@cms/core/form-tree";
+export type {
+	CmsCollectionName,
+	CmsCollectionOptionsFor,
+	CmsCollections,
+	CmsCollectionType,
+	CmsFieldKinds,
+	CmsImage,
+	CmsReference,
+	DefineCmsOptionsFromGenerated,
+	FormBuilderFor,
+} from "./collection-types";
 export { createFormTreeHelpers, createScopedFormTreeHelpers };
 
 /**
@@ -126,15 +100,12 @@ function resolveForm(
  * Schema-first overlay entry for `src/cms.config.ts`.
  *
  * Presentation only — schemas live in `content.config`.
- * Path-map `ui` was removed; use {@link CmsCollectionOptions.form}.
+ * Use {@link CmsCollectionOptions.form} (form tree); path-map `ui` is gone.
  */
 export function defineCms(options: DefineCmsOptions = {}): DefineCmsResult {
 	const forms: Record<string, FormTree | undefined> = {};
 	const types: Record<string, CmsCollectionType | undefined> = {};
-	const previewByCollection = new Map<
-		string,
-		(id: string) => string | null
-	>();
+	const previewByCollection = new Map<string, (id: string) => string | null>();
 
 	for (const name of Object.keys(options)) {
 		const opt = options[name as keyof typeof options] as
@@ -144,9 +115,7 @@ export function defineCms(options: DefineCmsOptions = {}): DefineCmsResult {
 			forms[name] = resolveForm(
 				opt.form as
 					| FormTree
-					| ((
-							f: ScopedFormTreeHelpers<Record<string, unknown>>,
-					  ) => FormTree),
+					| ((f: ScopedFormTreeHelpers<Record<string, unknown>>) => FormTree),
 			);
 		}
 		types[name] = opt?.type ?? "collection";

@@ -20,12 +20,5 @@ Project a collection schema + optional form tree into `CollectionFormModel`: fie
 
 ## Notes
 
-Path-map `SchemaFormOverlay` may remain as a temporary apply path until Astro migrates to `form` (ticket 14).
-
-## Delivered
-
-- `projectSchemaFormModel(schema, { form? })` — optional `FormTree` lowers into `CollectionFormModel.layout`
-- Runtime fail-closed: unknown field-ref paths throw (`Unknown field key in form tree: "…"`)
-- Unplaced top-level (and nested object-scope) keys append after explicit placement
-- Path-map `overlay` still applied after form-tree chrome (temporary until ticket 14)
-- Tests: `packages/core/scripts/schema-form-projection.test.ts` (`projectSchemaFormModel with form tree`)
+Path-map `SchemaFormOverlay` was a temporary apply path until Astro migrated to
+`form` (ticket 14); removed after the form-tree phase.

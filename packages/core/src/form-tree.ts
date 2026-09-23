@@ -15,7 +15,7 @@
 
 import type { OpaqueBinding, SemanticKind } from "./semantic/types";
 
-/** Kind hints on a field ref — same vocabulary as path-map chrome (`image` / `reference`). */
+/** Kind hints on a field ref — image / reference vocabulary for chrome. */
 export type FormTreeKindHint = Extract<SemanticKind, "image" | "reference">;
 
 /** Presentation chrome on a field ref (fluent `.label` / `.editor` / `.kind`). */
@@ -68,11 +68,12 @@ export type FormTree = readonly FormTreeNode[];
 type PlainObject = Record<string, unknown>;
 
 /** Object Input shape for nested scopes (arrays / functions are not enterable). */
-export type ObjectInputOf<T> = NonNullable<T> extends readonly unknown[]
-	? never
-	: NonNullable<T> extends PlainObject
-		? NonNullable<T>
-		: never;
+export type ObjectInputOf<T> =
+	NonNullable<T> extends readonly unknown[]
+		? never
+		: NonNullable<T> extends PlainObject
+			? NonNullable<T>
+			: never;
 
 type FieldChromeState = FormTreeFieldChrome & {
 	readonly content?: readonly FormTreeNode[];
@@ -106,19 +107,20 @@ export type FormTreeHelpers<Data> = {
  */
 export type ScopedFormTreeHelpers<Data> = FormTreeHelpers<Data> & FieldFn<Data>;
 
-type ObjectFieldMethods<Data, K extends keyof Data & string> =
-	[ObjectInputOf<Data[K]>] extends [never]
-		? unknown
-		: {
-				fields(
-					build: (f: FieldFn<ObjectInputOf<Data[K]>>) => readonly FormTreeNode[],
-				): FieldRefBuilder<Data, K>;
-				form(
-					build: (
-						f: ScopedFormTreeHelpers<ObjectInputOf<Data[K]>>,
-					) => FormTreeNode | readonly FormTreeNode[],
-				): FieldRefBuilder<Data, K>;
-			};
+type ObjectFieldMethods<Data, K extends keyof Data & string> = [
+	ObjectInputOf<Data[K]>,
+] extends [never]
+	? unknown
+	: {
+			fields(
+				build: (f: FieldFn<ObjectInputOf<Data[K]>>) => readonly FormTreeNode[],
+			): FieldRefBuilder<Data, K>;
+			form(
+				build: (
+					f: ScopedFormTreeHelpers<ObjectInputOf<Data[K]>>,
+				) => FormTreeNode | readonly FormTreeNode[],
+			): FieldRefBuilder<Data, K>;
+		};
 
 export type FieldRefBuilder<
 	Data,
@@ -175,9 +177,7 @@ const fieldRefProto: FieldRefProto = {
 		const nested = createScopedFormTreeHelpers<Record<string, unknown>>();
 		return createFieldRefNode(this.key, {
 			...this[FIELD_CHROME],
-			content: normalizeContent(
-				build(nested as ScopedFormTreeHelpers<never>),
-			),
+			content: normalizeContent(build(nested as ScopedFormTreeHelpers<never>)),
 		});
 	},
 };
@@ -217,7 +217,9 @@ function createFieldRefNode(
  * Scoped helpers for collection-level `form: (f) => …` callbacks:
  * callable as `f(key)` plus `field` / `tabs` / `columns` / `group`.
  */
-export function createScopedFormTreeHelpers<Data>(): ScopedFormTreeHelpers<Data> {
+export function createScopedFormTreeHelpers<
+	Data,
+>(): ScopedFormTreeHelpers<Data> {
 	const helpers = createFormTreeHelpers<Data>();
 	const call = ((key: keyof Data & string) =>
 		helpers.field(key)) as ScopedFormTreeHelpers<Data>;
@@ -243,9 +245,7 @@ export function createFormTreeHelpers<Data>(): FormTreeHelpers<Data> {
 				})),
 			};
 		},
-		columns(
-			cols: readonly (readonly FormTreeNode[])[],
-		): FormTreeColumnsNode {
+		columns(cols: readonly (readonly FormTreeNode[])[]): FormTreeColumnsNode {
 			return {
 				type: "columns",
 				content: cols.map((col) => [...col]),

@@ -13,6 +13,7 @@ Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is
 - Research: [schema-first-overlay.md](../schema-first-overlay.md), [astro-loader-extraction.md](../astro-loader-extraction.md)
 - Astro flip plan: [plan.md](./plan.md) (tickets 01–10 — largely done)
 - Form-tree phase: [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md) (tickets 11–17 — implemented on this branch)
+- **IR authoring face stripped** on this branch (`s.field` / `compileSemanticIr` / `createCmsBuilders` / IR→form projections / IR validator). Schema-first + form tree + `CollectionFormModel` remain.
 - Breakage on this branch is accepted (Q22).
 - Do not edit GitHub wayfinder map #1 while exploring.
 

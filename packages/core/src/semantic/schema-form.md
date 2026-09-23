@@ -2,17 +2,19 @@
 
 Schema-first path (exploration branch): stamped Zod collection schemas project to
 browser **form models**, then lower to `EditorCollectionInput` for `@cms/authoring`.
+There is no CMS-first IR authoring face (`s.field` / `compileSemanticIr`) on this
+branch — schema + form tree are the only projection inputs.
 
 ## Public faces
 
 | Package | API | Output |
 | --- | --- | --- |
-| `@cms/core/semantic` | `projectSchemaFormModel(s)` / `applySchemaFormOverlay` | `CollectionFormModel` (thin internal form IR); optional `form` tree lowers layout + field-ref chrome |
-| `@cms/authoring` | `editorCollectionsFromSchemas(collections, catalog, { overlays? })` | `EditorCollectionInput` per collection |
+| `@cms/core/semantic` | `projectSchemaFormModel(s)` (+ optional `form` tree) | `CollectionFormModel` |
+| `@cms/authoring` | `editorCollectionsFromSchemas(collections, catalog, { forms? })` | `EditorCollectionInput` per collection |
 
 Stamps (`Symbol.for("@cms/astro.contentFieldStamp")` + `.meta.cms`) mark `image` /
-`reference` kinds. Overlay is nested path chrome (`label`, `editor` key) — not
-FieldUi-on-Zod. Singleton chrome lands with `defineCms` (tickets 05/07).
+`reference` kinds. Presentation chrome and layout come from the **form tree**
+(field refs + tabs/columns/group) — not path-map overlays or FieldUi-on-Zod.
 
 ## Dual engines (Ajv client vs authoritative parse)
 

@@ -6,7 +6,6 @@
 
 import { z } from "zod";
 import {
-	type ChromeFor,
 	type CmsFile,
 	type CmsImage,
 	type CmsReference,
@@ -44,19 +43,10 @@ void config.schemas.authors;
 type PostsInput = z.input<(typeof config.schemas)["posts"]>;
 type _CoverIsImage = PostsInput["cover"] extends CmsImage ? true : false;
 type _FileIsFile = PostsInput["attachment"] extends CmsFile ? true : false;
-type _AuthorIsRef = PostsInput["author"] extends CmsReference<"authors">
-	? true
-	: false;
+type _AuthorIsRef =
+	PostsInput["author"] extends CmsReference<"authors"> ? true : false;
 const _brands: [_CoverIsImage, _FileIsFile, _AuthorIsRef] = [true, true, true];
 void _brands;
-
-const chrome: ChromeFor<PostsInput> = {
-	title: { label: "Title" },
-	cover: { kind: "image" },
-	author: { kind: "reference" },
-	attachment: { label: "File" },
-};
-void chrome;
 
 // Form field keys are keyof schema Input
 defineCms((cms) => ({

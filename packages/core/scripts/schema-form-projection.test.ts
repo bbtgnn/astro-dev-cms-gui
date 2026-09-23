@@ -1,13 +1,12 @@
 /**
  * Schema-first form projection: stamped Zod Input → CollectionFormModel.
  * Client JSON Schema is Ajv-oriented; authoritative parse stays on the Zod schema.
- * Optional form tree (ticket 13) lowers layout + field-ref chrome onto the model.
+ * Optional form tree lowers layout + field-ref chrome onto the model.
  */
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import { createFormTreeHelpers } from "../src/form-tree";
 import {
-	applySchemaFormOverlay,
 	projectSchemaFormModel,
 	projectSchemaFormModels,
 } from "../src/semantic/schema-form-projection";
@@ -95,43 +94,17 @@ describe("projectSchemaFormModel", () => {
 	});
 });
 
-describe("applySchemaFormOverlay", () => {
-	test("merges nested path chrome without re-authoring schema", () => {
-		const base = projectSchemaFormModel(postsLikeSchema(), {
-			collectionId: "posts",
-		});
-		const model = applySchemaFormOverlay(base, {
-			title: { label: "Title" },
-			author: { editor: "AuthorPicker" },
-			seo: {
-				label: "SEO",
-				fields: {
-					description: { label: "Meta description" },
-				},
-			},
-		});
-
-		expect(model.fields.title?.label).toBe("Title");
-		expect(model.fields.author?.component).toBe("AuthorPicker");
-		expect(model.fields.seo?.label).toBe("SEO");
-		expect(model.fields["seo.description"]?.label).toBe("Meta description");
-		// Schema shape unchanged
-		expect(model.fields.cover?.semanticKind).toBe("image");
-		expect(
-			(model.jsonSchema.properties as Record<string, unknown>).author,
-		).toEqual({ type: "string" });
-	});
-});
-
 describe("projectSchemaFormModels", () => {
-	test("projects each collection and applies per-collection overlay", () => {
+	test("projects each collection and applies per-collection form tree", () => {
+		const { field } = createFormTreeHelpers<{
+			title: string;
+			author: string;
+		}>();
 		const models = projectSchemaFormModels(
 			{ posts: postsLikeSchema() },
 			{
-				overlays: {
-					posts: {
-						title: { label: "Post title" },
-					},
+				forms: {
+					posts: [field("title").label("Post title")],
 				},
 			},
 		);
@@ -163,9 +136,7 @@ describe("projectSchemaFormModel with form tree", () => {
 						field("draft").label("Draft"),
 						field("seo")
 							.label("SEO")
-							.fields((f) => [
-								f("description").label("Meta description"),
-							]),
+							.fields((f) => [f("description").label("Meta description")]),
 					],
 				},
 				{
@@ -193,9 +164,9 @@ describe("projectSchemaFormModel with form tree", () => {
 		expect(tabsNode.content[0]?.label).toBe("Content");
 
 		const contentTab = tabsNode.content[0];
-		expect(contentTab?.content.some((n) => n.kind === "field" && n.path === "title")).toBe(
-			true,
-		);
+		expect(
+			contentTab?.content.some((n) => n.kind === "field" && n.path === "title"),
+		).toBe(true);
 		const seoNode = contentTab?.content.find((n) => n.kind === "object");
 		expect(seoNode).toMatchObject({
 			kind: "object",

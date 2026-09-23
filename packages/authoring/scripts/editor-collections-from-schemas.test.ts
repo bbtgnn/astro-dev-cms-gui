@@ -1,7 +1,8 @@
 /**
- * Schema-first mount seam: stamped Zod schemas (+ overlay) → EditorCollections.
+ * Schema-first mount seam: stamped Zod schemas (+ form tree) → EditorCollections.
  */
 import { describe, expect, test } from "bun:test";
+import { createFormTreeHelpers } from "@cms/core/form-tree";
 import { z } from "zod";
 import { editorCollectionsFromSchemas } from "../src/form/editor-collections";
 
@@ -41,15 +42,23 @@ describe("editorCollectionsFromSchemas", () => {
 			author: stampReference(z.string(), "authors"),
 		});
 
+		type PostsData = {
+			title: string;
+			cover?: unknown;
+			author: string;
+		};
+		const { field } = createFormTreeHelpers<PostsData>();
+
 		const editor = editorCollectionsFromSchemas(
 			{ posts },
 			{},
 			{
-				overlays: {
-					posts: {
-						title: { label: "Title" },
-						author: { editor: "AuthorPickerToken" },
-					},
+				forms: {
+					posts: [
+						field("title").label("Title"),
+						field("author").editor("AuthorPickerToken"),
+						field("cover"),
+					],
 				},
 			},
 		);

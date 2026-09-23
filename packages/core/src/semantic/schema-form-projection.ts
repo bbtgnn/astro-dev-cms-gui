@@ -8,17 +8,12 @@
  *   persisted Input. Do not chase Ajv ≡ Zod.
  *
  * Image / reference kinds come from content-proxy stamps (`Symbol.for` + `.meta.cms`),
- * not from inventing FieldUi-on-Zod as the overlay API. Nested overlay chrome
- * (label, editor key) merges via {@link applySchemaFormOverlay}. Optional **form tree**
- * lowers layout + field-ref chrome; path-map overlay remains until Astro migrates.
+ * not FieldUi-on-Zod. Optional **form tree** lowers layout + field-ref chrome
+ * (label, editor catalog key, kind hints).
  */
 
 import { z } from "zod";
-import type {
-	FormTree,
-	FormTreeFieldChrome,
-	FormTreeNode,
-} from "../form-tree";
+import type { FormTree, FormTreeFieldChrome, FormTreeNode } from "../form-tree";
 import type {
 	CollectionFormModel,
 	FormConstraintSummary,
@@ -26,7 +21,7 @@ import type {
 	FormLayoutNode,
 	FormModelsByCollection,
 } from "./form-model";
-import type { OpaqueBinding, SemanticKind } from "./types";
+import type { SemanticKind } from "./types";
 
 /** Same key as `@cms/astro/content-proxy` — readable without importing the host package. */
 export const CONTENT_FIELD_STAMP = Symbol.for("@cms/astro.contentFieldStamp");
@@ -36,26 +31,13 @@ export type ContentFieldStampMeta =
 	| { readonly kind: "file" }
 	| { readonly kind: "reference"; readonly collection: string };
 
-/** Nested path chrome — mergeable without re-authoring the Zod schema. */
-export type SchemaFormFieldChrome = {
-	readonly label?: string;
-	/** Opaque catalog key / binding token for a custom editor. */
-	readonly editor?: OpaqueBinding;
-	/** Nested chrome scoped to this object's fields. */
-	readonly fields?: SchemaFormOverlay;
-};
-
-export type SchemaFormOverlay = Readonly<Record<string, SchemaFormFieldChrome>>;
-
 export type ProjectSchemaFormOptions = {
 	readonly collectionId?: string;
-	readonly overlay?: SchemaFormOverlay;
-	/** Optional form tree — layout + field-ref chrome (ticket 13). */
+	/** Optional form tree — layout + field-ref chrome. */
 	readonly form?: FormTree;
 };
 
 export type ProjectSchemaFormModelsOptions = {
-	readonly overlays?: Readonly<Record<string, SchemaFormOverlay>>;
 	readonly forms?: Readonly<Record<string, FormTree>>;
 };
 
@@ -217,18 +199,6 @@ function kindFromJson(
 		default:
 			return "string";
 	}
-}
-
-function clientLeafSchema(
-	node: JsonSchemaNode,
-	kind: SemanticKind,
-): JsonSchemaNode {
-	if (kind === "image" || kind === "reference") {
-		return { type: "string" };
-	}
-	const cleaned = stripCms(node);
-	delete cleaned.$schema;
-	return cleaned;
 }
 
 type WalkState = {
@@ -429,9 +399,7 @@ function lowerFormTreeNode(
 
 			const defaults = state.defaultLayoutByPath[path];
 			if (!defaults) {
-				throw new Error(
-					`Missing default layout for form tree field "${path}"`,
-				);
+				throw new Error(`Missing default layout for form tree field "${path}"`);
 			}
 			return cloneLayout(defaults);
 		}
@@ -592,7 +560,7 @@ export function projectSchemaFormModel(
 			? { kind: "stack", content: lowerFormTreeScope(options.form, "", state) }
 			: { kind: "stack", content };
 
-	let model: CollectionFormModel = {
+	return {
 		collectionId,
 		layout,
 		fields: state.fields,
@@ -605,11 +573,6 @@ export function projectSchemaFormModel(
 			additionalProperties: jsonSchema.additionalProperties ?? false,
 		},
 	};
-
-	if (options?.overlay) {
-		model = applySchemaFormOverlay(model, options.overlay);
-	}
-	return model;
 }
 
 /**
@@ -623,45 +586,10 @@ export function projectSchemaFormModels(
 	for (const [id, schema] of Object.entries(collections)) {
 		out[id] = projectSchemaFormModel(schema, {
 			collectionId: id,
-			...(options?.overlays?.[id] !== undefined
-				? { overlay: options.overlays[id] }
-				: {}),
 			...(options?.forms?.[id] !== undefined
 				? { form: options.forms[id] }
 				: {}),
 		});
 	}
 	return out;
-}
-
-/**
- * Merge nested overlay chrome (label, editor key) onto a projected form model.
- * Does not change persisted JSON Schema shape. Singleton lands in tickets 05/07.
- */
-export function applySchemaFormOverlay(
-	model: CollectionFormModel,
-	overlay: SchemaFormOverlay,
-	pathPrefix = "",
-): CollectionFormModel {
-	const fields: Record<string, FormFieldDescriptor> = { ...model.fields };
-
-	const applyAt = (chromeMap: SchemaFormOverlay, parentPath: string) => {
-		for (const [key, chrome] of Object.entries(chromeMap)) {
-			const path = joinPath(parentPath, key);
-			const existing = fields[path];
-			if (existing) {
-				fields[path] = {
-					...existing,
-					...(chrome.label !== undefined ? { label: chrome.label } : {}),
-					...(chrome.editor !== undefined ? { component: chrome.editor } : {}),
-				};
-			}
-			if (chrome.fields) {
-				applyAt(chrome.fields, path);
-			}
-		}
-	};
-
-	applyAt(overlay, pathPrefix);
-	return { ...model, fields };
 }

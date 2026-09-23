@@ -103,7 +103,8 @@ function unwrapZod(schema: unknown): {
 
 function objectShape(node: ZodWalkNode): Record<string, unknown> | undefined {
 	if (node.shape && typeof node.shape === "object") return node.shape;
-	if (node.def?.shape && typeof node.def.shape === "object") return node.def.shape;
+	if (node.def?.shape && typeof node.def.shape === "object")
+		return node.def.shape;
 	if (node.def?.entries && typeof node.def.entries === "object") {
 		return node.def.entries;
 	}
@@ -159,10 +160,13 @@ function printInner(schema: unknown): PrintedTypeTree {
 
 	if (t === "array") {
 		const el = arrayElement(node);
-		const printed = el !== undefined ? printInner(el) : {
-			typeSource: "unknown",
-			fieldKind: { kind: "scalar" as const },
-		};
+		const printed =
+			el !== undefined
+				? printInner(el)
+				: {
+						typeSource: "unknown",
+						fieldKind: { kind: "scalar" as const },
+					};
 		return {
 			typeSource: `ReadonlyArray<${printed.typeSource}>`,
 			fieldKind: { kind: "array" },
@@ -171,11 +175,17 @@ function printInner(schema: unknown): PrintedTypeTree {
 	}
 
 	if (t === "string" || t === "boolean" || t === "number" || t === "bigint") {
-		return { typeSource: t === "bigint" ? "bigint" : t, fieldKind: { kind: "scalar" } };
+		return {
+			typeSource: t === "bigint" ? "bigint" : t,
+			fieldKind: { kind: "scalar" },
+		};
 	}
 
 	if (t === "literal") {
-		return { typeSource: "string | number | boolean", fieldKind: { kind: "scalar" } };
+		return {
+			typeSource: "string | number | boolean",
+			fieldKind: { kind: "scalar" },
+		};
 	}
 
 	if (t === "enum" || t === "union") {

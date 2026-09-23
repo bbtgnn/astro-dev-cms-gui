@@ -4,7 +4,7 @@
  * {@link openAuthoringSession} wires this; session takes the opaque predicate.
  *
  * Input must already be Ajv-safe (`EditorCollectionInput.schema` after
- * {@link lowerFormModelToSjsf} / {@link editorCollectionsFromTree}).
+ * {@link lowerFormModelToSjsf} / {@link editorCollectionsFromSchemas}).
  */
 
 import { createFormValidator } from "@sjsf/ajv8-validator";

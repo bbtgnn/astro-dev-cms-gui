@@ -6,11 +6,11 @@
 
 import { forms } from "virtual:@cms/config";
 import { collections } from "virtual:@cms/content-config";
+import type { FormTree } from "@cms/core/form-tree";
 import {
 	type FormModelsByCollection,
 	projectSchemaFormModels,
 } from "@cms/core/semantic";
-import type { FormTree } from "@cms/core/form-tree";
 import {
 	collectionsFromContentConfigExport,
 	type StampedCollectionConfig,

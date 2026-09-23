@@ -11,7 +11,6 @@ export {
 	type EditorCollectionsFromSchemasOptions,
 	editorCollectionsFromFormModels,
 	editorCollectionsFromSchemas,
-	editorCollectionsFromTree,
 } from "./form/editor-collections";
 export type {
 	CmsAssetsFieldContext,

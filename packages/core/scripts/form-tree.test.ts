@@ -166,11 +166,11 @@ describe("createFormTreeHelpers", () => {
 		expect(mainContent?.[0]).toMatchObject({ type: "field", key: "title" });
 		expect(mainContent?.[1]).toMatchObject({ type: "columns" });
 		const cols = mainContent?.[1];
-		expect(cols && cols.type === "columns" && cols.content[1]?.[0]).toMatchObject(
-			{
-				type: "group",
-			},
-		);
+		expect(
+			cols && cols.type === "columns" && cols.content[1]?.[0],
+		).toMatchObject({
+			type: "group",
+		});
 		expect(
 			cols &&
 				cols.type === "columns" &&

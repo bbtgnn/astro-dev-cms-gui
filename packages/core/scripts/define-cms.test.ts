@@ -3,12 +3,12 @@
  */
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
+import { defineCms } from "../src/define-cms";
 import {
 	CONTENT_FIELD_STAMP,
 	type ContentFieldStampMeta,
 	projectSchemaFormModel,
 } from "../src/semantic/schema-form-projection";
-import { defineCms } from "../src/define-cms";
 
 function contentStamp(schema: unknown): ContentFieldStampMeta | undefined {
 	if (!schema || typeof schema !== "object") return undefined;

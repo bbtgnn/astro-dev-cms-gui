@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "CMS protocol + FS write-back adapters + semantic IR",
+	"description": "CMS protocol + FS write-back adapters + schema→form projection",
 	"exports": {
 		".": "./src/index.ts",
 		"./define-cms": "./src/define-cms.ts",
@@ -20,7 +20,7 @@
 	},
 	"scripts": {
 		"check": "tsc -p . && bunx tsc -p ./scripts/tsconfig.fixtures.json",
-		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts ./scripts/schema-form-projection.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts",
-		"test:semantic": "bun test ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts ./scripts/schema-form-projection.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts"
+		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/schema-form-projection.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts",
+		"test:semantic": "bun test ./scripts/schema-form-projection.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts"
 	}
 }

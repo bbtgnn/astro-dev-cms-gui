@@ -1,10 +1,12 @@
 /**
- * ADR-0019 slice 5 — stock-by-kind registry + IR → SJSF lowering.
+ * Stock-by-kind registry + schema-form model → SJSF lowering.
  */
 
 import { describe, expect, test } from "bun:test";
-import { compileSemanticIr, projectFormModels, s } from "@cms/core/semantic";
+import { createFormTreeHelpers } from "@cms/core/form-tree";
+import { projectSchemaFormModel } from "@cms/core/semantic";
 import { createFormValidator } from "@sjsf/ajv8-validator";
+import { z } from "zod";
 import { lowerFormModelToSjsf } from "../src/form/lower-sjsf";
 import {
 	getStockEditor,
@@ -13,34 +15,51 @@ import {
 	stockEditorRegistry,
 } from "../src/form/stock-registry";
 
-function postsIr() {
-	return compileSemanticIr({
-		collections: {
-			posts: s.collection({
-				loader: s.glob({ base: "./posts", pattern: "**/*.json" }),
-				schema: s.stack([
-					s.field({
-						id: "title",
-						label: "Title",
-						schema: s.string().min(1),
-					}),
-					s.field({
-						id: "cover",
-						schema: s.image().optional(),
-					}),
-					s
-						.field({
-							id: "author",
-							schema: s.reference("authors"),
-						})
-						.editor("AuthorPickerToken"),
-					s.field({
-						id: "count",
-						schema: s.number().int(),
-					}),
-				]),
-			}),
-		},
+const CONTENT_FIELD_STAMP = Symbol.for("@cms/astro.contentFieldStamp");
+
+function stampImage<T extends z.ZodType>(schema: T): T {
+	const withMeta = schema.meta({ cms: { kind: "image" as const } }) as T;
+	(withMeta as { [key: symbol]: unknown })[CONTENT_FIELD_STAMP] = {
+		kind: "image",
+	};
+	return withMeta;
+}
+
+function stampReference<T extends z.ZodType>(schema: T, collection: string): T {
+	const withMeta = schema.meta({
+		cms: { kind: "reference" as const, collection },
+	}) as T;
+	(withMeta as { [key: symbol]: unknown })[CONTENT_FIELD_STAMP] = {
+		kind: "reference",
+		collection,
+	};
+	return withMeta;
+}
+
+function postsFormModel() {
+	const posts = z.object({
+		title: z.string().min(1),
+		cover: stampImage(z.string()).optional(),
+		author: stampReference(z.string(), "authors"),
+		count: z.number().int(),
+	});
+
+	type PostsData = {
+		title: string;
+		cover?: string;
+		author: string;
+		count: number;
+	};
+	const { field } = createFormTreeHelpers<PostsData>();
+
+	return projectSchemaFormModel(posts, {
+		collectionId: "posts",
+		form: [
+			field("title").label("Title"),
+			field("cover"),
+			field("author").editor("AuthorPickerToken"),
+			field("count"),
+		],
 	});
 }
 
@@ -56,9 +75,8 @@ describe("stockEditorRegistry", () => {
 	});
 
 	test("field component override wins over stock", () => {
-		const ir = postsIr();
-		const model = projectFormModels(ir).posts;
-		const author = model?.fields.author;
+		const model = postsFormModel();
+		const author = model.fields.author;
 		expect(author).toBeDefined();
 		if (!author) throw new Error("missing author");
 
@@ -73,7 +91,7 @@ describe("stockEditorRegistry", () => {
 			expect(resolved.component).toEqual({ name: "LiveAuthorPicker" });
 		}
 
-		const title = model?.fields.title;
+		const title = model.fields.title;
 		expect(title).toBeDefined();
 		if (!title) throw new Error("missing title");
 		const stock = resolveFieldEditor(title);
@@ -85,11 +103,8 @@ describe("stockEditorRegistry", () => {
 });
 
 describe("lowerFormModelToSjsf", () => {
-	test("lowers IR form model to Ajv-safe schema + uiSchema", () => {
-		const ir = postsIr();
-		const model = projectFormModels(ir).posts;
-		expect(model).toBeDefined();
-		if (!model) throw new Error("missing model");
+	test("lowers schema form model to Ajv-safe schema + uiSchema", () => {
+		const model = postsFormModel();
 
 		const { schema, uiSchema } = lowerFormModelToSjsf(model, {
 			resolveBinding: (token) => token,
@@ -128,10 +143,7 @@ describe("lowerFormModelToSjsf", () => {
 	});
 
 	test("strips $schema / ui / config from form-model jsonSchema", () => {
-		const ir = postsIr();
-		const model = projectFormModels(ir).posts;
-		expect(model).toBeDefined();
-		if (!model) throw new Error("missing model");
+		const model = postsFormModel();
 
 		const dirty = {
 			...model,

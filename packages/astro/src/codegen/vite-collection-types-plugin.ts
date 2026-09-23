@@ -40,8 +40,7 @@ export function cmsCollectionTypesVitePlugin(
 		const materialized = collectionsFromContentConfigExport(
 			mod as { collections?: Record<string, never> },
 		);
-		const schemas: Record<string, (typeof materialized)[string]["schema"]> =
-			{};
+		const schemas: Record<string, (typeof materialized)[string]["schema"]> = {};
 		for (const [name, col] of Object.entries(materialized)) {
 			schemas[name] = col.schema;
 		}

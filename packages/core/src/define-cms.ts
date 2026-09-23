@@ -10,11 +10,11 @@
  */
 
 import { z } from "zod";
-import type { CollectionConfig, CollectionDescriptor } from "./collection-descriptors";
 import type {
-	FormTree,
-	ScopedFormTreeHelpers,
-} from "./form-tree";
+	CollectionConfig,
+	CollectionDescriptor,
+} from "./collection-descriptors";
+import type { FormTree, ScopedFormTreeHelpers } from "./form-tree";
 import { createScopedFormTreeHelpers } from "./form-tree";
 import {
 	CONTENT_FIELD_STAMP,
@@ -45,36 +45,8 @@ export type CollectionLocation = {
 	readonly pathTemplate?: string;
 };
 
-type FieldChromeBase = {
-	readonly label?: string;
-	readonly editor?: unknown;
-	readonly kind?: "image" | "reference";
-};
-
-/**
- * Nested field chrome keyed by CMS Input shape (path-map companion).
- * Prefer form-tree field refs on {@link CmsCollectionOptions.form}.
- */
-export type ChromeFor<T> = {
-	readonly [K in keyof T]?: T[K] extends CmsImage
-		? FieldChromeBase & { readonly kind?: "image" }
-		: T[K] extends CmsReference<string>
-			? FieldChromeBase & { readonly kind?: "reference" }
-			: T[K] extends CmsFile
-				? FieldChromeBase
-				: NonNullable<T[K]> extends readonly (infer _E)[]
-					? FieldChromeBase
-					: NonNullable<T[K]> extends object
-						? FieldChromeBase & {
-								readonly fields?: ChromeFor<NonNullable<T[K]>>;
-							}
-						: FieldChromeBase;
-};
-
 /** Collection-scoped form builder typed to Input keys of `Data`. */
-export type FormBuilderFor<Data> = (
-	f: ScopedFormTreeHelpers<Data>,
-) => FormTree;
+export type FormBuilderFor<Data> = (f: ScopedFormTreeHelpers<Data>) => FormTree;
 
 export type CmsCollectionOptions<Schema extends z.ZodType> = {
 	readonly schema: Schema;
@@ -117,9 +89,7 @@ function stampLeaf<T extends MetaCapable>(
 	return attachStamp(schema, stamp);
 }
 
-function resolveForm<Data>(
-	form: FormTree | FormBuilderFor<Data>,
-): FormTree {
+function resolveForm<Data>(form: FormTree | FormBuilderFor<Data>): FormTree {
 	if (typeof form === "function") {
 		return form(createScopedFormTreeHelpers<Data>());
 	}
@@ -263,10 +233,7 @@ export function defineCms<
 	const schemas = {} as DefineCmsResult<Collections>["schemas"];
 	const forms: Record<string, FormTree | undefined> = {};
 	const types = {} as DefineCmsResult<Collections>["types"];
-	const previewByCollection = new Map<
-		string,
-		(id: string) => string | null
-	>();
+	const previewByCollection = new Map<string, (id: string) => string | null>();
 	const descriptors: CollectionDescriptor[] = [];
 
 	for (const name of names) {
