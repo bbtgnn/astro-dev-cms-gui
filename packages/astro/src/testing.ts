@@ -11,11 +11,11 @@
 export {
 	type BuildFsHostFromStampedOptions,
 	type BuildFsHostFromStampedResult,
+	buildFsHostFromStampedCollections,
 	type CollectionLocationOverride,
+	collectionsFromContentConfigExport,
 	type MaterializedStampedCollection,
 	type StampedCollectionConfig,
-	buildFsHostFromStampedCollections,
-	collectionsFromContentConfigExport,
 } from "./build-fs-host-from-stamped";
 export {
 	type CmsHarnessOptions,

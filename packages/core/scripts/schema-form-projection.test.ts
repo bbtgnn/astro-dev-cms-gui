@@ -85,7 +85,9 @@ describe("projectSchemaFormModel", () => {
 		expect(props.author).toEqual({ type: "string" });
 		expect(props.title).toMatchObject({ type: "string" });
 		// Astro image Output object must not leak into the form model.
-		expect((props.cover as { properties?: unknown }).properties).toBeUndefined();
+		expect(
+			(props.cover as { properties?: unknown }).properties,
+		).toBeUndefined();
 		// cms stamp meta is not part of the Ajv client schema.
 		expect((props.author as { cms?: unknown }).cms).toBeUndefined();
 	});

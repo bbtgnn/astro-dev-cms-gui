@@ -8,16 +8,16 @@ export { default as PlaceholderChrome } from "./components/PlaceholderChrome.sve
 export { default as EntryEditor } from "./EntryEditor.svelte";
 export { default as CmsForm } from "./form/CmsForm.svelte";
 export {
+	type EditorCollectionsFromSchemasOptions,
 	editorCollectionsFromFormModels,
 	editorCollectionsFromSchemas,
 	editorCollectionsFromTree,
-	type EditorCollectionsFromSchemasOptions,
 } from "./form/editor-collections";
-export { resolveCatalogBinding } from "./form/stock-registry";
 export type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,
 } from "./form/ImageField.svelte";
+export { resolveCatalogBinding } from "./form/stock-registry";
 export {
 	type OpenAuthoringSessionOptions,
 	openAuthoringSession,

@@ -38,9 +38,7 @@ export type SchemaFormFieldChrome = {
 	readonly fields?: SchemaFormOverlay;
 };
 
-export type SchemaFormOverlay = Readonly<
-	Record<string, SchemaFormFieldChrome>
->;
+export type SchemaFormOverlay = Readonly<Record<string, SchemaFormFieldChrome>>;
 
 export type ProjectSchemaFormOptions = {
 	readonly collectionId?: string;
@@ -120,9 +118,8 @@ function unwrapZod(schema: unknown): {
 			continue;
 		}
 		if (t === "default" && typeof node.unwrap === "function") {
-			const def = (
-				current as { def?: { defaultValue?: unknown } }
-			).def?.defaultValue;
+			const def = (current as { def?: { defaultValue?: unknown } }).def
+				?.defaultValue;
 			if (def !== undefined) defaultValue = def;
 			current = node.unwrap();
 			continue;
@@ -147,7 +144,8 @@ function joinPath(parent: string, id: string): string {
 type JsonSchemaNode = Record<string, unknown>;
 
 function asObject(node: unknown): JsonSchemaNode | undefined {
-	if (!node || typeof node !== "object" || Array.isArray(node)) return undefined;
+	if (!node || typeof node !== "object" || Array.isArray(node))
+		return undefined;
 	return node as JsonSchemaNode;
 }
 
@@ -191,9 +189,7 @@ function kindFromJson(
 	if (stamp?.kind === "reference") return "reference";
 	if (Array.isArray(node.enum)) return "enum";
 	const raw = node.type;
-	const type = Array.isArray(raw)
-		? raw.find((t) => t !== "null")
-		: raw;
+	const type = Array.isArray(raw) ? raw.find((t) => t !== "null") : raw;
 	switch (type) {
 		case "string":
 			return "string";
@@ -236,7 +232,8 @@ function projectProperty(
 	state: WalkState,
 ): FormLayoutNode {
 	const path = joinPath(parentPath, id);
-	const { inner, optional, nullable, defaultValue, stamp } = unwrapZod(zodSchema);
+	const { inner, optional, nullable, defaultValue, stamp } =
+		unwrapZod(zodSchema);
 	const kind = kindFromJson(jsonNode, stamp);
 	const constraints = constraintsFromJson(jsonNode, kind);
 
@@ -257,9 +254,7 @@ function projectProperty(
 		state.fields[path] = base;
 		const props = asObject(jsonNode.properties) ?? {};
 		const req = new Set(
-			Array.isArray(jsonNode.required)
-				? (jsonNode.required as string[])
-				: [],
+			Array.isArray(jsonNode.required) ? (jsonNode.required as string[]) : [],
 		);
 		const zodShape = zodObjectShape(inner);
 		const content: FormLayoutNode[] = [];
@@ -285,7 +280,10 @@ function projectProperty(
 		const itemsJson = asObject(jsonNode.items);
 		const itemZod = zodArrayElement(inner);
 		let item: FormLayoutNode | undefined;
-		if (itemsJson && kindFromJson(itemsJson, readCmsMeta(itemZod)) === "object") {
+		if (
+			itemsJson &&
+			kindFromJson(itemsJson, readCmsMeta(itemZod)) === "object"
+		) {
 			const itemPath = `${path}[]`;
 			const itemProps = asObject(itemsJson.properties) ?? {};
 			const itemReq = new Set(
@@ -329,9 +327,7 @@ function projectProperty(
 	return { kind: "field", path };
 }
 
-function zodObjectShape(
-	schema: unknown,
-): Record<string, unknown> | undefined {
+function zodObjectShape(schema: unknown): Record<string, unknown> | undefined {
 	if (!schema || typeof schema !== "object") return undefined;
 	const shape = (schema as { shape?: unknown }).shape;
 	if (shape && typeof shape === "object") {
@@ -408,9 +404,7 @@ export function projectSchemaFormModel(
 	const state: WalkState = { fields: {} };
 	const props = asObject(jsonSchema.properties) ?? {};
 	const required = new Set(
-		Array.isArray(jsonSchema.required)
-			? (jsonSchema.required as string[])
-			: [],
+		Array.isArray(jsonSchema.required) ? (jsonSchema.required as string[]) : [],
 	);
 	const shape = zodObjectShape(unwrapZod(schema).inner) ?? {};
 	const content: FormLayoutNode[] = [];
@@ -495,9 +489,7 @@ export function applySchemaFormOverlay(
 				fields[path] = {
 					...existing,
 					...(chrome.label !== undefined ? { label: chrome.label } : {}),
-					...(chrome.editor !== undefined
-						? { component: chrome.editor }
-						: {}),
+					...(chrome.editor !== undefined ? { component: chrome.editor } : {}),
 				};
 			}
 			if (chrome.fields) {

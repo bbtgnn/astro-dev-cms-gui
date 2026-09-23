@@ -66,23 +66,6 @@
         "typescript": "catalog:",
       },
     },
-    "packages/astro-template": {
-      "name": "@cms/astro-template",
-      "version": "0.0.0",
-      "dependencies": {
-        "@astrojs/svelte": "catalog:",
-        "@cms/astro": "workspace:*",
-        "@cms/authoring": "workspace:*",
-        "@cms/core": "workspace:*",
-        "astro": "catalog:",
-        "svelte": "catalog:",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "@astrojs/check": "^0.9.10",
-        "typescript": "catalog:",
-      },
-    },
     "packages/authoring": {
       "name": "@cms/authoring",
       "version": "0.0.0",
@@ -223,8 +206,6 @@
     "@cms/astro-demo": ["@cms/astro-demo@workspace:packages/astro-demo"],
 
     "@cms/astro-demo-simple": ["@cms/astro-demo-simple@workspace:packages/astro-demo-simple"],
-
-    "@cms/astro-template": ["@cms/astro-template@workspace:packages/astro-template"],
 
     "@cms/authoring": ["@cms/authoring@workspace:packages/authoring"],
 

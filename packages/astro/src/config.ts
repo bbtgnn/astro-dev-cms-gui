@@ -39,10 +39,7 @@ export type CmsOverlayConfig<
 		readonly [K in keyof Collections]?: SchemaFormOverlay;
 	};
 	/** Host-compiled entry → site preview URL; null when unsupported. */
-	readonly getPreviewUrl?: (
-		collection: string,
-		id: string,
-	) => string | null;
+	readonly getPreviewUrl?: (collection: string, id: string) => string | null;
 };
 
 export type DefineCmsResult<
@@ -52,10 +49,7 @@ export type DefineCmsResult<
 	readonly overlays: {
 		readonly [K in keyof Collections]?: SchemaFormOverlay;
 	};
-	readonly getPreviewUrl: (
-		collection: string,
-		id: string,
-	) => string | null;
+	readonly getPreviewUrl: (collection: string, id: string) => string | null;
 };
 
 /**
@@ -65,15 +59,14 @@ export type DefineCmsResult<
  * single schema authority). Overlay is presentation-only — loaders / write
  * bases stay on stamped content.config.
  */
-export function defineCms<
-	Collections extends Record<string, ZodType>,
->(
+export function defineCms<Collections extends Record<string, ZodType>>(
 	collections: Collections,
 	config: CmsOverlayConfig<Collections> = {},
 ): DefineCmsResult<Collections> {
 	return {
 		collections,
-		overlays: (config.overlays ?? {}) as DefineCmsResult<Collections>["overlays"],
+		overlays: (config.overlays ??
+			{}) as DefineCmsResult<Collections>["overlays"],
 		getPreviewUrl: config.getPreviewUrl ?? (() => null),
 	};
 }

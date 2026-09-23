@@ -19,10 +19,10 @@ First demo package: native Astro `content.config` only, `cms()` in `astro.config
 
 ## Notes
 
-Can seed from `packages/astro-template` content + pages; strip CMS IR config.
+Seeded from former `packages/astro-template` content + pages; CMS IR config stripped. Template package removed in [09](./09-task-workspace-docs-rename.md).
 
 ## Done
 
 - Package: `packages/astro-demo-simple`
 - Exported `authorsSchema` / `postsSchema` for ticket 07 dual registration
-- Root `workspaces` + `check` filter wired; root `dev` still template (09)
+- Root `workspaces` + `check` / `dev` filters: see [09](./09-task-workspace-docs-rename.md)

@@ -11,7 +11,7 @@ The UI an editor uses at author-time to create and change content entries. Not a
 _Avoid_: CMS server, admin panel, dashboard
 
 **Self-host validation**:
-Running the authoring shell on a real local Astro project (especially the reference host `@cms/astro-template`) to prove integration and write-back — not only via docs or demos.
+Running the authoring shell on a real local Astro project (especially the reference host demos `@cms/astro-demo-simple` / `@cms/astro-demo`) to prove integration and write-back — not only via docs.
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
@@ -28,8 +28,8 @@ editors live in `src/cms.components.ts` (`virtual:@cms/components`).
 _Avoid_: cms.config as a server discovery registry, content.config (for the browser edge)
 
 **Reference host**:
-The in-repo Astro app (`@cms/astro-template`) used to exercise and validate the product. It is a sample consumer, not the product identity.
-_Avoid_: dogfood app, prototype template (as the product name)
+The in-repo Astro demos used to exercise and validate the product: `@cms/astro-demo-simple` (content.config-only) and `@cms/astro-demo` (optional overlay + components). Sample consumers, not the product identity. On branch `explore/schema-first-overlay`, these demos explore schema-first hosting vs ADR-0019 generate.
+_Avoid_: dogfood app, prototype template (as the product name), `@cms/astro-template` (removed)
 
 **Shell UI**:
 The Svelte interface rendered inside the Astro-hosted authoring shell.

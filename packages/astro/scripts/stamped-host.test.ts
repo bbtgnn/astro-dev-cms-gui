@@ -6,11 +6,11 @@ import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { memoryWriter } from "@cms/core";
 import { z } from "zod";
+import { file, glob } from "../src/content-proxy/shims/astro-loaders";
 import {
 	stampImageSchema,
 	stampRelationSchema,
 } from "../src/content-proxy/stamp-helpers";
-import { file, glob } from "../src/content-proxy/shims/astro-loaders";
 import {
 	buildFsHostFromStampedCollections,
 	collectionsFromContentConfigExport,

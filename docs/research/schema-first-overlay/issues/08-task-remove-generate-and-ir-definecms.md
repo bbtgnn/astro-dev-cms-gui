@@ -27,4 +27,4 @@ Delete or quarantine product paths that assume CMS-first generation / user-autho
 - CLI `cms generate` hard-fails (“removed on this branch”) for leftover template scripts (09 deletes package).
 - Product host face: `buildFsHostFromStampedCollections` / `defineCms(collections, overlay)` only.
 - Follow-up: `@cms/core/semantic` still used for form projection / overlay types — not deleted.
-- Leftover for 09: `@cms/astro-template` still has generate scripts + IR-shaped `cms.config.ts`.
+- Template package deletion + workspace docs: ticket [09](./09-task-workspace-docs-rename.md).

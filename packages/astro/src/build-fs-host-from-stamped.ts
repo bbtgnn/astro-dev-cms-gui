@@ -41,9 +41,7 @@ export type CollectionLocationOverride = {
 
 export type StampedCollectionConfig = {
 	loader?: unknown;
-	schema?:
-		| z.ZodType
-		| ((ctx: { image: () => z.ZodType }) => z.ZodType);
+	schema?: z.ZodType | ((ctx: { image: () => z.ZodType }) => z.ZodType);
 };
 
 export type MaterializedStampedCollection = {
@@ -161,9 +159,7 @@ function unwrapZod(schema: unknown): {
 	};
 }
 
-function zodObjectShape(
-	schema: unknown,
-): Record<string, unknown> | undefined {
+function zodObjectShape(schema: unknown): Record<string, unknown> | undefined {
 	if (!schema || typeof schema !== "object") return undefined;
 	const shape = (schema as ZodWalkNode).shape;
 	if (shape && typeof shape === "object") {
@@ -181,10 +177,7 @@ function zodArrayElement(schema: unknown): unknown {
 
 type InputValidatorDeps = {
 	isAcceptedImageAsset?: (path: string) => boolean | Promise<boolean>;
-	entryExists?: (
-		collection: string,
-		id: string,
-	) => boolean | Promise<boolean>;
+	entryExists?: (collection: string, id: string) => boolean | Promise<boolean>;
 };
 
 /**
@@ -233,11 +226,7 @@ function toPersistedInputSchema(
 			const el = zodArrayElement(inner);
 			if (el !== undefined) {
 				result = z.array(
-					toPersistedInputSchema(
-						el as z.ZodType,
-						deps,
-						`${fieldPath}[]`,
-					),
+					toPersistedInputSchema(el as z.ZodType, deps, `${fieldPath}[]`),
 				);
 			} else {
 				result = inner as z.ZodType;
@@ -361,11 +350,7 @@ export function buildFsHostFromStampedCollections(
 	for (const [name, config] of Object.entries(input)) {
 		const schema = materializeSchema(config.schema, name);
 		stampedSchemas[name] = schema;
-		const loc = resolveCollectionLocation(
-			name,
-			config.loader,
-			locations[name],
-		);
+		const loc = resolveCollectionLocation(name, config.loader, locations[name]);
 		bases.set(name, loc.base);
 		extensions.set(name, loc.extension);
 	}

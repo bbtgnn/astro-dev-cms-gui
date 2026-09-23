@@ -75,6 +75,17 @@ export {
 	type PersistedProjections,
 	persistedProjections,
 } from "./persisted-projections";
+export {
+	applySchemaFormOverlay,
+	CONTENT_FIELD_STAMP,
+	type ContentFieldStampMeta,
+	type ProjectSchemaFormModelsOptions,
+	type ProjectSchemaFormOptions,
+	projectSchemaFormModel,
+	projectSchemaFormModels,
+	type SchemaFormFieldChrome,
+	type SchemaFormOverlay,
+} from "./schema-form-projection";
 export type {
 	CompiledSemanticIr,
 	IrArray,
@@ -116,14 +127,3 @@ export {
 	type AuthoritativeValidator,
 	createAuthoritativeValidator,
 } from "./validator";
-export {
-	CONTENT_FIELD_STAMP,
-	type ContentFieldStampMeta,
-	type ProjectSchemaFormModelsOptions,
-	type ProjectSchemaFormOptions,
-	type SchemaFormFieldChrome,
-	type SchemaFormOverlay,
-	applySchemaFormOverlay,
-	projectSchemaFormModel,
-	projectSchemaFormModels,
-} from "./schema-form-projection";

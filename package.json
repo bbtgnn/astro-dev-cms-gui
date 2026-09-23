@@ -8,7 +8,6 @@
 			"packages/core",
 			"packages/authoring",
 			"packages/astro",
-			"packages/astro-template",
 			"packages/astro-demo-simple",
 			"packages/astro-demo"
 		],
@@ -25,11 +24,11 @@
 		}
 	},
 	"scripts": {
-		"dev": "bun run --filter @cms/astro-template dev",
-		"build": "bun run --filter @cms/astro-template build",
-		"check": "bun run --filter @cms/core check && bun run --filter @cms/authoring check && bun run --filter @cms/astro check && bun run --filter @cms/astro-template check && bun run --filter @cms/astro-demo-simple check && bun run --filter @cms/astro-demo check",
+		"dev": "bun run --filter @cms/astro-demo-simple dev",
+		"dev:overlay": "bun run --filter @cms/astro-demo dev",
+		"build": "bun run --filter @cms/astro-demo-simple build && bun run --filter @cms/astro-demo build",
+		"check": "bun run --filter @cms/core check && bun run --filter @cms/authoring check && bun run --filter @cms/astro check && bun run --filter @cms/astro-demo-simple check && bun run --filter @cms/astro-demo check",
 		"check:allowlist": "bun run --filter @cms/core check:allowlist && bun run --filter @cms/authoring check:layers && bun run --filter @cms/authoring check:allowlist",
-		"check:image": "bun run --filter @cms/astro-template check:image",
 		"lint": "biome check .",
 		"format": "biome check --write ."
 	},

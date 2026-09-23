@@ -3,8 +3,7 @@
  * `cms` CLI — generation removed on the schema-first overlay branch.
  *
  * Product path: hand-authored `src/content.config.ts` + optional overlay.
- * Leftover `cms generate` scripts (e.g. `@cms/astro-template`) hard-fail here
- * until ticket 09 deletes that package.
+ * `cms generate` hard-fails; demos own content.config directly.
  */
 
 function printHelp(): void {

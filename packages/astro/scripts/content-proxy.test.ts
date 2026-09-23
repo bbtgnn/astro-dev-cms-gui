@@ -59,9 +59,7 @@ describe("astro/loaders shim stamps", () => {
 
 describe("image / reference content-field stamps", () => {
 	test("stampRelationSchema attaches reference stamp and keeps parse", async () => {
-		const require = createRequire(
-			path.join(packageRoot, "package.json"),
-		);
+		const require = createRequire(path.join(packageRoot, "package.json"));
 		// Prefer consumer zod (via astro peer graph) for Standard Schema Input.
 		const zodEntry = require.resolve("zod", {
 			paths: [path.dirname(require.resolve("astro/package.json"))],
@@ -78,9 +76,7 @@ describe("image / reference content-field stamps", () => {
 	});
 
 	test("stampImageSchema attaches image stamp and keeps parse", async () => {
-		const require = createRequire(
-			path.join(packageRoot, "package.json"),
-		);
+		const require = createRequire(path.join(packageRoot, "package.json"));
 		const zodEntry = require.resolve("zod", {
 			paths: [path.dirname(require.resolve("astro/package.json"))],
 		});
@@ -106,9 +102,7 @@ describe("image / reference content-field stamps", () => {
 
 describe("mini content.config via shim", () => {
 	test("collections export carries loader stamps", async () => {
-		const { collections } = await import(
-			"./fixtures/mini-content.config.ts"
-		);
+		const { collections } = await import("./fixtures/mini-content.config.ts");
 		const posts = collections.posts;
 		const settings = collections.settings;
 		expect(getLoaderStamp(posts.loader)).toEqual({

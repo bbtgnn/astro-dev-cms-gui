@@ -4,11 +4,11 @@
  * the same way the Vite `astro:content` boot proxy wraps them.
  */
 import { z } from "zod";
+import { file, glob } from "../../src/content-proxy/shims/astro-loaders";
 import {
 	stampImageSchema,
 	stampRelationSchema,
 } from "../../src/content-proxy/stamp-helpers";
-import { file, glob } from "../../src/content-proxy/shims/astro-loaders";
 
 function reference(collection: string) {
 	return stampRelationSchema(z.string(), collection);

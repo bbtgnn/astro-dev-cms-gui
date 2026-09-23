@@ -11,9 +11,9 @@ import { collections } from "virtual:@cms/content-config";
 import { contentRoot } from "virtual:@cms/integration-options";
 import { type CmsHost, nodeFsWriter } from "@cms/core";
 import {
-	type StampedCollectionConfig,
 	buildFsHostFromStampedCollections,
 	collectionsFromContentConfigExport,
+	type StampedCollectionConfig,
 } from "./build-fs-host-from-stamped";
 
 function nodeFileExists(absPath: string): boolean {

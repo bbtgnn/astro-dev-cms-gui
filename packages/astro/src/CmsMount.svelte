@@ -8,11 +8,11 @@ import { mount } from "virtual:@cms/integration-options";
 import {
 	AuthoringApp,
 	editorCollectionsFromFormModels,
-	resolveCatalogBinding,
 	type GetPreviewUrl,
+	resolveCatalogBinding,
 } from "@cms/authoring";
-import type { FormModelsByCollection } from "@cms/core/semantic";
 import { createFetchClient } from "@cms/core/fetch-client";
+import type { FormModelsByCollection } from "@cms/core/semantic";
 
 let {
 	formModels,

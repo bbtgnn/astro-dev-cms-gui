@@ -404,7 +404,7 @@ describe("authoring autosave self-host json", () => {
 		const previewPage = await readFile(
 			path.resolve(
 				path.dirname(fileURLToPath(import.meta.url)),
-				"../../astro-template/src/pages/posts/[id].astro",
+				"../../astro-demo-simple/src/pages/posts/[id].astro",
 			),
 			"utf8",
 		);

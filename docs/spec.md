@@ -30,9 +30,10 @@ The job is a local-first **authoring shell**, not a production CMS identity.
   humans; [ADR-0012](adr/0012-block-schema-and-production-renderers-stay-separate.md)
   remains the invariant (separate registries; no required per-block authoring
   preview). Facade is intended DX, not a supersession of 0012.
-- **How we judge “best”:** the reference host (`@cms/astro-template`) plus a
-  small set of Kirby-like acceptance scenes (compose an entry, nested blocks,
-  tidy sections). Payload is the config foil, not the UX bar.
+- **How we judge “best”:** the reference host demos (`@cms/astro-demo-simple` /
+  `@cms/astro-demo`) plus a small set of Kirby-like acceptance scenes (compose
+  an entry, nested blocks, tidy sections). Payload is the config foil, not the
+  UX bar.
 
 Delivery and architecture (unchanged):
 

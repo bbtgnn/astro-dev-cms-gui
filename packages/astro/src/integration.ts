@@ -20,10 +20,7 @@
  * Protocol-only: {@link createCmsMiddleware} from `@cms/astro`.
  */
 import { fileURLToPath } from "node:url";
-import {
-	viteAliasesForBoot,
-	vitePluginsForBoot,
-} from "./content-proxy/boot";
+import { viteAliasesForBoot, vitePluginsForBoot } from "./content-proxy/boot";
 import {
 	type CmsDispatcherOptions,
 	type CmsMiddlewareHandler,
@@ -238,8 +235,7 @@ export function createCmsIntegration(
 
 			const useProjectHost =
 				typeof options.host === "string" && options.host.length > 0;
-			const useDefaultHost =
-				options.host == null && contentConfigEntry != null;
+			const useDefaultHost = options.host == null && contentConfigEntry != null;
 			const hostEntry = useProjectHost
 				? resolveProjectEntry(options.host as string, root)
 				: useDefaultHost
@@ -269,9 +265,7 @@ export function createCmsIntegration(
 			const plugins: CmsVitePlugin[] = [...proxyPlugins];
 
 			if (contentConfigEntry != null) {
-				plugins.push(
-					cmsContentConfigVitePlugin({ entry: contentConfigEntry }),
-				);
+				plugins.push(cmsContentConfigVitePlugin({ entry: contentConfigEntry }));
 			}
 
 			const needsShellVirtuals =

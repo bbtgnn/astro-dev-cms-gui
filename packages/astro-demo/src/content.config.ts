@@ -4,11 +4,8 @@
  * CMS stamps `glob` / `image` / `reference` via content-proxy; no generate.
  */
 import { defineCollection } from "astro:content";
+import { authorsSchema, postsSchema } from "@cms/astro-demo-simple/schemas";
 import { glob } from "astro/loaders";
-import {
-	authorsSchema,
-	postsSchema,
-} from "@cms/astro-demo-simple/schemas";
 
 const authors = defineCollection({
 	loader: glob({

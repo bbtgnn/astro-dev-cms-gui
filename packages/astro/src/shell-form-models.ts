@@ -4,16 +4,16 @@
  * imports content.config).
  */
 
-import {
-	type FormModelsByCollection,
-	type SchemaFormOverlay,
-	projectSchemaFormModels,
-} from "@cms/core/semantic";
 import { overlays } from "virtual:@cms/config";
 import { collections } from "virtual:@cms/content-config";
 import {
-	type StampedCollectionConfig,
+	type FormModelsByCollection,
+	projectSchemaFormModels,
+	type SchemaFormOverlay,
+} from "@cms/core/semantic";
+import {
 	collectionsFromContentConfigExport,
+	type StampedCollectionConfig,
 } from "./build-fs-host-from-stamped";
 
 export { getPreviewUrl } from "virtual:@cms/config";
