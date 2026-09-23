@@ -1,30 +1,29 @@
 /**
- * Package default CmsHost factory (ADR-0016).
- * Wired when `cms()` runs without a project `hostModule`.
+ * Package default CmsHost — Vite adapter over {@link buildDefaultFsHost}.
  *
- * Discovers collections from the project's `content.config` and writes under
- * the configured content root (default `src/content`).
+ * Reads editor configuration and content root from virtual modules, injects
+ * Node FS Writer + fileExists, then delegates assembly (ADR-0016 / 0019 / 0020).
  */
 
-import { collections } from "virtual:@cms/content-config";
+import fs from "node:fs";
+import { collections as editorCollections } from "virtual:@cms/config";
 import { contentRoot } from "virtual:@cms/integration-options";
-import {
-	type CmsHost,
-	createCmsHost,
-	discoverCollections,
-	nodeFsWriter,
-} from "@cms/core";
+import { type CmsHost, nodeFsWriter } from "@cms/core";
+import { buildDefaultFsHost } from "./build-default-fs-host";
+
+function nodeFileExists(absPath: string): boolean {
+	try {
+		return fs.existsSync(absPath) && fs.statSync(absPath).isFile();
+	} catch {
+		return false;
+	}
+}
 
 export function createHost(): CmsHost {
-	const discovered = discoverCollections(collections);
-	const allowPaths = [
-		...new Set(discovered.map((collection) => collection.base)),
-	];
-
-	return createCmsHost({
-		root: contentRoot,
-		allowPaths,
+	return buildDefaultFsHost({
+		collections: editorCollections,
+		contentRoot,
 		writer: nodeFsWriter(),
-		collections: discovered,
+		fileExists: nodeFileExists,
 	});
 }

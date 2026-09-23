@@ -7,21 +7,24 @@ export type { AuthoringStatus } from "./autosave";
 export { default as PlaceholderChrome } from "./components/PlaceholderChrome.svelte";
 export { default as EntryEditor } from "./EntryEditor.svelte";
 export { default as CmsForm } from "./form/CmsForm.svelte";
+export { editorCollectionsFromTree } from "./form/editor-collections";
 export type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,
 } from "./form/ImageField.svelte";
 export {
-	type AuthoringSession,
-	type AuthoringSessionMode,
-	type AuthoringSessionOptions,
-	type AuthoringSessionSnapshot,
-	createAuthoringSession,
-	offersAssetUpload,
-	offersEntryDeletion,
+	type OpenAuthoringSessionOptions,
+	openAuthoringSession,
+} from "./open-authoring-session";
+export type {
+	AuthoringSession,
+	AuthoringSessionMode,
+	AuthoringSessionSnapshot,
 } from "./session";
 export type {
 	AuthoringClient,
+	EditorCollectionInput,
 	EditorCollections,
 	GetPreviewUrl,
 } from "./types";
+export { resolveEditorCollection } from "./types";

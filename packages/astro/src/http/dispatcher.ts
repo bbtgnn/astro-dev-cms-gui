@@ -149,7 +149,11 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 			// /api/collections/:collection[/:id]
 			const collMatch = /^api\/collections\/([^/]+)(?:\/([^/]+))?$/.exec(path);
 			if (collMatch) {
-				const collection = decodeURIComponent(collMatch[1]!);
+				const rawCollection = collMatch[1];
+				if (rawCollection === undefined) {
+					return new Response("Not Found", { status: 404 });
+				}
+				const collection = decodeURIComponent(rawCollection);
 				const id = collMatch[2] ? decodeURIComponent(collMatch[2]) : undefined;
 
 				if (!id && method === "GET") {

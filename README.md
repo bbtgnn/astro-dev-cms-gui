@@ -1,6 +1,6 @@
 # Astro Dev CMS
 
-A **server-light authoring shell** for Astro content collections — edit content as files in a real project, with a Svelte UI generated from your Zod field schemas. No always-on CMS server, no hosted admin cloud.
+A **server-light authoring shell** for Astro content collections — edit content as files in a real project, with a Svelte UI generated from your CMS semantic schema. No always-on CMS server, no hosted admin cloud.
 
 **Primary usage:** mount the shell as a **dev-mode route** inside an Astro project. The authoring UI is kept as general as possible behind a serializable CMS protocol; Astro + filesystem write-back is the first host path.
 
@@ -14,7 +14,7 @@ Most “CMS for a static/git site” tools pull you into one of two traps:
 We want the useful middle:
 
 1. **Your Astro repo is the source of truth.** Content lives in the working tree (JSON today; markdown collections later). Write-back is allowlisted filesystem ops during authoring.
-2. **Schemas you already write drive the UI.** Collection Zod (+ FieldUi on `.meta()`) becomes the form. Editors don’t maintain a parallel `config.yml`.
+2. **One CMS schema drives the UI and Astro.** Author `src/cms.config.ts`; Astro `content.config.ts` is generated. Editors don’t maintain a parallel `config.yml`.
 3. **Dev integration is thin.** `cms()` from `@cms/astro` mounts the shell at `/cms` and the protocol at `/_cms`. Conventions: `src/cms.config.ts`, `src/content.config.ts`, content under `src/content/`. Dev-only by default.
 
 Borrow the good bits from Kirby / Pages / Payload (field registry, blocks, locale fields, local write-back). Reject their control planes as the default.
@@ -47,7 +47,7 @@ Three product packages match ADR-0008 layers
 ([ADR-0018](docs/adr/0018-three-packages-for-adr-0008-layers.md)):
 
 - `@cms/authoring` — shell UI + form shell
-- `@cms/core` — field schemas + CMS protocol + FS adapters
+- `@cms/core` — semantic IR + CMS protocol + FS adapters
 - `@cms/astro` — `cms()` host mount + `/_cms` transport
 
 Checks: `bun run check && bun run check:allowlist && bun run lint`.

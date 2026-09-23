@@ -1,18 +1,7 @@
 {
-  "title": "image post",
-  "body": "ciao",
-  "summary": {
-    "en": "nice post"
-  },
-  "blocks": [
-    {
-      "type": "hero",
-      "content": {
-        "title": "asd",
-        "body": "asd"
-      }
-    }
-  ],
-  "cover": "./new-post/cover/pixel.png",
-  "author": "my man"
+	"title": "image post",
+	"draft": false,
+	"body": "ciao",
+	"cover": "./new-post/cover/pixel.png",
+	"author": "ada"
 }

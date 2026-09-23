@@ -5,10 +5,13 @@
 <script lang="ts">
 import type { ContentEntry } from "@cms/core/fetch-client";
 import { onMount } from "svelte";
-import type { z } from "zod";
 import type { AuthoringStatus } from "./autosave";
 import { CmsForm } from "./form";
 import type { AuthoringSession } from "./session";
+import {
+	type EditorCollectionInput,
+	resolveEditorCollection,
+} from "./types";
 
 let {
 	session,
@@ -21,8 +24,8 @@ let {
 	/** Parent-owned session — EntryEditor does not dispose it. */
 	session: AuthoringSession;
 	collection: string;
-	/** Live Zod from host-compiled editor configuration. */
-	schema?: z.ZodType | null;
+	/** Lowered IR form model (JSON Schema + uiSchema) from host editor configuration. */
+	schema?: EditorCollectionInput | null;
 	onSaved?: (entry: ContentEntry) => void;
 	onDeleted?: () => void;
 	onCancel?: () => void;
@@ -42,6 +45,10 @@ const assetsContext = $derived.by(() => {
 	void version;
 	return session.assetsContext();
 });
+
+const formSpec = $derived(
+	schema != null ? resolveEditorCollection(schema) : null,
+);
 
 onMount(() => {
 	return session.subscribe(() => {
@@ -145,11 +152,12 @@ function statusLabel(status: AuthoringStatus): string | null {
 		</details>
 	{/if}
 
-	{#if schema}
+	{#if formSpec}
 		{#key `${collection}:${snap.creating ? "new" : snap.entryId}:${snap.formEpoch}`}
 			<CmsForm
 				title={`${collection} / ${snap.creating ? snap.entryId || "new" : snap.entryId}`}
-				{schema}
+				schema={formSpec.schema}
+				uiSchema={formSpec.uiSchema}
 				value={snap.formValue}
 				{collection}
 				entryId={snap.creating ? snap.entryId.trim() : snap.entryId}

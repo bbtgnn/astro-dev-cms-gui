@@ -1,6 +1,7 @@
 /**
  * Ambient types for Vite virtual modules registered by createCmsIntegration.
  * Real modules are generated at host Vite config time.
+ * Package-internal — consumers do not import these IDs.
  */
 
 interface ImportMetaEnv {
@@ -12,28 +13,32 @@ interface ImportMeta {
 }
 
 declare module "virtual:@cms/config" {
-	import type { z } from "zod";
+	import type { SemanticConfigInput } from "@cms/core/semantic";
 
-	export const collections: Record<string, z.ZodType>;
+	/** Semantic collections from the Node-safe unified tree. */
+	export const collections: SemanticConfigInput["collections"];
 	/** Host-compiled entry → site preview URL; null when unsupported. */
 	export function getPreviewUrl(collection: string, id: string): string | null;
 	const config: {
-		collections: Record<string, z.ZodType>;
+		collections: SemanticConfigInput["collections"];
 		getPreviewUrl?: (collection: string, id: string) => string | null;
 	};
 	export default config;
 }
 
+declare module "virtual:@cms/components" {
+	import type { AnySvelteComponent } from "@cms/authoring/config";
+
+	/** Live Svelte catalog keyed by `cms.config` binding strings. */
+	const components: Readonly<Record<string, AnySvelteComponent>>;
+	export default components;
+}
+
 declare module "virtual:@cms/host" {
 	import type { CmsHost } from "@cms/core";
 
-	/** Host factory (project override or package default). */
+	/** Host factory (package default FS adapter or project override). */
 	export function createHost(): CmsHost;
-}
-
-declare module "virtual:@cms/content-config" {
-	/** Live Astro `content.config` collections export for the default host. */
-	export const collections: Record<string, unknown>;
 }
 
 declare module "virtual:@cms/integration-options" {

@@ -1,34 +1,43 @@
 /**
- * Guard: Zod→JSON Schema after stripUiFromJsonSchema must validate under
- * @sjsf/ajv8-validator (regression: draft/2020-12 $schema threw and blocked Submit).
+ * Guard: stripUiFromJsonSchema must leave JSON Schema Ajv-safe
+ * (regression: draft/2020-12 $schema threw and blocked Submit).
+ * Strip lives in authoring form lowering (ADR-0011).
  */
 
 import { describe, expect, test } from "bun:test";
-import {
-	boolean,
-	config,
-	markdown,
-	object,
-	reference,
-	stripUiFromJsonSchema,
-	text,
-	toFormSchemas,
-} from "@cms/core/fields";
 import { createFormValidator } from "@sjsf/ajv8-validator";
+import { stripUiFromJsonSchema } from "../src/form/ui-schema";
 
-const posts = object(
-	{
-		title: text({ label: "Title" }),
-		draft: boolean({ label: "Draft", default: false }),
-		body: markdown({ label: "Body" }),
-		author: reference("authors", { label: "Author" }),
+const postsSchema: Record<string, unknown> = {
+	$schema: "https://json-schema.org/draft/2020-12/schema",
+	type: "object",
+	ui: { widget: "object" },
+	config: { label: "Posts", base: "posts" },
+	properties: {
+		title: {
+			type: "string",
+			ui: { widget: "text", label: "Title" },
+		},
+		draft: {
+			type: "boolean",
+			default: false,
+			ui: { widget: "boolean", label: "Draft" },
+		},
+		body: {
+			type: "string",
+			ui: { widget: "markdown", label: "Body" },
+		},
+		author: {
+			type: "string",
+			ui: { widget: "reference", label: "Author" },
+		},
 	},
-	{ label: "Posts" },
-).meta(config({ label: "Posts", base: "posts" }));
+	required: ["title", "body", "author"],
+	additionalProperties: false,
+};
 
 describe("stripUiFromJsonSchema is Ajv-safe", () => {
-	const { schema } = toFormSchemas(posts);
-	const stripped = stripUiFromJsonSchema(schema);
+	const stripped = stripUiFromJsonSchema(postsSchema);
 	const validator = createFormValidator();
 
 	test("removes $schema and root ui/config", () => {

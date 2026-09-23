@@ -3,19 +3,22 @@
  */
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
-import { createCmsIntegration } from "../src/integration";
+import { cms } from "../src/integration";
 import {
+	CMS_COMPONENTS_VIRTUAL_ID,
+	CMS_CONFIG_CONVENTION,
 	CMS_CONFIG_VIRTUAL_ID,
-	CMS_CONTENT_CONFIG_VIRTUAL_ID,
 	CMS_HOST_VIRTUAL_ID,
 	CMS_INTEGRATION_OPTIONS_VIRTUAL_ID,
+	cmsComponentsVitePlugin,
 	cmsConfigVitePlugin,
-	cmsContentConfigVitePlugin,
+	cmsHarness,
 	cmsHostVitePlugin,
 	cmsIntegrationOptionsVitePlugin,
 	DEFAULT_CONTENT_ROOT,
 	resolveProjectEntry,
-} from "../src/vite-config-plugin";
+	SCHEMA_PARTITION_CONVENTION,
+} from "../src/testing";
 
 describe("resolveProjectEntry", () => {
 	test("keeps absolute paths", () => {
@@ -27,6 +30,13 @@ describe("resolveProjectEntry", () => {
 		expect(resolveProjectEntry("./src/cms/host.ts", "/project")).toBe(
 			path.resolve("/project/src/cms/host.ts"),
 		);
+	});
+});
+
+describe("schema partition convention", () => {
+	test("primary path matches first cms.config candidate", () => {
+		expect(SCHEMA_PARTITION_CONVENTION).toBe(CMS_CONFIG_CONVENTION[0]);
+		expect(typeof SCHEMA_PARTITION_CONVENTION).toBe("string");
 	});
 });
 
@@ -43,6 +53,27 @@ describe("cmsConfigVitePlugin", () => {
 	});
 });
 
+describe("cmsComponentsVitePlugin", () => {
+	test("re-exports catalog default export", async () => {
+		const entry = path.resolve("/project/src/cms.components.ts");
+		const plugin = cmsComponentsVitePlugin({ entry });
+		const resolved = await plugin.resolveId(CMS_COMPONENTS_VIRTUAL_ID);
+		expect(resolved).toBe(`\0${CMS_COMPONENTS_VIRTUAL_ID}`);
+		if (resolved == null) throw new Error("expected resolved id");
+		const source = await plugin.load(resolved);
+		expect(source).toBe(`export { default } from ${JSON.stringify(entry)};\n`);
+	});
+
+	test("emits empty catalog when entry omitted", async () => {
+		const plugin = cmsComponentsVitePlugin({});
+		const resolved = await plugin.resolveId(CMS_COMPONENTS_VIRTUAL_ID);
+		expect(resolved).toBe(`\0${CMS_COMPONENTS_VIRTUAL_ID}`);
+		if (resolved == null) throw new Error("expected resolved id");
+		const source = await plugin.load(resolved);
+		expect(source).toBe("export default {};\n");
+	});
+});
+
 describe("cmsHostVitePlugin", () => {
 	test("re-exports createHost from host module", async () => {
 		const entry = path.resolve("/project/src/cms/host.ts");
@@ -53,20 +84,6 @@ describe("cmsHostVitePlugin", () => {
 		const source = await plugin.load(resolved);
 		expect(source).toBe(
 			`export { createHost } from ${JSON.stringify(entry)};\n`,
-		);
-	});
-});
-
-describe("cmsContentConfigVitePlugin", () => {
-	test("re-exports collections from content.config", async () => {
-		const entry = path.resolve("/project/src/content.config.ts");
-		const plugin = cmsContentConfigVitePlugin({ entry });
-		const resolved = await plugin.resolveId(CMS_CONTENT_CONFIG_VIRTUAL_ID);
-		expect(resolved).toBe(`\0${CMS_CONTENT_CONFIG_VIRTUAL_ID}`);
-		if (resolved == null) throw new Error("expected resolved id");
-		const source = await plugin.load(resolved);
-		expect(source).toBe(
-			`export { collections } from ${JSON.stringify(entry)};\n`,
 		);
 	});
 });
@@ -91,22 +108,24 @@ describe("cmsIntegrationOptionsVitePlugin", () => {
 	});
 });
 
-describe("createCmsIntegration shellPath", () => {
-	test("defaults to /cms for convention-first cms()", () => {
-		const integration = createCmsIntegration();
+describe("cms() product face", () => {
+	test("defaults to /cms with zero args", () => {
+		const integration = cms();
 		expect(integration.shellPath).toBe("/cms");
 		expect(integration.name).toBe("@cms/astro");
 	});
+});
 
+describe("cmsHarness escapes", () => {
 	test("shellPath false skips inject", () => {
-		const integration = createCmsIntegration({
+		const integration = cmsHarness({
 			shellPath: false,
 		});
 		expect(integration.shellPath).toBeUndefined();
 	});
 
 	test("normalizes custom shellPath", () => {
-		const integration = createCmsIntegration({
+		const integration = cmsHarness({
 			shellPath: "admin/",
 		});
 		expect(integration.shellPath).toBe("/admin");

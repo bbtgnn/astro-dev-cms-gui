@@ -1,0 +1,14 @@
+{
+	"extends": "../../../tsconfig.base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"rootDir": "..",
+		"strict": true,
+		"skipLibCheck": true
+	},
+	"include": [
+		"./aggregate-component-inference.fixtures.ts",
+		"./define-cms.fixtures.ts",
+		"../src/config/**/*.ts"
+	]
+}

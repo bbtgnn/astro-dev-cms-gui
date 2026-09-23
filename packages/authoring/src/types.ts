@@ -2,8 +2,9 @@
  * Host-injected seams for the reusable authoring application.
  * Package name / graph are provisional (ADR-0009).
  */
+
 import type { CmsFetchClient } from "@cms/core/fetch-client";
-import type { z } from "zod";
+import type { UiSchemaNode } from "./form/ui-schema";
 
 /**
  * Protocol client surface used by the authoring application.
@@ -20,8 +21,20 @@ export type AuthoringClient = Pick<
 	| "uploadImage"
 >;
 
-/** Host-compiled editor schemas (Zod + FieldUi + direct components). */
-export type EditorCollections = Record<string, z.ZodType>;
+/**
+ * One collection's editor inputs for the form shell.
+ * Lowered IR form models only: Ajv-safe JSON Schema + optional uiSchema
+ * (ADR-0011 / 0019). Use {@link editorCollectionsFromTree} / lowering — do
+ * not pass raw Form model jsonSchema here.
+ */
+export type EditorCollectionInput = {
+	/** Ajv-safe JSON Schema (post-lower). */
+	readonly schema: Record<string, unknown>;
+	readonly uiSchema?: UiSchemaNode;
+};
+
+/** Host-compiled editor schemas (IR form model → JSON Schema + uiSchema). */
+export type EditorCollections = Record<string, EditorCollectionInput>;
 
 /**
  * Host-compiled preview URL builder (ADR-0013).
@@ -32,3 +45,14 @@ export type GetPreviewUrl = (
 	collection: string,
 	id: string,
 ) => string | null | undefined;
+
+/** Normalize collection input to CmsForm schema + optional uiSchema. */
+export function resolveEditorCollection(input: EditorCollectionInput): {
+	schema: Record<string, unknown>;
+	uiSchema?: UiSchemaNode;
+} {
+	return {
+		schema: input.schema,
+		...(input.uiSchema !== undefined ? { uiSchema: input.uiSchema } : {}),
+	};
+}

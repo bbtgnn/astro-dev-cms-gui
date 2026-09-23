@@ -11,14 +11,12 @@ import {
 	isCmsFetchError,
 } from "@cms/core/fetch-client";
 import { onDestroy, onMount } from "svelte";
-import type { z } from "zod";
 import EntryEditor from "./EntryEditor.svelte";
-import {
-	type AuthoringSession,
-	createAuthoringSession,
-} from "./session";
+import { openAuthoringSession } from "./open-authoring-session";
+import type { AuthoringSession } from "./session";
 import type {
 	AuthoringClient,
+	EditorCollectionInput,
 	EditorCollections,
 	GetPreviewUrl,
 } from "./types";
@@ -61,9 +59,9 @@ function errMsg(e: unknown): string {
 	return e instanceof Error ? e.message : String(e);
 }
 
-function editorSchemaFor(name: string | null): z.ZodType | null {
+function editorSchemaFor(name: string | null): EditorCollectionInput | null {
 	if (!name) return null;
-	return (editorCollections[name] as z.ZodType | undefined) ?? null;
+	return editorCollections[name] ?? null;
 }
 
 const activeSchema = $derived(editorSchemaFor(selectedCollection));
@@ -123,7 +121,7 @@ async function openEntry(id: string) {
 			return;
 		}
 		disposeSession();
-		session = createAuthoringSession({
+		session = openAuthoringSession({
 			client,
 			collection: selectedCollection,
 			mode: { kind: "edit", entry: result.value },
@@ -131,6 +129,10 @@ async function openEntry(id: string) {
 			capabilities,
 			getPreviewUrl,
 		});
+		if (!session) {
+			error = `Missing editor schema for collection "${selectedCollection}"`;
+			return;
+		}
 		view = "editor";
 	} catch (e) {
 		error = errMsg(e);
@@ -144,7 +146,7 @@ function startCreate() {
 	if (!selectedCollection) return;
 	disposeSession();
 	selectedEntryId = null;
-	session = createAuthoringSession({
+	session = openAuthoringSession({
 		client,
 		collection: selectedCollection,
 		mode: { kind: "create" },
@@ -152,6 +154,10 @@ function startCreate() {
 		capabilities,
 		getPreviewUrl,
 	});
+	if (!session) {
+		error = `Missing editor schema for collection "${selectedCollection}"`;
+		return;
+	}
 	view = "create";
 	error = null;
 }

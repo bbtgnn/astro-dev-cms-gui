@@ -38,11 +38,12 @@ export function memoryWriter(
 			store.delete(path);
 		},
 		async list(dir: string) {
-			const prefix = dir.replace(/\/+$/, "") + "/";
+			const prefix = `${dir.replace(/\/+$/, "")}/`;
 			const names = new Set<string>();
 			for (const key of store.keys()) {
 				if (key.startsWith(prefix)) {
-					names.add(key.slice(prefix.length).split("/")[0]!);
+					const [name] = key.slice(prefix.length).split("/");
+					if (name !== undefined && name.length > 0) names.add(name);
 				}
 			}
 			return [...names];

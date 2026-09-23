@@ -13,13 +13,9 @@
 		<li>
 			<a href="/_cms/api/collections/posts/hello">/_cms/api/collections/posts/hello</a>
 		</li>
-		<li><a href="/form-spike">/form-spike</a> — example form page</li>
 		<li>
 			<a href="/posts/hello"><strong>/posts/hello</strong></a> — real Astro
 			preview route (ADR-0013)
-		</li>
-		<li>
-			<a href="/blocks-demo">/blocks-demo</a> — resolveBlock render (hero/cta)
 		</li>
 		<li>
 			<a href="/image-demo">/image-demo</a> — cover image (original asset)

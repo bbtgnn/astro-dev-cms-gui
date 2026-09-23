@@ -1,58 +1,54 @@
 /**
  * Vite virtual modules for the Astro host integration:
- * - `virtual:@cms/config` — browser-safe editor configuration
- * - `virtual:@cms/host` — `createHost()` factory (project or package default)
- * - `virtual:@cms/content-config` — live `content.config` collections (default host)
+ * - `virtual:@cms/config` — Node-safe unified tree (`cms.config.ts`); also the
+ *   IR source for the package default CmsHost
+ * - `virtual:@cms/components` — Vite-only live Svelte catalog (`cms.components.ts`)
+ * - `virtual:@cms/host` — `createHost()` factory (package default or override)
  * - `virtual:@cms/integration-options` — mount / allowInProd / contentRoot
  *
- * Direct Svelte components stay live module values in the host graph —
+ * Catalog values stay live module bindings in the host Vite graph —
  * they are never serialized through Astro props or the CMS protocol.
+ * Virtual IDs are package-internal; consumers do not import them.
  */
 import fs from "node:fs";
 import path from "node:path";
 
+export {
+	CMS_COMPONENTS_CONVENTION,
+	CMS_CONFIG_CONVENTION,
+	CONTENT_CONFIG_CONVENTION,
+	DEFAULT_CONTENT_ROOT,
+	SCHEMA_PARTITION_CONVENTION,
+} from "./conventions";
+
 export const CMS_CONFIG_VIRTUAL_ID = "virtual:@cms/config";
 const CMS_CONFIG_RESOLVED_ID = `\0${CMS_CONFIG_VIRTUAL_ID}`;
 
+export const CMS_COMPONENTS_VIRTUAL_ID = "virtual:@cms/components";
+const CMS_COMPONENTS_RESOLVED_ID = `\0${CMS_COMPONENTS_VIRTUAL_ID}`;
+
 export const CMS_HOST_VIRTUAL_ID = "virtual:@cms/host";
 const CMS_HOST_RESOLVED_ID = `\0${CMS_HOST_VIRTUAL_ID}`;
-
-export const CMS_CONTENT_CONFIG_VIRTUAL_ID = "virtual:@cms/content-config";
-const CMS_CONTENT_CONFIG_RESOLVED_ID = `\0${CMS_CONTENT_CONFIG_VIRTUAL_ID}`;
 
 export const CMS_INTEGRATION_OPTIONS_VIRTUAL_ID =
 	"virtual:@cms/integration-options";
 const CMS_INTEGRATION_OPTIONS_RESOLVED_ID = `\0${CMS_INTEGRATION_OPTIONS_VIRTUAL_ID}`;
 
-/** Convention paths for browser editor configuration (ADR-0016). */
-export const CMS_CONFIG_CONVENTION = [
-	"src/cms.config.ts",
-	"src/cms.config.mjs",
-	"src/cms.config.js",
-] as const;
-
-/** Convention paths for Astro content collections (ADR-0004 / 0016). */
-export const CONTENT_CONFIG_CONVENTION = [
-	"src/content.config.ts",
-	"src/content.config.mjs",
-	"src/content.config.js",
-] as const;
-
-/** Default write-back root relative to the Astro project root. */
-export const DEFAULT_CONTENT_ROOT = "src/content";
-
 export type CmsConfigVitePluginOptions = {
-	/** Absolute path to the browser-safe editor configuration module. */
+	/** Absolute path to the Node-safe unified tree module. */
 	entry: string;
+};
+
+export type CmsComponentsVitePluginOptions = {
+	/**
+	 * Absolute path to the Vite-only components catalog, or omit for an empty
+	 * default export (stock editors only).
+	 */
+	entry?: string;
 };
 
 export type CmsHostVitePluginOptions = {
 	/** Absolute path to the module that exports `createHost`. */
-	entry: string;
-};
-
-export type CmsContentConfigVitePluginOptions = {
-	/** Absolute path to the project's `content.config` module. */
 	entry: string;
 };
 
@@ -103,7 +99,8 @@ export function resolveConventionEntry(
 
 /**
  * Expose `virtual:@cms/config` as a static re-export of `entry`.
- * Vite HMR follows the real module (and its Svelte imports) automatically.
+ * Entry must be Svelte-free (string catalog keys only).
+ * Shell and package default CmsHost both import this virtual.
  */
 export function cmsConfigVitePlugin(
 	options: CmsConfigVitePluginOptions,
@@ -130,6 +127,33 @@ export function cmsConfigVitePlugin(
 }
 
 /**
+ * Expose `virtual:@cms/components` as the live Svelte catalog (or `{}`).
+ */
+export function cmsComponentsVitePlugin(
+	options: CmsComponentsVitePluginOptions = {},
+): CmsVitePlugin {
+	const entry =
+		options.entry != null ? path.normalize(options.entry) : undefined;
+	const entryLiteral = entry != null ? JSON.stringify(entry) : null;
+
+	return {
+		name: "@cms/astro:virtual-components",
+		enforce: "pre",
+		resolveId(id) {
+			if (id === CMS_COMPONENTS_VIRTUAL_ID) return CMS_COMPONENTS_RESOLVED_ID;
+			return null;
+		},
+		load(id) {
+			if (id !== CMS_COMPONENTS_RESOLVED_ID) return null;
+			if (entryLiteral == null) {
+				return "export default {};\n";
+			}
+			return `export { default } from ${entryLiteral};\n`;
+		},
+	};
+}
+
+/**
  * Expose `virtual:@cms/host` as a re-export of `createHost`.
  * Loaded by the package-owned Astro middleware entrypoint at request time.
  */
@@ -149,31 +173,6 @@ export function cmsHostVitePlugin(
 		load(id) {
 			if (id !== CMS_HOST_RESOLVED_ID) return null;
 			return `export { createHost } from ${entryLiteral};\n`;
-		},
-	};
-}
-
-/**
- * Expose `virtual:@cms/content-config` for the package default host factory.
- */
-export function cmsContentConfigVitePlugin(
-	options: CmsContentConfigVitePluginOptions,
-): CmsVitePlugin {
-	const entry = path.normalize(options.entry);
-	const entryLiteral = JSON.stringify(entry);
-
-	return {
-		name: "@cms/astro:virtual-content-config",
-		enforce: "pre",
-		resolveId(id) {
-			if (id === CMS_CONTENT_CONFIG_VIRTUAL_ID) {
-				return CMS_CONTENT_CONFIG_RESOLVED_ID;
-			}
-			return null;
-		},
-		load(id) {
-			if (id !== CMS_CONTENT_CONFIG_RESOLVED_ID) return null;
-			return `export { collections } from ${entryLiteral};\n`;
 		},
 	};
 }

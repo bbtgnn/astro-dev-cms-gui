@@ -1,27 +1,7 @@
 {
-  "title": "Hello tracer",
-  "draft": true,
-  "body": "Pass 1 fake entry.\n\nMarkdown body for P5 textarea UX.\n",
-  "summary": {
-    "en": "Hello in English",
-    "it": "Ciao in italiano"
-  },
-  "blocks": [
-    {
-      "type": "hero",
-      "content": {
-        "title": "Hello hero",
-        "body": "Sample hero body for blocksLayout.\n"
-      }
-    },
-    {
-      "type": "cta",
-      "content": {
-        "label": "Open CMS",
-        "href": "/cms"
-      }
-    }
-  ],
-  "cover": "./hello/cover/pixel.png",
-  "author": "ada"
+	"title": "Hello tracer",
+	"draft": true,
+	"body": "Pass 1 fake entry.\n\nMarkdown body for textarea UX.\n",
+	"cover": "./hello/cover/pixel.png",
+	"author": "ada"
 }

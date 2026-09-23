@@ -15,11 +15,16 @@ Running the authoring shell on a real local Astro project (especially the refere
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: `src/cms.config.ts`, `src/content.config.ts`, content under `src/content/`. Field schemas and the CMS protocol live in `@cms/core`; the authoring UI lives in `@cms/authoring`.
+How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: `src/cms.config.ts` (human unified tree), generated `src/content.config.ts`, content under `src/content/`. Semantic IR and the CMS protocol live in `@cms/core`; the authoring UI lives in `@cms/authoring`.
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
 
 **Editor configuration**:
-The browser-safe project module (`src/cms.config.ts` by convention) that exports editor field schemas (Zod + FieldUi / direct Svelte components) and optional preview URL mapping. Compiled through the host Vite graph as `virtual:@cms/config`; never mixed into the CMS protocol.
+The Node-safe project module (`src/cms.config.ts` by convention) that exports
+the CMS unified tree (closed semantic schema, layout, loaders, string catalog
+keys) and optional preview URL mapping. Compiled through the host Vite graph as
+`virtual:@cms/config`; never mixed into the CMS protocol. Also the human source
+and generation partition for `src/content.config.ts` (ADR-0019). Live Svelte
+editors live in `src/cms.components.ts` (`virtual:@cms/components`).
 _Avoid_: cms.config as a server discovery registry, content.config (for the browser edge)
 
 **Reference host**:
@@ -32,22 +37,39 @@ _Avoid_: admin SPA, CMS frontend
 
 **Authoring session**:
 The in-browser module that owns one content-entry edit against the CMS protocol:
-statuses, guarded write-back (revision chaining), preview eligibility after
-successful save, form remount rules (create→edit, conflict reload), and the
+statuses, draft-write eligibility (schema gate plus create-id when creating),
+guarded write-back (revision chaining), preview eligibility after successful
+save, form remount rules (create→edit, conflict reload), and the
 authoring-facing asset upload (file → field path | message). Debounced autosave
-is an internal seam. The Shell UI is a thin view over the session.
+is an internal seam. Opened only through a fail-closed open face: missing
+collection form model (editor schema) → no session. The Shell UI is a thin
+view over the session.
 _Avoid_: autosave controller (as the public face), editor store, form state manager
 
 **Field schema**:
-The per-field definition that pairs a validation/type schema with UI metadata used to generate editors. In this product, usually a Zod schema with FieldUi on `.meta()` (builders return Zod for Astro).
+A durable node in the CMS semantic tree: persisted input type, semantic kind,
+validation constraints, and optional editor binding (`component` / `props`).
+Projected to browser form model, authoritative validator, and native Astro Zod.
 _Avoid_: Astro schema alone, Zod schema alone, form config
 
 **FieldUi**:
-UI metadata on a field: a `widget` key (and optional label/options), and/or a direct editor `ui` binding such as a Svelte component on Zod `.meta()`.
-_Avoid_: form config, widget map alone
+Authoring UI on a field or aggregate: stock editor from semantic kind, optional
+catalog-key `component`, optional `wrapper` on objects/arrays, and explicit
+`props`. Authored in the unified tree. Keys resolve to live Svelte modules via
+the host components catalog.
+_Avoid_: form config, widget map alone, Zod meta UI, FieldUi-on-Zod
+
+**Form model**:
+The browser editor projection of the IR for one collection: JSON Schema plus
+layout and field bindings, without live Svelte values. Produced by compile +
+project. SJSF `uiSchema` is form-shell implementation after lower — not part of
+the Form model.
+_Avoid_: Zod editor schema, toFormSchemas output, content.config schema, SJSF
+uiSchema (as the Form model itself)
 
 **Field registry**:
-The map from `widget` identity to default validation helpers and UI used to generate editors; field-level `meta.ui` can override.
+The map from semantic field kind to default validation helpers and stock
+editors; field-level `component` can override via the components catalog.
 _Avoid_: widget map (Decap-only sense), component library
 
 **Write-back**:
@@ -55,8 +77,8 @@ The path by which edits from the authoring shell land in project files (or a loc
 _Avoid_: persistence, save API, storage backend
 
 **CMS protocol**:
-The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + discovered collections. Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
-_Avoid_: save API, REST CRUD, WriteMode (as a public API)
+The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + collection descriptors (from compiled IR on the default host). Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
+_Avoid_: save API, REST CRUD, WriteMode (as a public API), content.config discovery (as the editor seam)
 
 **Content entry**:
 One unit of content addressed by the shell (a file or logical document in a collection).
@@ -67,7 +89,7 @@ An Astro content collection whose entries the shell can list and edit.
 _Avoid_: content type, model (Payload sense)
 
 **Form shell**:
-The Svelte UI that turns a field schema (or derived JSON Schema) into an editable form for one content entry.
+The Svelte UI that turns a form model into an editable form for one content entry.
 _Avoid_: admin form, CMS form
 
 **Schema builder**:

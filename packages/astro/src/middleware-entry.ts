@@ -1,7 +1,7 @@
 /**
  * Package-owned Astro middleware entrypoint.
- * Registered via `addMiddleware` when a host is resolved (project `hostModule`
- * or package default host from `content.config`).
+ * Registered via `addMiddleware` when the package default CmsHost (or a
+ * harness host override) is wired.
  *
  * Host construction: `createHost` from `virtual:@cms/host`.
  */

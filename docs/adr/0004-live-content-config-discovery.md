@@ -2,10 +2,22 @@
 status: accepted
 ---
 
-# Server/FS discovery uses live `content.config`; the browser does not
+# Default host uses schema partition; browser never loads `content.config`
 
-For the **filesystem / Astro host adapter**, discover editable collections by Vite-importing the host `src/content.config.*` and reading `export const collections` — the same graph Astro uses. Collection chrome may use root schema `.meta(config({...}))`. No required parallel discovery registry for that adapter (`src/cms.config.ts` is the browser editor edge only — see [ADR-0016](0016-astro-convention-install-surface.md)). JSON-Schema digests alone are insufficient when `meta.ui` holds components.
+For the **filesystem / Astro host adapter**, build editable collection
+descriptors from the CMS schema partition / compiled IR
+([ADR-0019](0019-cms-first-semantic-schema.md),
+[ADR-0020](0020-ir-form-model-only-editor-configuration.md)). Generated
+`src/content.config.*` remains Astro’s collection graph and type surface; the
+package default host does not Vite-import it for editor schemas or FieldUi.
 
-Path mapping `(collection, id) → file` stays **inside the FS adapter**. Clients and the CMS protocol never send filesystem paths.
+Path mapping `(collection, id) → file` stays **inside the FS adapter**. Clients
+and the CMS protocol never send filesystem paths.
 
-The **browser authoring UI** does not import `content.config` for editor schemas. It imports build-time editor configuration (schemas, layouts, direct Svelte components) through the host module graph, e.g. `virtual:@cms/config`. Server registry and client config are two edges, not one shared load.
+The **browser authoring UI** does not import `content.config`. It imports the
+compiled editor/form projection through the host module graph (e.g.
+`virtual:@cms/config`). Server registry and client config remain two edges, not
+one shared load — even though one human source produces both.
+
+**Historical:** live `content.config` FieldUi discovery and Zod `.meta(config(...))`
+chrome were the pre–ADR-0019 dual seam; removed under ADR-0020.
