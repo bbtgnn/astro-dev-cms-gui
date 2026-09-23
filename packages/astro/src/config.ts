@@ -1,12 +1,37 @@
 /**
  * Host facade for `src/cms.config.ts` (schema-first overlay).
  *
- * {@link defineCms}`(collections, options)` — optional schema record + per-collection
- * presentation options. IR unified-tree builder removed (ticket 08).
+ * {@link defineCms}`(collections, options)` — Astro `collections` export (or plain
+ * Zod map) + per-collection presentation options. Prefer
+ * `export default defineCms(collections, { … })`.
+ *
+ * `ui` path safety: generate Input types via `cms sync` / Vite emit
+ * (`@cms/astro/collection-types`). Stamped image/ref → CmsImage / CmsReference.
  */
 
 import type { SchemaFormOverlay } from "@cms/core/semantic";
 import type { ZodType } from "zod";
+import type { StampedCollectionConfig } from "./build-fs-host-from-stamped";
+import { materializeSchema } from "./build-fs-host-from-stamped";
+import type {
+	ChromeFor,
+	CmsCollectionOptionsFor,
+	CmsCollectionType,
+	CmsCollections,
+	DefineCmsOptionsFromGenerated,
+} from "./collection-types";
+
+export type {
+	ChromeFor,
+	CmsCollectionOptionsFor,
+	CmsCollectionType,
+	CmsCollections,
+	CmsCollectionName,
+	CmsFieldKinds,
+	CmsImage,
+	CmsReference,
+	DefineCmsOptionsFromGenerated,
+} from "./collection-types";
 
 export type {
 	AggregateWrapperProps,
@@ -31,85 +56,115 @@ export {
 	SHELL_OWNED_KEYS,
 } from "@cms/authoring/config";
 
-/** Editor mode for a collection (default `"collection"`). */
-export type CmsCollectionType = "collection" | "singleton";
-
 /**
- * Per-collection presentation options.
- *
- * Reserved keys stay separate from nested field chrome under {@link ui}.
+ * Per-collection presentation options (loose `ui` when codegen absent).
  */
 export type CmsCollectionOptions = {
-	/** Entry id → site preview URL; omit or return null when unsupported. */
 	readonly previewUrl?: (id: string) => string | null;
-	/** Editor mode; default `"collection"`. */
 	readonly type?: CmsCollectionType;
-	/**
-	 * Nested field chrome (labels, catalog editor keys, nested object chrome).
-	 * Named `ui` — presentation overlay, not schema / validation.
-	 */
-	readonly ui?: SchemaFormOverlay;
+	readonly ui?: SchemaFormOverlay | ChromeFor<Record<string, unknown>>;
 };
 
-/** Options bag keyed by collection name (same keys as the schema record). */
-export type DefineCmsOptions<
-	Collections extends Record<string, ZodType> = Record<string, ZodType>,
-> = {
-	readonly [K in keyof Collections]?: CmsCollectionOptions;
+export type AstroCollectionsInput = Record<string, StampedCollectionConfig>;
+
+export type DefineCmsOptions<Cols extends Record<string, unknown>> = {
+	readonly [K in keyof Cols]?: K extends keyof CmsCollections
+		? CmsCollectionOptionsFor<CmsCollections[K]>
+		: CmsCollectionOptions;
 };
 
 export type DefineCmsResult<
-	Collections extends Record<string, ZodType> = Record<string, ZodType>,
+	Schemas extends Record<string, ZodType> = Record<string, ZodType>,
 > = {
-	readonly collections: Collections;
-	/** Normalized field chrome per collection (for form projection). */
+	readonly collections: Schemas;
 	readonly overlays: {
-		readonly [K in keyof Collections]?: SchemaFormOverlay;
+		readonly [K in keyof Schemas]?: SchemaFormOverlay;
 	};
-	/** Adapted host face: `(collection, id) => url`. */
 	readonly getPreviewUrl: (collection: string, id: string) => string | null;
-	/** Per-collection editor mode (defaults applied). */
 	readonly types: {
-		readonly [K in keyof Collections]?: CmsCollectionType;
+		readonly [K in keyof Schemas]?: CmsCollectionType;
 	};
 };
+
+function isZodType(value: unknown): value is ZodType {
+	return (
+		!!value &&
+		typeof value === "object" &&
+		"parse" in value &&
+		typeof (value as { parse?: unknown }).parse === "function"
+	);
+}
+
+function isAstroCollectionConfig(value: unknown): value is StampedCollectionConfig {
+	if (!value || typeof value !== "object") return false;
+	return "schema" in value || "loader" in value;
+}
+
+/**
+ * Normalize first-arg map: Astro `defineCollection` results or plain Zod schemas.
+ */
+export function materializeDefineCmsCollections<
+	Cols extends Record<string, StampedCollectionConfig | ZodType>,
+>(collections: Cols): { [K in keyof Cols]: ZodType } {
+	const out = {} as { [K in keyof Cols]: ZodType };
+	for (const name of Object.keys(collections) as (keyof Cols)[]) {
+		const value = collections[name];
+		if (isAstroCollectionConfig(value)) {
+			out[name] = materializeSchema(value.schema, String(name));
+			continue;
+		}
+		if (isZodType(value)) {
+			out[name] = value;
+			continue;
+		}
+		throw new Error(
+			`defineCms: collection "${String(name)}" must be a Zod schema or Astro collection config`,
+		);
+	}
+	return out;
+}
 
 /**
  * Schema-first overlay entry for `src/cms.config.ts`.
  *
- * Pass the same schema record imported by `content.config` when dual
- * registration is desired. Overlay options are presentation-only — loaders /
- * write bases stay on stamped content.config.
- *
- * Prefer `export default defineCms(...)` — the Vite soft-bind synthesizes named
- * faces for the shell.
+ * Pass Astro `collections` from `content.config` (preferred) or a plain Zod map.
+ * Overlay options are presentation-only.
  */
-export function defineCms<Collections extends Record<string, ZodType>>(
-	collections: Collections,
-	options: DefineCmsOptions<Collections> = {},
-): DefineCmsResult<Collections> {
-	const overlays = {} as DefineCmsResult<Collections>["overlays"];
-	const types = {} as DefineCmsResult<Collections>["types"];
+export function defineCms<Cols extends Record<string, unknown>>(
+	collections: Cols,
+	options: DefineCmsOptions<Cols> & Partial<DefineCmsOptionsFromGenerated> = {},
+): DefineCmsResult<{ [K in keyof Cols]: ZodType }> {
+	const schemas = materializeDefineCmsCollections(
+		collections as Record<string, StampedCollectionConfig | ZodType>,
+	) as { [K in keyof Cols]: ZodType };
+	const overlays: Record<string, SchemaFormOverlay | undefined> = {};
+	const types: Record<string, CmsCollectionType | undefined> = {};
 	const previewByCollection = new Map<
 		string,
 		(id: string) => string | null
 	>();
 
-	for (const name of Object.keys(collections) as (keyof Collections)[]) {
-		const opt = options[name];
+	for (const name of Object.keys(schemas) as (keyof Cols)[]) {
+		const opt = options[name as keyof typeof options] as
+			| CmsCollectionOptions
+			| undefined;
 		if (opt?.ui !== undefined) {
-			overlays[name] = opt.ui;
+			overlays[String(name)] = opt.ui as SchemaFormOverlay;
 		}
-		types[name] = opt?.type ?? "collection";
+		types[String(name)] = opt?.type ?? "collection";
 		if (opt?.previewUrl !== undefined) {
 			previewByCollection.set(String(name), opt.previewUrl);
 		}
 	}
 
 	return {
-		collections,
-		overlays,
-		types,
+		collections: schemas,
+		overlays: overlays as DefineCmsResult<{
+			[K in keyof Cols]: ZodType;
+		}>["overlays"],
+		types: types as DefineCmsResult<{
+			[K in keyof Cols]: ZodType;
+		}>["types"],
 		getPreviewUrl: (collection, id) =>
 			previewByCollection.get(collection)?.(id) ?? null,
 	};

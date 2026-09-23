@@ -19,6 +19,7 @@
       "dependencies": {
         "@cms/authoring": "workspace:*",
         "@cms/core": "workspace:*",
+        "vite": "catalog:",
       },
       "devDependencies": {
         "astro": "catalog:",
@@ -106,6 +107,7 @@
     "svelte": "^5.43.6",
     "svelte-check": "^4.3.1",
     "typescript": "^5.9.0",
+    "vite": "^8.3.0",
     "zod": "^4.1.5",
   },
   "packages": {

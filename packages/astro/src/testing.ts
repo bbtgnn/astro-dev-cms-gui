@@ -14,9 +14,17 @@ export {
 	buildFsHostFromStampedCollections,
 	type CollectionLocationOverride,
 	collectionsFromContentConfigExport,
+	materializeSchema,
 	type MaterializedStampedCollection,
 	type StampedCollectionConfig,
 } from "./build-fs-host-from-stamped";
+export {
+	CMS_COLLECTION_TYPES_FILENAME,
+	printCollectionTypesFile,
+} from "./codegen/emit-collection-types";
+export { syncCmsCollectionTypes } from "./codegen/sync-collection-types";
+export { cmsCollectionTypesVitePlugin } from "./codegen/vite-collection-types-plugin";
+export { printZodInputType } from "./codegen/zod-input-type";
 export {
 	type CmsHarnessOptions,
 	type CmsIntegration,

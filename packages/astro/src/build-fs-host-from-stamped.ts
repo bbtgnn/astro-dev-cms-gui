@@ -41,7 +41,16 @@ export type CollectionLocationOverride = {
 
 export type StampedCollectionConfig = {
 	loader?: unknown;
-	schema?: z.ZodType | ((ctx: { image: () => z.ZodType }) => z.ZodType);
+	/**
+	 * Zod schema or Astro function schema. Typed loosely so Astro
+	 * `SchemaContext` (rich `image()`) assigns into defineCms(collections).
+	 */
+	schema?:
+		| z.ZodType
+		| ((ctx: { image: () => z.ZodType }) => z.ZodType)
+		// Astro CollectionConfig.schema (SchemaContext) — accept without fighting image() Output.
+		| ((ctx: never) => z.ZodType)
+		| unknown;
 };
 
 export type MaterializedStampedCollection = {
@@ -268,12 +277,16 @@ function materializeSchema(
 		throw new Error(`Collection "${name}" has no schema`);
 	}
 	if (typeof schema === "function") {
-		return schema({
+		const fn = schema as (ctx: { image: () => z.ZodType }) => z.ZodType;
+		return fn({
 			image: () => stampImageSchema(z.string()),
 		});
 	}
-	return schema;
+	return schema as z.ZodType;
 }
+
+/** Materialize Astro function schemas with stamped Input `image()` (CMS path/id). */
+export { materializeSchema };
 
 function resolveCollectionLocation(
 	name: string,

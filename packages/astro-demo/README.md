@@ -1,11 +1,12 @@
 # @cms/astro-demo
 
 **Demo / self-host fixture** for schema-first CMS with optional overlay:
-native Astro `content.config` + `defineCms(collections, overlay)` +
+native Astro `content.config` + `defineCms(collections, options)` +
 `cms.components`. Not a starter to copy into products.
 
 Proves the custom integration ladder — nested field chrome, catalog editors,
 preview URLs — while Astro/Zod Input remains validation authority.
+`cms sync` emits Input types (`CmsImage` / `CmsReference`) for typed `ui`.
 
 Companion: [`@cms/astro-demo-simple`](../astro-demo-simple) (same schemas, no
 overlay).
@@ -30,8 +31,9 @@ Layout:
 
 - `src/content.config.ts` — hand-authored Astro collections (schemas from
   `@cms/astro-demo-simple/schemas`)
-- `src/cms.config.ts` — `export default defineCms(schemas, { authors: { ui }, posts: { previewUrl, ui } })`
+- `src/cms.config.ts` — `export default defineCms(collections, { authors, posts })`
 - `src/cms.components.ts` — live Svelte catalog (`AuthorNameEditor`)
+- `src/cms-collections.d.ts` — generated Input types (`cms sync` / gitignored)
 - `src/content/` — JSON entries (seeded from simple; optional `seo` on posts)
 
 Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
@@ -44,6 +46,7 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 | Nested object field chrome | `posts.ui.seo` → `seo.description` label |
 | Custom editor | `authors.ui.name` → `AuthorNameEditor` via catalog |
 | Preview URL | `posts.previewUrl(id)` → `/posts/:id` |
+| Image/ref kinds | codegen `CmsImage` / `CmsReference`; `ui.cover.kind: "image"` |
 | Collection type | `type?: "collection" \| "singleton"` (stored; shell wiring later) |
 
 ## Useful endpoints

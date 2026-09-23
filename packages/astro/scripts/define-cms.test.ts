@@ -54,4 +54,28 @@ describe("defineCms", () => {
 		expect(config.types.posts).toBe("collection");
 		expect(config.getPreviewUrl("posts", "x")).toBeNull();
 	});
+
+	test("accepts Astro collection config shape and materializes function schema", () => {
+		const posts = {
+			schema: ({ image }: { image: () => z.ZodType }) =>
+				z.object({
+					title: z.string(),
+					cover: image().optional(),
+				}),
+		};
+		const config = defineCms(
+			{ posts },
+			{
+				posts: {
+					ui: { title: { label: "T" } },
+				},
+			},
+		);
+		expect(config.overlays.posts?.title?.label).toBe("T");
+		const parsed = config.collections.posts.safeParse({
+			title: "Hi",
+			cover: "x.jpg",
+		});
+		expect(parsed.success).toBe(true);
+	});
 });

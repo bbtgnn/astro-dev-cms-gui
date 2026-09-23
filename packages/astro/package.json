@@ -10,6 +10,7 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./config": "./src/config.ts",
+		"./collection-types": "./src/collection-types.ts",
 		"./content-proxy": "./src/content-proxy/index.ts",
 		"./testing": "./src/testing.ts",
 		"./middleware-entry": "./src/middleware-entry.ts",
@@ -18,7 +19,8 @@
 	},
 	"dependencies": {
 		"@cms/authoring": "workspace:*",
-		"@cms/core": "workspace:*"
+		"@cms/core": "workspace:*",
+		"vite": "catalog:"
 	},
 	"peerDependencies": {
 		"astro": "catalog:",
@@ -32,9 +34,10 @@
 		"zod": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-cms.test.ts ./scripts/cms-happy-path.test.ts ./scripts/content-proxy.test.ts ./scripts/stamped-host.test.ts",
+		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-cms.test.ts ./scripts/cms-happy-path.test.ts ./scripts/content-proxy.test.ts ./scripts/stamped-host.test.ts ./scripts/codegen-input-types.test.ts",
 		"test:content-proxy": "bun test ./scripts/content-proxy.test.ts",
 		"test:stamped-host": "bun test ./scripts/stamped-host.test.ts",
-		"test:happy-path": "bun test ./scripts/cms-happy-path.test.ts"
+		"test:happy-path": "bun test ./scripts/cms-happy-path.test.ts",
+		"test:codegen": "bun test ./scripts/codegen-input-types.test.ts"
 	}
 }

@@ -1,9 +1,9 @@
 /**
  * Shared Zod collection schemas (schema-first authority).
- * Imported by content.config and by @cms/astro-demo defineCms dual registration.
+ * Imported by content.config. Overlay demos pass Astro `collections` to defineCms
+ * (materialize + cms sync for Input types) — no parallel postsSchemaInput map.
  *
  * - `postsSchema` — Astro `defineCollection` (live `image()` / `reference`)
- * - `postsSchemaInput` — same Input shape for `defineCms` (string stub for image)
  */
 import { reference, type SchemaContext } from "astro:content";
 import { z } from "astro/zod";

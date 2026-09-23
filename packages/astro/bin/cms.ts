@@ -1,17 +1,20 @@
 #!/usr/bin/env bun
 /**
- * `cms` CLI — generation removed on the schema-first overlay branch.
+ * `cms` CLI — schema-first overlay branch.
  *
- * Product path: hand-authored `src/content.config.ts` + optional overlay.
- * `cms generate` hard-fails; demos own content.config directly.
+ * - `cms sync` — emit CMS Input types from content.config
+ * - `cms generate` — removed (hard-fail)
  */
+
+import path from "node:path";
+import { syncCmsCollectionTypes } from "../src/codegen/sync-collection-types.ts";
 
 function printHelp(): void {
 	process.stdout.write(`Usage:
+  cms sync       Emit src/cms-collections.d.ts from content.config (CMS Input types)
   cms generate   (removed)
 
-cms generate / content.config emission from IR was removed on this branch.
-Use a hand-authored src/content.config.ts and optional defineCms(collections, overlay).
+Hand-authored src/content.config.ts + optional defineCms(collections, options).
 `);
 }
 
@@ -26,9 +29,18 @@ async function main(): Promise<number> {
 	if (command === "generate") {
 		process.stderr.write(
 			"cms generate was removed on this branch (schema-first overlay).\n" +
-				"Author src/content.config.ts directly; optional overlay via defineCms(collections, config).\n",
+				"Author src/content.config.ts directly; run cms sync for overlay types.\n",
 		);
 		return 1;
+	}
+
+	if (command === "sync") {
+		const root = process.cwd();
+		const result = await syncCmsCollectionTypes({ projectRoot: root });
+		process.stdout.write(
+			`Wrote ${path.relative(root, result.outFile)} (${result.collectionNames.join(", ")})\n`,
+		);
+		return 0;
 	}
 
 	process.stderr.write(

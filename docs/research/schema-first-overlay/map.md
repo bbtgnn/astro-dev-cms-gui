@@ -29,6 +29,8 @@ Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is
 
 See task list in [plan.md](./plan.md) § Tickets. Open / unblocked first wins.
 
+**Next (types):** [codegen-input-types-plan.md](./codegen-input-types-plan.md) — Input types from `content.config` for full `defineCms` `ui` safety (`cms sync` + Vite emit).
+
 ## Out of scope here
 
 - Superseding ADR-0019 on `main` / map #1

@@ -21,6 +21,7 @@
  */
 import { fileURLToPath } from "node:url";
 import { viteAliasesForBoot, vitePluginsForBoot } from "./content-proxy/boot";
+import { cmsCollectionTypesVitePlugin } from "./codegen/vite-collection-types-plugin";
 import {
 	type CmsDispatcherOptions,
 	type CmsMiddlewareHandler,
@@ -266,6 +267,12 @@ export function createCmsIntegration(
 
 			if (contentConfigEntry != null) {
 				plugins.push(cmsContentConfigVitePlugin({ entry: contentConfigEntry }));
+				plugins.push(
+					cmsCollectionTypesVitePlugin({
+						projectRoot: root,
+						contentConfigEntry,
+					}),
+				);
 			}
 
 			const needsShellVirtuals =
