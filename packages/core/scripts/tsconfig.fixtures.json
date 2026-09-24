@@ -10,11 +10,18 @@
 	"include": [
 		"./form-tree.fixtures.ts",
 		"./define-cms.fixtures.ts",
+		"./create-cms-host.fixtures.ts",
 		"../src/form-tree.ts",
 		"../src/define-cms.ts",
 		"../src/collection-descriptors.ts",
+		"../src/create-cms-protocol.ts",
+		"../src/types.ts",
+		"../src/write-mode.ts",
+		"../src/node-fs-writer.ts",
+		"../src/protocol.ts",
 		"../src/semantic/types.ts",
 		"../src/semantic/schema-form-projection.ts",
-		"../src/semantic/form-model.ts"
+		"../src/semantic/form-model.ts",
+		"../src/semantic/content-field-stamp.ts"
 	]
 }

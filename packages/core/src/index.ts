@@ -13,6 +13,11 @@ export { scanEntryIds } from "./collection-descriptors";
 export type {
 	AdaptProtocolOptions,
 	CmsHost,
+	CreateCmsHostConfig,
+	CreateCmsHostFromCollections,
+	CreateCmsHostFromCollectionsOptions,
+	CreateCmsHostFromConfig,
+	CreateCmsHostFromConfigOptions,
 	CreateCmsHostOptions,
 	CreateCmsProtocolOptions,
 } from "./create-cms-protocol";

@@ -24,6 +24,8 @@ import {
 	type UploadImageResult,
 } from "./protocol";
 import type {
+	CreateCmsHostFromCollections,
+	CreateCmsHostFromConfig,
 	CreateCmsHostOptions,
 	CreateWriteModeOptions,
 	ReadAssetResult,
@@ -46,11 +48,24 @@ export type AdaptProtocolOptions = {
 	capabilities?: CmsCapabilitiesInput;
 };
 
-export type CreateCmsProtocolOptions = CreateCmsHostOptions &
+export type CreateCmsHostFromConfigOptions = CreateCmsHostFromConfig &
 	AdaptProtocolOptions;
 
+export type CreateCmsHostFromCollectionsOptions = CreateCmsHostFromCollections &
+	AdaptProtocolOptions;
+
+export type CreateCmsProtocolOptions =
+	| CreateCmsHostFromConfigOptions
+	| CreateCmsHostFromCollectionsOptions;
+
 /** Re-export host construction options (no pathMap / fakeCatalog). */
-export type { CreateCmsHostOptions };
+export type {
+	CreateCmsHostConfig,
+	CreateCmsHostFromCollections,
+	CreateCmsHostFromConfig,
+	CreateCmsHostOptions,
+} from "./types";
+
 
 /** WriteMode throw codes that surface as protocol `conflict`. */
 const CONFLICT_IMPL_CODES = new Set(["REVISION_CONFLICT"]);
@@ -293,32 +308,42 @@ export type CmsHost = {
  * Construct filesystem/memory write-back for an Astro (or other) host transport.
  * Prefer this when the dispatcher needs GET …/assets/*.
  *
- * Happy path with portable defineCms:
- * `createCmsHost({ root, config })` — allowPaths / collections / schemas derived;
- * writer defaults to nodeFsWriter().
+ * Two doors (mutually exclusive — overloads keep autocomplete on one shape):
+ * - `{ root, config }` — portable {@link defineCms} result
+ * - `{ root, collections, … }` — explicit descriptors (Astro stamped adapter)
+ *
+ * Writer defaults to nodeFsWriter().
  */
-export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
-	const { capabilities, config, ...rest } = options;
-	const writer = rest.writer ?? nodeFsWriter();
-	const collections = rest.collections ?? config?.descriptors;
-	const schemas =
-		rest.schemas ?? (config !== undefined ? { ...config.schemas } : undefined);
-	const allowPaths =
-		rest.allowPaths ??
-		(config !== undefined
-			? [...new Set(config.descriptors.map((d) => d.base))]
-			: undefined);
-	if (allowPaths == null) {
-		throw new Error("createCmsHost requires allowPaths or config");
+function createCmsHostImpl(options: CreateCmsProtocolOptions): CmsHost {
+	const { capabilities } = options;
+	const writer = options.writer ?? nodeFsWriter();
+
+	let collections: CreateWriteModeOptions["collections"];
+	let schemas: CreateWriteModeOptions["schemas"];
+	let allowPaths: string[];
+
+	if (isConfigDoor(options)) {
+		const { config } = options;
+		collections = config.descriptors;
+		schemas = { ...config.schemas };
+		allowPaths = [...new Set(config.descriptors.map((d) => d.base))];
+	} else {
+		collections = options.collections;
+		schemas = options.schemas;
+		allowPaths =
+			options.allowPaths ??
+			[...new Set(options.collections.map((d) => d.base))];
 	}
 
 	const wmOptions: CreateWriteModeOptions = {
-		root: rest.root,
+		root: options.root,
 		allowPaths,
 		writer,
 		...(collections !== undefined ? { collections } : {}),
 		...(schemas !== undefined ? { schemas } : {}),
-		...(rest.entryIndex !== undefined ? { entryIndex: rest.entryIndex } : {}),
+		...(options.entryIndex !== undefined
+			? { entryIndex: options.entryIndex }
+			: {}),
 	};
 	const writeMode = createWriteMode(wmOptions);
 	return {
@@ -327,9 +352,31 @@ export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
 	};
 }
 
+function isConfigDoor(
+	options: CreateCmsProtocolOptions,
+): options is CreateCmsHostFromConfigOptions {
+	return "config" in options && options.config != null;
+}
+
+export function createCmsHost(
+	options: CreateCmsHostFromConfigOptions,
+): CmsHost;
+export function createCmsHost(
+	options: CreateCmsHostFromCollectionsOptions,
+): CmsHost;
+export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
+	return createCmsHostImpl(options);
+}
+
 /** In-memory or filesystem CmsProtocol (same options as {@link createCmsHost}). */
+export function createCmsProtocol(
+	options: CreateCmsHostFromConfigOptions,
+): CmsProtocol;
+export function createCmsProtocol(
+	options: CreateCmsHostFromCollectionsOptions,
+): CmsProtocol;
 export function createCmsProtocol(
 	options: CreateCmsProtocolOptions,
 ): CmsProtocol {
-	return createCmsHost(options).protocol;
+	return createCmsHostImpl(options).protocol;
 }
