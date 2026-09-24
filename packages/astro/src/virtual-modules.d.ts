@@ -12,15 +12,31 @@ interface ImportMeta {
 	readonly env: ImportMetaEnv;
 }
 
-declare module "virtual:@cms/config" {
-	import type { SemanticConfigInput } from "@cms/core/semantic";
+declare module "virtual:@cms/content-config" {
+	/** User Astro content collections (host/SSR only). */
+	export const collections: Readonly<
+		Record<
+			string,
+			{
+				loader?: unknown;
+				schema?: unknown;
+			}
+		>
+	>;
+}
 
-	/** Semantic collections from the Node-safe unified tree. */
-	export const collections: SemanticConfigInput["collections"];
+declare module "virtual:@cms/config" {
+	import type { FormTree } from "@cms/core/form-tree";
+
+	/** Per-collection form trees (normalized from options.*.form). */
+	export const forms: Readonly<Record<string, FormTree>>;
+	/** Per-collection editor mode (normalized from options.*.type). */
+	export const types: Readonly<Record<string, "collection" | "singleton">>;
 	/** Host-compiled entry → site preview URL; null when unsupported. */
 	export function getPreviewUrl(collection: string, id: string): string | null;
 	const config: {
-		collections: SemanticConfigInput["collections"];
+		forms?: Readonly<Record<string, FormTree>>;
+		types?: Readonly<Record<string, "collection" | "singleton">>;
 		getPreviewUrl?: (collection: string, id: string) => string | null;
 	};
 	export default config;
@@ -29,7 +45,7 @@ declare module "virtual:@cms/config" {
 declare module "virtual:@cms/components" {
 	import type { AnySvelteComponent } from "@cms/authoring/config";
 
-	/** Live Svelte catalog keyed by `cms.config` binding strings. */
+	/** Live Svelte catalog keyed by overlay binding strings. */
 	const components: Readonly<Record<string, AnySvelteComponent>>;
 	export default components;
 }
@@ -42,7 +58,7 @@ declare module "virtual:@cms/host" {
 }
 
 declare module "virtual:@cms/integration-options" {
-	/** Mount prefix without trailing slash (default `/_cms`). */
+	/** Mount prefix without trailing slash (default `/cms/api`). */
 	export const mount: string;
 	export const allowInProd: boolean | undefined;
 	/** Absolute write-back root (default `src/content`). */

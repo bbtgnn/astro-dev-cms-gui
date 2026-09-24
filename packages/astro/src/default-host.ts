@@ -1,15 +1,17 @@
 /**
- * Package default CmsHost — Vite adapter over {@link buildDefaultFsHost}.
+ * Package default CmsHost — Vite adapter over stamped CMS assemble.
  *
- * Reads editor configuration and content root from virtual modules, injects
- * Node FS Writer + fileExists, then delegates assembly (ADR-0016 / 0019 / 0020).
+ * Reads collections from `virtual:@cms/content-config` (content-proxy stamps
+ * active on the host Vite graph), injects Node FS Writer + fileExists, then
+ * {@link assembleStampedCms} (host field only).
  */
 
 import fs from "node:fs";
-import { collections as editorCollections } from "virtual:@cms/config";
+import { collections } from "virtual:@cms/content-config";
 import { contentRoot } from "virtual:@cms/integration-options";
 import { type CmsHost, nodeFsWriter } from "@cms/core";
-import { buildDefaultFsHost } from "./build-default-fs-host";
+import { assembleStampedCms } from "./assemble-stamped-cms";
+import type { StampedCollectionConfig } from "./build-fs-host-from-stamped";
 
 function nodeFileExists(absPath: string): boolean {
 	try {
@@ -20,10 +22,13 @@ function nodeFileExists(absPath: string): boolean {
 }
 
 export function createHost(): CmsHost {
-	return buildDefaultFsHost({
-		collections: editorCollections,
+	const { host } = assembleStampedCms({
+		collections: collections as Readonly<
+			Record<string, StampedCollectionConfig>
+		>,
 		contentRoot,
 		writer: nodeFsWriter(),
 		fileExists: nodeFileExists,
 	});
+	return host;
 }

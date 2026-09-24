@@ -16,10 +16,9 @@ Steal Kirby’s panel *feel* (composable, calm) and Payload’s *config-in-code*
 habit; reject Kirby’s YAML blueprints and Payload’s Next-shaped admin clunk.
 The job is a local-first **authoring shell**, not a production CMS identity.
 
-- **Building blocks (v1 surface):** CMS unified tree (closed semantic schema +
-  layout + direct Svelte widgets), recursive layouts (tabs, groups, columns),
-  and blocks. Shell-chrome plugins that replace the form shell are out of the
-  star.
+- **Building blocks (v1 surface):** stamped content schemas, optional form
+  trees (tabs, groups, columns, field-ref chrome), and blocks. Shell-chrome
+  plugins that replace the form shell are out of the star.
 - **Defaults vs custom widgets:** the product owns excellent stock building
   blocks and tidy default editing. Bad UX from a consumer’s clever custom
   widget is the consumer’s business.
@@ -30,9 +29,10 @@ The job is a local-first **authoring shell**, not a production CMS identity.
   humans; [ADR-0012](adr/0012-block-schema-and-production-renderers-stay-separate.md)
   remains the invariant (separate registries; no required per-block authoring
   preview). Facade is intended DX, not a supersession of 0012.
-- **How we judge “best”:** the reference host (`@cms/astro-template`) plus a
-  small set of Kirby-like acceptance scenes (compose an entry, nested blocks,
-  tidy sections). Payload is the config foil, not the UX bar.
+- **How we judge “best”:** the reference host demos (`@cms/astro-demo-simple` /
+  `@cms/astro-demo` / `@cms/sveltekit-demo`) plus a small set of Kirby-like
+  acceptance scenes (compose an entry, nested blocks, tidy sections). Payload
+  is the config foil, not the UX bar.
 
 Delivery and architecture (unchanged):
 
@@ -40,8 +40,8 @@ Delivery and architecture (unchanged):
 - project content remains the source of truth;
 - the shell UI is a client-side Svelte application;
 - SJSF powers schema-driven forms;
-- editor configuration and direct Svelte components compile through the host
-  Vite graph;
+- optional overlay and direct Svelte components compile through the host Vite
+  graph;
 - the shell UI exchanges serializable persisted input through a CMS protocol;
 - Astro is the first host and the filesystem is the first write-back
   implementation;
@@ -77,33 +77,39 @@ rather than copying those decisions into a second source of truth.
 
 ```text
 Host project
-  src/cms.config.ts (unified semantic tree + Svelte bindings)
+  src/content.config.ts (Zod/Astro collections)
                     |
-                    | host Vite / build-time compiler
+                    | content-proxy stamps
+                    v
+         stamped collection graph
+                    |
         +-----------+------------------+
         |                              |
         v                              v
-generated content.config.ts       virtual:@cms/config
-  Astro Zod + loaders             form model + live bindings
-        |                              |
-        v                              v
-Astro sync / types            Authoring UI (shell + form + SJSF)
-        |                              |
-        +-------------+----------------+
+optional cms.config.ts            stamped CMS assemble
+  defineAstroCms form trees         host + form models
+  (+ cms.components.ts)                    |
+        |                                  |
+        v                                  v
+virtual:@cms/config              Authoring UI (shell + form + SJSF)
+  form model + live bindings              |
+        |                                  |
+        +-------------+--------------------+
                       |
                       | serializable CMS protocol
                       v
-Host / write-back (collection descriptors from compiled IR)
+Host / write-back (descriptors from stamped collections)
 ```
 
 The conceptual modules are:
 
-- runtime-neutral semantic model and layout declarations;
+- stamps, schema→form projection, and form trees;
 - CMS protocol, outcomes, and client;
 - Svelte/SJSF form shell;
 - reusable authoring application;
-- Astro dev integration + content.config generation;
-- filesystem write-back implementation.
+- Astro dev integration + content-proxy (no generate);
+- filesystem write-back implementation;
+- portable `defineCms` for non-Astro hosts.
 
 These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
 `@cms/astro` ([ADR-0018](adr/0018-three-packages-for-adr-0008-layers.md)).
@@ -115,30 +121,33 @@ These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
 - [ADR-0008](adr/0008-backend-agnostic-ui-fs-first-adapter.md) — backend-agnostic
   authoring UI; filesystem first.
 - [ADR-0018](adr/0018-three-packages-for-adr-0008-layers.md) — three packages for
-  those layers (`authoring`, `core`, `astro` + reference host).
+  those layers (`authoring`, `core`, `astro` + `demos/` hosts).
 - [ADR-0009](adr/0009-conceptual-layers-before-package-extraction.md) —
   superseded by ADR-0018 (historical “stabilize before extract” guidance).
 - [ADR-0016](adr/0016-astro-convention-install-surface.md) — convention-first
-  Astro install (`cms()`, `cms.config` + generated `content.config` +
-  `src/content/`).
+  Astro install (`cms()`, required `content.config`, optional overlay).
 
 ### Fields and schema projections
 
-- [ADR-0019](adr/0019-cms-first-semantic-schema.md) — CMS-first unified tree;
-  generated native Astro `content.config`; supersedes ADR-0003.
-- [ADR-0020](adr/0020-ir-form-model-only-editor-configuration.md) — editor
-  configuration is IR form model only; no Zod/FieldUi dual path.
-- [ADR-0022](adr/0022-triple-compile-editor-configuration-intentional.md) —
-  generate / default host / browser may each compile the unified tree for now.
+- [ADR-0025](adr/0025-schema-first-content-config-optional-overlay.md) —
+  schema-first `content.config`; optional overlay; no generate. Supersedes
+  ADR-0019 / 0020 / 0022.
+- [ADR-0024](adr/0024-content-field-stamps-live-in-core.md) — content-field
+  stamps live in `@cms/core`; Astro content-proxy adapts native helpers.
 - [ADR-0023](adr/0023-semantic-projection-peers-stay.md) — no extra semantic
   “project everything” facade; depth stays on host/authoring mounts.
-- [ADR-0003](adr/0003-field-ui-on-zod-meta.md) — superseded by ADR-0019.
+- [ADR-0019](adr/0019-cms-first-semantic-schema.md) /
+  [ADR-0020](adr/0020-ir-form-model-only-editor-configuration.md) /
+  [ADR-0022](adr/0022-triple-compile-editor-configuration-intentional.md) —
+  superseded by ADR-0025 (CMS-first generate / IR form-only history).
+- [ADR-0003](adr/0003-field-ui-on-zod-meta.md) — superseded by ADR-0019
+  (still historical vs FieldUi-on-Zod).
 - [ADR-0004](adr/0004-live-content-config-discovery.md) — default host uses
-  schema partition / IR; browser never loads `content.config` (amended by
-  ADR-0019 / 0020).
+  stamped collections; browser never loads `content.config` (amended by
+  ADR-0025).
 - [ADR-0010](adr/0010-persisted-input-with-environment-schema-projections.md) —
   editor, authoritative validator, and Astro are projections of one
-  persisted-input model (IR is the authority under ADR-0019).
+  persisted-input model (stamped schema authority under ADR-0025).
 
 ### Form shell, blocks, and preview
 
@@ -152,7 +161,7 @@ These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
 ### CMS protocol and filesystem write-back
 
 - [ADR-0005](adr/0005-write-back-contract.md) — the CMS protocol is the
-  write-back seam; `/_cms` is an Astro transport.
+  write-back seam; Astro transport is the protocol HTTP mount.
 - [ADR-0017](adr/0017-json-only-entry-serialization-v1.md) — JSON-only
   serialization in the v1 filesystem implementation (supersedes ADR-0006).
 - [ADR-0007](adr/0007-entry-id-path-conventions.md) — filesystem entry IDs,
@@ -183,7 +192,7 @@ Active design questions:
 Closed (keep linked):
 
 - [#6 — semantic schema and projection contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/6)
-  → [ADR-0019](adr/0019-cms-first-semantic-schema.md) / [ADR-0020](adr/0020-ir-form-model-only-editor-configuration.md)
+  → ADR-0019 / 0020 (historical) → [ADR-0025](adr/0025-schema-first-content-config-optional-overlay.md)
 
 Other deferred product questions:
 

@@ -21,8 +21,8 @@ export type UiSchemaNode = {
  * Make JSON Schema safe for `@sjsf/ajv8-validator` / Ajv 8.
  *
  * Strip `$schema` (Zod 4 / draft-2020-12 keys Ajv may not resolve) and
- * presentation bags (`ui`, `config`) that belong in uiSchema / host chrome.
- * Used by form-model lowering so editor collection schemas are Ajv-safe.
+ * presentation bags (`ui`, `config`, `cms` stamp meta) that belong in uiSchema /
+ * host chrome. Used by form-model lowering so editor collection schemas are Ajv-safe.
  */
 export function stripUiFromJsonSchema(
 	schema: Record<string, unknown>,
@@ -35,6 +35,7 @@ export function stripUiFromJsonSchema(
 		delete rec.$schema;
 		delete rec.ui;
 		delete rec.config;
+		delete rec.cms;
 		for (const value of Object.values(rec)) {
 			if (Array.isArray(value)) value.forEach(walk);
 			else walk(value);

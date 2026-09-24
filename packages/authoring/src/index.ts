@@ -3,15 +3,24 @@
  */
 
 export { default as AuthoringApp } from "./AuthoringApp.svelte";
+export type {
+	AuthoringAppProps,
+	AuthoringPropsFromDefineCmsOptions,
+	AuthoringPropsOptions,
+} from "./authoring-props";
+export {
+	authoringPropsFromDefineCms,
+	authoringPropsFromFormModels,
+} from "./authoring-props";
 export type { AuthoringStatus } from "./autosave";
 export { default as PlaceholderChrome } from "./components/PlaceholderChrome.svelte";
 export { default as EntryEditor } from "./EntryEditor.svelte";
 export { default as CmsForm } from "./form/CmsForm.svelte";
-export { editorCollectionsFromTree } from "./form/editor-collections";
 export type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,
 } from "./form/ImageField.svelte";
+export { resolveCatalogBinding } from "./form/stock-registry";
 export {
 	type OpenAuthoringSessionOptions,
 	openAuthoringSession,

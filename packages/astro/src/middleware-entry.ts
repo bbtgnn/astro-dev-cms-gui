@@ -1,7 +1,7 @@
 /**
- * Package-owned Astro middleware entrypoint.
- * Registered via `addMiddleware` when the package default CmsHost (or a
- * harness host override) is wired.
+ * Package-owned Astro middleware entrypoint (escape hatch).
+ * Prefer `cms()` injectRoute (`protocol-route.ts`). Use this only when
+ * composing middleware manually via `addMiddleware`.
  *
  * Host construction: `createHost` from `virtual:@cms/host`.
  */

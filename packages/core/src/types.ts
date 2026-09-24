@@ -79,30 +79,69 @@ export type WriteMode = {
 	readAsset(relFromRoot: string): Promise<ReadAssetResult>;
 };
 
-export type CreateCmsHostOptions = {
+export type CreateCmsHostConfig = {
+	readonly descriptors: CollectionDescriptor[];
+	readonly schemas: Readonly<Record<string, z.ZodType>>;
+};
+
+type CreateCmsHostShared = {
 	root: string;
-	/** Absolute or root-relative path prefixes that may be written. */
-	allowPaths: string[];
-	writer: Writer;
-	/**
-	 * Collection descriptors — preferred happy path (ADR-0007 / 0019 / 0020).
-	 * Path = root + collection.base + id + ext (or pathTemplate).
-	 */
-	collections?: CollectionDescriptor[];
+	/** Defaults to {@link nodeFsWriter} when omitted. */
+	writer?: Writer;
 	/**
 	 * Optional Content Layer id index keyed by collection name.
 	 * When absent, listEntries FS-scans the collection base.
 	 */
 	entryIndex?: Record<string, string[]>;
-	/** Per-collection Zod schemas. Merged under descriptor schemas when both set. */
-	schemas?: Record<string, z.ZodType>;
 };
 
 /**
- * Full WriteMode construction — includes internal test seams.
- * Hosts use {@link CreateCmsHostOptions} via createCmsHost / createCmsProtocol.
+ * Portable {@link defineCms} door — allowPaths / collections / schemas derived.
+ * Mutually exclusive with {@link CreateCmsHostFromCollections}.
  */
-export type CreateWriteModeOptions = CreateCmsHostOptions & {
+export type CreateCmsHostFromConfig = CreateCmsHostShared & {
+	config: CreateCmsHostConfig;
+	collections?: never;
+	schemas?: never;
+	allowPaths?: never;
+};
+
+/**
+ * Explicit descriptors door (Astro stamped adapter, tests).
+ * `allowPaths` defaults to unique collection bases when omitted.
+ * Mutually exclusive with {@link CreateCmsHostFromConfig}.
+ */
+export type CreateCmsHostFromCollections = CreateCmsHostShared & {
+	collections: CollectionDescriptor[];
+	/**
+	 * Absolute or root-relative path prefixes that may be written.
+	 * Defaults to unique `collections[].base` values.
+	 */
+	allowPaths?: string[];
+	/** Per-collection Zod schemas. Merged under descriptor schemas when both set. */
+	schemas?: Record<string, z.ZodType>;
+	config?: never;
+};
+
+/**
+ * Construct a CmsHost — pick exactly one door (`config` or `collections`).
+ * Overloads on {@link createCmsHost} keep autocomplete on a single door.
+ */
+export type CreateCmsHostOptions =
+	| CreateCmsHostFromConfig
+	| CreateCmsHostFromCollections;
+
+/**
+ * Full WriteMode construction — includes internal test seams.
+ * Hosts use {@link CreateCmsHostOptions} via createCmsHost.
+ */
+export type CreateWriteModeOptions = {
+	root: string;
+	allowPaths: string[];
+	writer: Writer;
+	collections?: CollectionDescriptor[];
+	entryIndex?: Record<string, string[]>;
+	schemas?: Record<string, z.ZodType>;
 	/**
 	 * Internal test seam: (collection, id) → relative path overrides.
 	 * Not part of the public host construction face.

@@ -9,7 +9,7 @@ import path from "node:path";
 import { z } from "zod";
 import {
 	adaptWriteModeToProtocol,
-	createCmsProtocol,
+	createCmsHost,
 } from "../src/create-cms-protocol";
 import { createWriteMode } from "../src/write-mode";
 import {
@@ -373,7 +373,7 @@ forEachBackend("write-side protocol contract", (backend) => {
 		const transformSchema = z.object({
 			title: z.string().transform((s) => s.toUpperCase()),
 		});
-		const transformProtocol = createCmsProtocol({
+		const transformProtocol = createCmsHost({
 			root,
 			allowPaths: ["posts"],
 			writer,
@@ -386,7 +386,7 @@ forEachBackend("write-side protocol contract", (backend) => {
 					config: { label: "Posts", base: "posts" },
 				},
 			],
-		});
+		}).protocol;
 		const transformed = await transformProtocol.upsertEntry({
 			id: "xform",
 			collection: "posts",
@@ -468,13 +468,13 @@ forEachBackend("deletion capability contract", (backend) => {
 		if (missing.ok) return;
 		expect(missing.code).toBe("not_found");
 
-		const unsupported = createCmsProtocol({
+		const unsupported = createCmsHost({
 			root,
 			allowPaths: ["posts"],
 			writer,
 			collections: [postsCollection],
 			capabilities: { deleteEntry: false },
-		});
+		}).protocol;
 		const unsupportedCaps = await unsupported.getCapabilities();
 		expect(unsupportedCaps.ok).toBe(true);
 		if (!unsupportedCaps.ok) return;
@@ -519,12 +519,12 @@ forEachBackend("assets capability contract", (backend) => {
 					cover: z.string().optional(),
 				}),
 			};
-			const protocol = createCmsProtocol({
+			const protocol = createCmsHost({
 				root,
 				allowPaths: ["posts"],
 				writer,
 				collections: [postsWithCover],
-			});
+			}).protocol;
 
 			const caps = await protocol.getCapabilities();
 			expect(caps.ok).toBe(true);
@@ -606,13 +606,13 @@ forEachBackend("assets capability contract", (backend) => {
 			if (empty.ok) return;
 			expect(empty.code).toBe("validation_failed");
 
-			const unsupported = createCmsProtocol({
+			const unsupported = createCmsHost({
 				root,
 				allowPaths: ["posts"],
 				writer,
 				collections: [postsWithCover],
 				capabilities: { assets: { uploadImage: false } },
-			});
+			}).protocol;
 			const unsupportedCaps = await unsupported.getCapabilities();
 			expect(unsupportedCaps.ok).toBe(true);
 			if (!unsupportedCaps.ok) return;

@@ -1,0 +1,47 @@
+---
+/**
+ * Simple demo home (content.config-only CMS).
+ * Cover optimization: see /posts/hello (Astro `<Image>` via schema `image()`).
+ */
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Astro Dev CMS — simple demo</title>
+	</head>
+	<body>
+		<main>
+			<h1>Astro Dev CMS — simple demo</h1>
+			<p>
+				Schema-first fixture: native <code>content.config</code> +
+				<code>cms()</code>, no overlay. Dev route <code>/cms</code>.
+			</p>
+			<ul>
+				<li>
+					<a href="/cms"><strong>/cms</strong></a> — collections → entries →
+					stock editors
+				</li>
+				<li><a href="/cms/api/ok">/cms/api/ok</a> — API heartbeat</li>
+				<li><a href="/cms/api/collections">/cms/api/collections</a></li>
+				<li>
+					<a href="/cms/api/collections/posts">/cms/api/collections/posts</a>
+				</li>
+				<li>
+					<a href="/cms/api/collections/posts/hello"
+						>/cms/api/collections/posts/hello</a
+					>
+				</li>
+				<li>
+					<a href="/posts/hello"><strong>/posts/hello</strong></a> — real Astro
+					preview with optimized cover (ADR-0013 / 0015)
+				</li>
+				<li>
+					<code>PUT</code> invalid → 400; <code>DELETE</code> → 204 (allowlist
+					deny covered by contract tests)
+				</li>
+			</ul>
+		</main>
+	</body>
+</html>

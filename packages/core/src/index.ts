@@ -1,7 +1,8 @@
 /**
- * @cms/core — CMS protocol, FS write-back adapters, and semantic IR.
- * Filesystem write-back sits behind createCmsProtocol / createCmsHost (ADR-0005).
- * Editor configuration is CMS-first IR only (ADR-0019 / 0020).
+ * @cms/core — CMS protocol, FS write-back adapters, and schema→form projection.
+ * Filesystem write-back sits behind createCmsHost (ADR-0005).
+ * Schema-first exploration: stamped Zod + form-tree builders (field refs + layout).
+ * CMS-first IR authoring face is stripped on this branch.
  */
 
 export type {
@@ -12,13 +13,28 @@ export { scanEntryIds } from "./collection-descriptors";
 export type {
 	AdaptProtocolOptions,
 	CmsHost,
+	CreateCmsHostConfig,
+	CreateCmsHostFromCollections,
+	CreateCmsHostFromCollectionsOptions,
+	CreateCmsHostFromConfig,
+	CreateCmsHostFromConfigOptions,
 	CreateCmsHostOptions,
 	CreateCmsProtocolOptions,
 } from "./create-cms-protocol";
-export {
-	createCmsHost,
-	createCmsProtocol,
-} from "./create-cms-protocol";
+export { createCmsHost } from "./create-cms-protocol";
+export type {
+	CmsCollectionBuilt,
+	CmsCollectionOptions,
+	CmsCollectionType,
+	CmsFile,
+	CmsHelpers,
+	CmsImage,
+	CmsReference,
+	CollectionLocation,
+	DefineCmsResult,
+	FormBuilderFor,
+} from "./define-cms";
+export { defineCms } from "./define-cms";
 export { parseEntryFile, serializeEntryFile } from "./entry-file";
 export {
 	type CmsFetchClient,
@@ -26,6 +42,37 @@ export {
 	createFetchClient,
 	isCmsFetchError,
 } from "./fetch-client";
+export type {
+	FieldFn,
+	FieldRefBuilder,
+	FormTree,
+	FormTreeColumnsNode,
+	FormTreeFieldChrome,
+	FormTreeFieldNode,
+	FormTreeGroupNode,
+	FormTreeHelpers,
+	FormTreeKindHint,
+	FormTreeNode,
+	FormTreeTabEntry,
+	FormTreeTabsNode,
+	ObjectInputOf,
+	ScopedFormTreeHelpers,
+} from "./form-tree";
+export {
+	createFormTreeHelpers,
+	createScopedFormTreeHelpers,
+} from "./form-tree";
+export type {
+	CmsDispatcherOptions,
+	CreateCmsHttpFromConfigOptions,
+	CreateCmsHttpFromConfigResult,
+} from "./http";
+export {
+	cmsDevOnlyGuard,
+	createCmsDispatcher,
+	createCmsHttpFromConfig,
+	DEFAULT_CMS_API_MOUNT,
+} from "./http";
 export { contentAssetPath, imageFolderFromCanonical } from "./image-path";
 export { memoryWriter } from "./memory-writer";
 export { nodeFsWriter } from "./node-fs-writer";

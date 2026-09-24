@@ -1,0 +1,25 @@
+{
+	"name": "@cms/astro-demo-simple",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Schema-first demo: content.config-only CMS (no overlay)",
+	"scripts": {
+		"dev": "astro dev --host 127.0.0.1 --port 4321",
+		"build": "astro build",
+		"preview": "astro preview",
+		"check": "astro check"
+	},
+	"dependencies": {
+		"@astrojs/svelte": "catalog:",
+		"@cms/astro": "workspace:*",
+		"@cms/core": "workspace:*",
+		"astro": "catalog:",
+		"svelte": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@astrojs/check": "^0.9.10",
+		"typescript": "catalog:"
+	}
+}

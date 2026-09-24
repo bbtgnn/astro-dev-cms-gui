@@ -1,20 +1,31 @@
 <!--
-  Thin host mount: wire protocol client + virtual:@cms/config into AuthoringApp.
-  Catalog keys from the IR resolve through virtual:@cms/components.
+  Thin host mount: SSR form models + virtual catalog → AuthoringApp.
+  Assembly lives in authoringPropsFromFormModels (ADR-0008 seam).
 -->
 <script lang="ts">
 import components from "virtual:@cms/components";
-import { getPreviewUrl, collections as semanticCollections } from "virtual:@cms/config";
 import { mount } from "virtual:@cms/integration-options";
 import {
 	AuthoringApp,
-	editorCollectionsFromTree,
+	authoringPropsFromFormModels,
+	type GetPreviewUrl,
 } from "@cms/authoring";
-import { createFetchClient } from "@cms/core/fetch-client";
+import type { FormModelsByCollection } from "@cms/core/semantic";
 
-const collections = editorCollectionsFromTree(semanticCollections, components);
+let {
+	formModels,
+	getPreviewUrl = () => null,
+}: {
+	formModels: FormModelsByCollection;
+	getPreviewUrl?: GetPreviewUrl;
+} = $props();
 
-const client = createFetchClient(mount);
+const authoring = $derived(
+	authoringPropsFromFormModels(formModels, components, {
+		apiBase: mount,
+		getPreviewUrl,
+	}),
+);
 </script>
 
-<AuthoringApp {client} {collections} {getPreviewUrl} />
+<AuthoringApp {...authoring} />

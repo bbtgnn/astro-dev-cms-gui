@@ -1,7 +1,7 @@
 /**
  * Vite virtual modules for the Astro host integration:
- * - `virtual:@cms/config` — Node-safe unified tree (`cms.config.ts`); also the
- *   IR source for the package default CmsHost
+ * - `virtual:@cms/content-config` — user `content.config` (host/SSR only)
+ * - `virtual:@cms/config` — optional overlay (`cms.config.ts`); stub when absent
  * - `virtual:@cms/components` — Vite-only live Svelte catalog (`cms.components.ts`)
  * - `virtual:@cms/host` — `createHost()` factory (package default or override)
  * - `virtual:@cms/integration-options` — mount / allowInProd / contentRoot
@@ -9,6 +9,7 @@
  * Catalog values stay live module bindings in the host Vite graph —
  * they are never serialized through Astro props or the CMS protocol.
  * Virtual IDs are package-internal; consumers do not import them.
+ * Browser shell must not import `virtual:@cms/content-config` (ADR-0008).
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -20,6 +21,9 @@ export {
 	DEFAULT_CONTENT_ROOT,
 	SCHEMA_PARTITION_CONVENTION,
 } from "./conventions";
+
+export const CMS_CONTENT_CONFIG_VIRTUAL_ID = "virtual:@cms/content-config";
+const CMS_CONTENT_CONFIG_RESOLVED_ID = `\0${CMS_CONTENT_CONFIG_VIRTUAL_ID}`;
 
 export const CMS_CONFIG_VIRTUAL_ID = "virtual:@cms/config";
 const CMS_CONFIG_RESOLVED_ID = `\0${CMS_CONFIG_VIRTUAL_ID}`;
@@ -34,9 +38,17 @@ export const CMS_INTEGRATION_OPTIONS_VIRTUAL_ID =
 	"virtual:@cms/integration-options";
 const CMS_INTEGRATION_OPTIONS_RESOLVED_ID = `\0${CMS_INTEGRATION_OPTIONS_VIRTUAL_ID}`;
 
-export type CmsConfigVitePluginOptions = {
-	/** Absolute path to the Node-safe unified tree module. */
+export type CmsContentConfigVitePluginOptions = {
+	/** Absolute path to the user-authored Astro content.config module. */
 	entry: string;
+};
+
+export type CmsConfigVitePluginOptions = {
+	/**
+	 * Absolute path to the optional overlay module (`cms.config.ts`).
+	 * Omit for a stub (empty forms, null preview).
+	 */
+	entry?: string;
 };
 
 export type CmsComponentsVitePluginOptions = {
@@ -98,16 +110,44 @@ export function resolveConventionEntry(
 }
 
 /**
- * Expose `virtual:@cms/config` as a static re-export of `entry`.
- * Entry must be Svelte-free (string catalog keys only).
- * Shell and package default CmsHost both import this virtual.
+ * Expose `virtual:@cms/content-config` as a re-export of the user content.config.
+ * Host / Astro SSR only — never import from the browser authoring shell.
  */
-export function cmsConfigVitePlugin(
-	options: CmsConfigVitePluginOptions,
+export function cmsContentConfigVitePlugin(
+	options: CmsContentConfigVitePluginOptions,
 ): CmsVitePlugin {
 	const entry = path.normalize(options.entry);
-	// JSON.stringify keeps Windows paths and escapes safe inside generated source.
 	const entryLiteral = JSON.stringify(entry);
+
+	return {
+		name: "@cms/astro:virtual-content-config",
+		enforce: "pre",
+		resolveId(id) {
+			if (id === CMS_CONTENT_CONFIG_VIRTUAL_ID) {
+				return CMS_CONTENT_CONFIG_RESOLVED_ID;
+			}
+			return null;
+		},
+		load(id) {
+			if (id !== CMS_CONTENT_CONFIG_RESOLVED_ID) return null;
+			return [
+				`export { collections } from ${entryLiteral};`,
+				`export * from ${entryLiteral};`,
+			].join("\n");
+		},
+	};
+}
+
+/**
+ * Expose `virtual:@cms/config` as the optional overlay module (or a stub).
+ * Entry must be Svelte-free (string catalog keys only).
+ */
+export function cmsConfigVitePlugin(
+	options: CmsConfigVitePluginOptions = {},
+): CmsVitePlugin {
+	const entry =
+		options.entry != null ? path.normalize(options.entry) : undefined;
+	const entryLiteral = entry != null ? JSON.stringify(entry) : null;
 
 	return {
 		name: "@cms/astro:virtual-config",
@@ -118,9 +158,23 @@ export function cmsConfigVitePlugin(
 		},
 		load(id) {
 			if (id !== CMS_CONFIG_RESOLVED_ID) return null;
+			if (entryLiteral == null) {
+				return [
+					"export const forms = {};",
+					"export const types = {};",
+					"export function getPreviewUrl(_collection, _id) { return null; }",
+					"export default { forms, types, getPreviewUrl };",
+				].join("\n");
+			}
+			// Prefer default export (defineAstroCms result); named exports are legacy fallback.
 			return [
-				`export { collections, default } from ${entryLiteral};`,
-				`export * from ${entryLiteral};`,
+				`import * as __cmsConfig from ${entryLiteral};`,
+				"const __cfg = __cmsConfig.default ?? __cmsConfig;",
+				"export const forms = __cfg.forms ?? {};",
+				"export const types = __cfg.types ?? {};",
+				"export const getPreviewUrl =",
+				"  __cfg.getPreviewUrl ?? ((_collection, _id) => null);",
+				"export default __cfg;",
 			].join("\n");
 		},
 	};

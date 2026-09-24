@@ -41,7 +41,7 @@ describe("schema partition convention", () => {
 });
 
 describe("cmsConfigVitePlugin", () => {
-	test("re-exports editor config entry", async () => {
+	test("soft-binds overlay exports from cms.config entry", async () => {
 		const entry = path.resolve("/project/src/cms.config.ts");
 		const plugin = cmsConfigVitePlugin({ entry });
 		const resolved = await plugin.resolveId(CMS_CONFIG_VIRTUAL_ID);
@@ -49,7 +49,21 @@ describe("cmsConfigVitePlugin", () => {
 		if (resolved == null) throw new Error("expected resolved id");
 		const source = await plugin.load(resolved);
 		expect(source).toContain(`from ${JSON.stringify(entry)}`);
-		expect(source).toContain("export { collections, default }");
+		expect(source).toContain("__cfg = __cmsConfig.default ?? __cmsConfig");
+		expect(source).toContain("export const forms =");
+		expect(source).toContain("export const getPreviewUrl =");
+		expect(source).toContain("export const types =");
+	});
+
+	test("emits stub forms when entry omitted", async () => {
+		const plugin = cmsConfigVitePlugin({});
+		const resolved = await plugin.resolveId(CMS_CONFIG_VIRTUAL_ID);
+		expect(resolved).toBe(`\0${CMS_CONFIG_VIRTUAL_ID}`);
+		if (resolved == null) throw new Error("expected resolved id");
+		const source = await plugin.load(resolved);
+		expect(source).toContain("export const forms = {};");
+		expect(source).toContain("export const types = {};");
+		expect(source).toContain("export function getPreviewUrl");
 	});
 });
 
@@ -92,7 +106,7 @@ describe("cmsIntegrationOptionsVitePlugin", () => {
 	test("emits mount, allowInProd, and contentRoot literals", async () => {
 		const contentRoot = path.resolve("/project", DEFAULT_CONTENT_ROOT);
 		const plugin = cmsIntegrationOptionsVitePlugin({
-			mount: "/_cms",
+			mount: "/cms/api",
 			allowInProd: false,
 			contentRoot,
 		});
@@ -100,7 +114,7 @@ describe("cmsIntegrationOptionsVitePlugin", () => {
 		expect(resolved).toBe(`\0${CMS_INTEGRATION_OPTIONS_VIRTUAL_ID}`);
 		if (resolved == null) throw new Error("expected resolved id");
 		const source = await plugin.load(resolved);
-		expect(source).toContain('export const mount = "/_cms";');
+		expect(source).toContain('export const mount = "/cms/api";');
 		expect(source).toContain("export const allowInProd = false;");
 		expect(source).toContain(
 			`export const contentRoot = ${JSON.stringify(contentRoot)};`,

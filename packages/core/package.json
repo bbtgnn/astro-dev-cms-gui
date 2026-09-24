@@ -3,10 +3,13 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "CMS protocol + FS write-back adapters + semantic IR",
+	"description": "CMS protocol + FS write-back adapters + schema→form projection",
 	"exports": {
 		".": "./src/index.ts",
+		"./define-cms": "./src/define-cms.ts",
 		"./fetch-client": "./src/fetch-client.ts",
+		"./form-tree": "./src/form-tree.ts",
+		"./http": "./src/http/index.ts",
 		"./protocol": "./src/protocol.ts",
 		"./semantic": "./src/semantic/index.ts"
 	},
@@ -17,8 +20,9 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p .",
-		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts",
-		"test:semantic": "bun test ./scripts/semantic-ir.test.ts ./scripts/form-model-validator.test.ts ./scripts/persisted-projections.test.ts"
+		"check": "tsc -p . && bunx tsc -p ./scripts/tsconfig.fixtures.json",
+		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/schema-form-projection.test.ts ./scripts/persisted-input-rewrite.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts ./scripts/http-dispatcher.test.ts",
+		"test:semantic": "bun test ./scripts/schema-form-projection.test.ts ./scripts/persisted-input-rewrite.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts",
+		"test:http": "bun test ./scripts/http-dispatcher.test.ts"
 	}
 }

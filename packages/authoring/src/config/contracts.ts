@@ -1,7 +1,7 @@
 /**
- * Svelte editor / wrapper / icon contracts for the CMS-first unified tree
- * (ADR-0019). Shell-owned props are provided by the form shell; editor-specific
- * keys go in the explicit `props` bag.
+ * Svelte editor / wrapper / icon contracts for the form shell and host catalog.
+ * Shell-owned props are provided by the form shell; editor-specific keys go in
+ * the explicit `props` bag.
  */
 
 import type { SemanticKind } from "@cms/core/semantic";

@@ -1,24 +1,26 @@
 /**
- * Form-shell mount seam: unified tree + live catalog → EditorCollections.
- * Compile, form-model projection, SJSF lowering, and catalog binding stay
- * implementation (ADR-0011 / 0019 / 0020).
+ * Package-private form-shell lowering → EditorCollections.
+ * Not part of the public `@cms/authoring` mount face — hosts use
+ * {@link authoringPropsFromFormModels} / {@link authoringPropsFromDefineCms}.
+ * Schema projection, form-model walk, SJSF lowering, and catalog binding stay
+ * implementation (ADR-0011 / exploration schema-first path).
  */
 
 import {
-	compileSemanticIr,
 	type FormModelsByCollection,
-	projectFormModels,
-	type SemanticConfigInput,
+	type ProjectSchemaFormModelsOptions,
+	projectSchemaFormModels,
 } from "@cms/core/semantic";
+import type { ZodType } from "zod";
 import type { EditorCollections } from "../types";
 import { type LowerFormModelOptions, lowerFormModelToSjsf } from "./lower-sjsf";
 import { resolveCatalogBinding } from "./stock-registry";
 
 /**
  * Lower each collection form model to JSON Schema + uiSchema for CmsForm.
- * Package-private — callers use {@link editorCollectionsFromTree}.
+ * Package-private — prefer {@link authoringPropsFromFormModels}.
  */
-function editorCollectionsFromFormModels(
+export function editorCollectionsFromFormModels(
 	models: FormModelsByCollection,
 	options?: LowerFormModelOptions,
 ): EditorCollections {
@@ -30,16 +32,24 @@ function editorCollectionsFromFormModels(
 	return out;
 }
 
+export type EditorCollectionsFromSchemasOptions =
+	ProjectSchemaFormModelsOptions;
+
 /**
- * Build shell `collections` from the CMS-first unified tree and the live
- * components catalog. Hosts must not assemble compile → project → lower.
+ * Package-private schema-first lowering: stamped Zod collection schemas
+ * (+ optional form trees) → EditorCollections. Stock editors apply by
+ * semantic kind; form-tree `.editor` keys resolve through the live catalog.
+ *
+ * Hosts mount via {@link authoringPropsFromDefineCms} instead. Client
+ * validation uses the lowered Ajv JSON Schema; authoritative parse stays
+ * on the host Zod / Standard Schema Input (dual engines OK).
  */
-export function editorCollectionsFromTree(
-	collections: SemanticConfigInput["collections"],
+export function editorCollectionsFromSchemas(
+	collections: Readonly<Record<string, ZodType>>,
 	catalog: Readonly<Record<string, unknown>>,
+	options?: EditorCollectionsFromSchemasOptions,
 ): EditorCollections {
-	const ir = compileSemanticIr({ collections });
-	const formModels = projectFormModels(ir);
+	const formModels = projectSchemaFormModels(collections, options);
 	return editorCollectionsFromFormModels(formModels, {
 		resolveBinding: resolveCatalogBinding(catalog),
 	});

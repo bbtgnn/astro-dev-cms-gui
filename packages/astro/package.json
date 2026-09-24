@@ -3,22 +3,25 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "Astro host — cms() integration, /cms shell, /_cms protocol transport",
+	"description": "Astro host — cms() integration, /cms shell, /cms/api protocol transport",
 	"bin": {
 		"cms": "./bin/cms.ts"
 	},
 	"exports": {
 		".": "./src/index.ts",
 		"./config": "./src/config.ts",
-		"./generate": "./src/generate/index.ts",
+		"./collection-types": "./src/collection-types.ts",
+		"./content-proxy": "./src/content-proxy/index.ts",
 		"./testing": "./src/testing.ts",
 		"./middleware-entry": "./src/middleware-entry.ts",
+		"./protocol-route": "./src/protocol-route.ts",
 		"./shell-page.astro": "./src/shell-page.astro",
 		"./CmsMount.svelte": "./src/CmsMount.svelte"
 	},
 	"dependencies": {
 		"@cms/authoring": "workspace:*",
-		"@cms/core": "workspace:*"
+		"@cms/core": "workspace:*",
+		"vite": "catalog:"
 	},
 	"peerDependencies": {
 		"astro": "catalog:",
@@ -28,9 +31,14 @@
 		"astro": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"zod": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-cms.test.ts ./scripts/emit-content-config.test.ts ./scripts/generate-content-config.test.ts ./scripts/content-config-generation-lifecycle.test.ts ./scripts/default-host.test.ts"
+		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-astro-cms.test.ts ./scripts/cms-happy-path.test.ts ./scripts/content-proxy.test.ts ./scripts/stamped-host.test.ts ./scripts/codegen-input-types.test.ts",
+		"test:content-proxy": "bun test ./scripts/content-proxy.test.ts",
+		"test:stamped-host": "bun test ./scripts/stamped-host.test.ts",
+		"test:happy-path": "bun test ./scripts/cms-happy-path.test.ts",
+		"test:codegen": "bun test ./scripts/codegen-input-types.test.ts"
 	}
 }

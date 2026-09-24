@@ -1,8 +1,10 @@
 /**
  * Filesystem / memory write-back behind the CMS protocol seam (ADR-0005).
- * WriteMode stays private implementation; hosts construct via createCmsProtocol
- * or createCmsHost (protocol + host-only readAsset).
+ * WriteMode stays private implementation; hosts construct via createCmsHost
+ * (protocol + host-only readAsset).
  */
+
+import { nodeFsWriter } from "./node-fs-writer";
 import {
 	type CmsCapabilitiesInput,
 	type CmsProtocol,
@@ -22,7 +24,10 @@ import {
 	type UploadImageResult,
 } from "./protocol";
 import type {
+	CreateCmsHostFromCollections,
+	CreateCmsHostFromConfig,
 	CreateCmsHostOptions,
+	CreateWriteModeOptions,
 	ReadAssetResult,
 	UpsertEntryInput,
 	WriteImageAssetsInput,
@@ -43,11 +48,24 @@ export type AdaptProtocolOptions = {
 	capabilities?: CmsCapabilitiesInput;
 };
 
-export type CreateCmsProtocolOptions = CreateCmsHostOptions &
+export type CreateCmsHostFromConfigOptions = CreateCmsHostFromConfig &
 	AdaptProtocolOptions;
 
+export type CreateCmsHostFromCollectionsOptions = CreateCmsHostFromCollections &
+	AdaptProtocolOptions;
+
+export type CreateCmsProtocolOptions =
+	| CreateCmsHostFromConfigOptions
+	| CreateCmsHostFromCollectionsOptions;
+
 /** Re-export host construction options (no pathMap / fakeCatalog). */
-export type { CreateCmsHostOptions };
+export type {
+	CreateCmsHostConfig,
+	CreateCmsHostFromCollections,
+	CreateCmsHostFromConfig,
+	CreateCmsHostOptions,
+} from "./types";
+
 
 /** WriteMode throw codes that surface as protocol `conflict`. */
 const CONFLICT_IMPL_CODES = new Set(["REVISION_CONFLICT"]);
@@ -288,10 +306,45 @@ export type CmsHost = {
 
 /**
  * Construct filesystem/memory write-back for an Astro (or other) host transport.
- * Prefer this when the dispatcher needs GET /api/assets/*.
+ * Prefer this when the dispatcher needs GET …/assets/*.
+ *
+ * Two doors (mutually exclusive — overloads keep autocomplete on one shape):
+ * - `{ root, config }` — portable {@link defineCms} result
+ * - `{ root, collections, … }` — explicit descriptors (Astro stamped adapter)
+ *
+ * Writer defaults to nodeFsWriter().
  */
-export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
-	const { capabilities, ...wmOptions } = options;
+function createCmsHostImpl(options: CreateCmsProtocolOptions): CmsHost {
+	const { capabilities } = options;
+	const writer = options.writer ?? nodeFsWriter();
+
+	let collections: CreateWriteModeOptions["collections"];
+	let schemas: CreateWriteModeOptions["schemas"];
+	let allowPaths: string[];
+
+	if (isConfigDoor(options)) {
+		const { config } = options;
+		collections = config.descriptors;
+		schemas = { ...config.schemas };
+		allowPaths = [...new Set(config.descriptors.map((d) => d.base))];
+	} else {
+		collections = options.collections;
+		schemas = options.schemas;
+		allowPaths =
+			options.allowPaths ??
+			[...new Set(options.collections.map((d) => d.base))];
+	}
+
+	const wmOptions: CreateWriteModeOptions = {
+		root: options.root,
+		allowPaths,
+		writer,
+		...(collections !== undefined ? { collections } : {}),
+		...(schemas !== undefined ? { schemas } : {}),
+		...(options.entryIndex !== undefined
+			? { entryIndex: options.entryIndex }
+			: {}),
+	};
 	const writeMode = createWriteMode(wmOptions);
 	return {
 		protocol: adaptWriteModeToProtocol(writeMode, { capabilities }),
@@ -299,9 +352,18 @@ export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
 	};
 }
 
-/** In-memory or filesystem CmsProtocol (same options as {@link createCmsHost}). */
-export function createCmsProtocol(
+function isConfigDoor(
 	options: CreateCmsProtocolOptions,
-): CmsProtocol {
-	return createCmsHost(options).protocol;
+): options is CreateCmsHostFromConfigOptions {
+	return "config" in options && options.config != null;
+}
+
+export function createCmsHost(
+	options: CreateCmsHostFromConfigOptions,
+): CmsHost;
+export function createCmsHost(
+	options: CreateCmsHostFromCollectionsOptions,
+): CmsHost;
+export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
+	return createCmsHostImpl(options);
 }

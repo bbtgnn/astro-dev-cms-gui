@@ -1,0 +1,7 @@
+{
+	"title": "Hello",
+	"draft": true,
+	"body": "Pass 1 sample entry.\n\nPlain body for textarea UX.\n",
+	"cover": "./hello/cover/pixel.png",
+	"author": "ada"
+}
