@@ -4,8 +4,7 @@
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createCmsHost } from "@cms/core";
-import { createCmsDispatcher, DEFAULT_CMS_API_MOUNT } from "@cms/core/http";
+import { createCmsHttpFromConfig, DEFAULT_CMS_API_MOUNT } from "@cms/core/http";
 import type { RequestHandler } from "@sveltejs/kit";
 import { dev } from "$app/environment";
 import { cmsConfig } from "$lib/cms";
@@ -15,10 +14,9 @@ const contentRoot = path.resolve(
 	"../../../../../data",
 );
 
-const host = createCmsHost({ root: contentRoot, config: cmsConfig });
-
-const dispatch = createCmsDispatcher({
-	host,
+const { dispatch } = createCmsHttpFromConfig({
+	config: cmsConfig,
+	root: contentRoot,
 	isDev: dev,
 	mount: DEFAULT_CMS_API_MOUNT,
 });

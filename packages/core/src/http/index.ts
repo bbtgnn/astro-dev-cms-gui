@@ -3,6 +3,11 @@
  * Protocol construction lives beside this module; hosts mount the dispatcher.
  */
 
+export {
+	type CreateCmsHttpFromConfigOptions,
+	type CreateCmsHttpFromConfigResult,
+	createCmsHttpFromConfig,
+} from "./create-cms-http-from-config";
 export { cmsDevOnlyGuard } from "./dev-guard";
 export {
 	type CmsDispatcherOptions,

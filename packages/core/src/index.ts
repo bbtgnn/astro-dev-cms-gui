@@ -65,10 +65,15 @@ export {
 	createFormTreeHelpers,
 	createScopedFormTreeHelpers,
 } from "./form-tree";
-export type { CmsDispatcherOptions } from "./http";
+export type {
+	CmsDispatcherOptions,
+	CreateCmsHttpFromConfigOptions,
+	CreateCmsHttpFromConfigResult,
+} from "./http";
 export {
 	cmsDevOnlyGuard,
 	createCmsDispatcher,
+	createCmsHttpFromConfig,
 	DEFAULT_CMS_API_MOUNT,
 } from "./http";
 export { contentAssetPath, imageFolderFromCanonical } from "./image-path";

@@ -8,8 +8,9 @@ import { createCmsHost } from "../src/create-cms-protocol";
 import { defineCms } from "../src/define-cms";
 import {
 	createCmsDispatcher,
+	createCmsHttpFromConfig,
 	DEFAULT_CMS_API_MOUNT,
-} from "../src/http/dispatcher";
+} from "../src/http";
 import { memoryWriter } from "../src/memory-writer";
 
 const MEMORY_ROOT = path.resolve("/cms-http-dispatcher-memory");
@@ -114,5 +115,37 @@ describe("createCmsHost({ config })", () => {
 		const entry = await host.protocol.getEntry("authors", "ada");
 		expect(entry.ok).toBe(true);
 		if (entry.ok) expect(entry.value.data).toEqual({ name: "Ada" });
+	});
+});
+
+describe("createCmsHttpFromConfig", () => {
+	test("pairs host + dispatch from the config door", async () => {
+		const config = defineCms((cms) => ({
+			posts: cms.collection({
+				schema: z.object({ title: z.string() }),
+				location: { base: "posts" },
+			}),
+		}));
+		const writer = memoryWriter({
+			[path.join(MEMORY_ROOT, "posts/hello.json")]: JSON.stringify({
+				title: "Hello",
+			}),
+		});
+		const { host, dispatch } = createCmsHttpFromConfig({
+			config,
+			root: MEMORY_ROOT,
+			isDev: true,
+			writer,
+		});
+
+		const listed = await host.protocol.listCollections();
+		expect(listed.ok).toBe(true);
+		if (!listed.ok) return;
+		expect(listed.value.map((c) => c.name)).toEqual(["posts"]);
+
+		const res = await dispatch(new Request("http://x/cms/api/ok"), ["ok"]);
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as { ok: boolean; mount: string };
+		expect(body).toEqual({ ok: true, mount: DEFAULT_CMS_API_MOUNT });
 	});
 });

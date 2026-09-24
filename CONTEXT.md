@@ -109,6 +109,10 @@ _Avoid_: persistence, save API, storage backend
 The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + collection descriptors (from compiled IR on the default host, or stamped/host-declared schemas on schema-first paths). Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
 _Avoid_: save API, REST CRUD, WriteMode (as a public API), content.config discovery (as the editor seam)
 
+**Portable CMS HTTP**:
+The injectable face that builds a CmsHost and HTTP dispatcher from the createCmsHost `config` door (portable defineCms result) plus content root. Framework adapters supply path segments and verb exports; the authoring shell stays on authoringPropsFromDefineCms.
+_Avoid_: mountDefineCms, Astro protocol-route (as this face — stamped path uses assemble instead)
+
 **Stamped CMS assemble**:
 The injectable face that turns one stamped collection graph (plus optional form trees) into the paired CmsHost and form models for the Astro package-default path. Thin host/shell adapters pick a field from that pair; they do not each invent a separate materialization path.
 _Avoid_: createDefaultCms, package-default CMS ready, dual materialize (as the product face)
