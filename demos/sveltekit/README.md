@@ -31,7 +31,8 @@ beside Astro demos.
 - `src/lib/cms-host.server.ts` — `hostFromDefineCms` over `./data`
 - `src/routes/cms/api/[...path]/+server.ts` — protocol ↔ HTTP via
   `@cms/core/http` `createCmsDispatcher`
-- `src/routes/cms/+page.svelte` — `AuthoringApp` (`ssr = false`)
+- `src/routes/cms/+page.svelte` — `authoringPropsFromDefineCms` → `AuthoringApp`
+  (`ssr = false`)
 - `data/` — seed JSON entries (`authors/ada.json`, `posts/hello.json`)
 
 ## Checks
