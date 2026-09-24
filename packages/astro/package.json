@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "Astro host — cms() integration, /cms shell, /_cms protocol transport",
+	"description": "Astro host — cms() integration, /cms shell, /cms/api protocol transport",
 	"bin": {
 		"cms": "./bin/cms.ts"
 	},
@@ -14,6 +14,7 @@
 		"./content-proxy": "./src/content-proxy/index.ts",
 		"./testing": "./src/testing.ts",
 		"./middleware-entry": "./src/middleware-entry.ts",
+		"./protocol-route": "./src/protocol-route.ts",
 		"./shell-page.astro": "./src/shell-page.astro",
 		"./CmsMount.svelte": "./src/CmsMount.svelte"
 	},

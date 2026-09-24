@@ -15,7 +15,7 @@ We want the useful middle:
 
 1. **Your Astro repo is the source of truth.** Content lives in the working tree (JSON today; markdown collections later). Write-back is allowlisted filesystem ops during authoring.
 2. **One CMS schema drives the UI and Astro.** Author `src/cms.config.ts`; Astro `content.config.ts` is generated. Editors don’t maintain a parallel `config.yml`.
-3. **Dev integration is thin.** `cms()` from `@cms/astro` mounts the shell at `/cms` and the protocol at `/_cms`. Conventions: `src/cms.config.ts`, `src/content.config.ts`, content under `src/content/`. Dev-only by default.
+3. **Dev integration is thin.** `cms()` from `@cms/astro` mounts the shell at `/cms` and the protocol at `/cms/api`. Conventions: `src/cms.config.ts`, `src/content.config.ts`, content under `src/content/`. Dev-only by default.
 
 Borrow the good bits from Kirby / Pages / Payload (field registry, blocks, locale fields, local write-back). Reject their control planes as the default.
 
@@ -34,7 +34,7 @@ bun run dev
 - Site: `http://127.0.0.1:4321/` (`demos/astro-simple` / `@cms/astro-demo-simple`, default)
 - Overlay demo: `bun run dev:overlay` → `http://127.0.0.1:4322/` (`demos/astro-overlay` / `@cms/astro-demo`)
 - Shell UI: `/cms`
-- JSON API: `/_cms` (via middleware — Astro ignores `src/pages/_…`)
+- JSON API: `/cms/api` (catch-all route via `cms()` `injectRoute`)
 
 `demos/astro-simple` and `demos/astro-overlay` are the in-repo Astro consumers used for self-host validation.
 
@@ -50,7 +50,7 @@ Three product packages match ADR-0008 layers
 
 - `@cms/authoring` — shell UI + form shell
 - `@cms/core` — semantic IR + CMS protocol + FS adapters
-- `@cms/astro` — `cms()` host mount + `/_cms` transport
+- `@cms/astro` — `cms()` host mount + `/cms/api` transport
 - `demos/` — sample hosts (`astro-simple`, `astro-overlay`)
 
 Checks: `bun run check && bun run check:allowlist && bun run lint`.

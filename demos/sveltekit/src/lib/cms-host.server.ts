@@ -1,10 +1,10 @@
 /**
- * Server-only CmsHost — nodeFsWriter under ./data.
+ * Server-only CmsHost — nodeFsWriter under ./data via hostFromDefineCms.
  * `.server.ts` keeps FS / Node out of the client bundle.
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createCmsHost, nodeFsWriter } from "@cms/core";
+import { hostFromDefineCms } from "@cms/core";
 import { cmsConfig } from "./cms";
 
 const contentRoot = path.resolve(
@@ -12,16 +12,6 @@ const contentRoot = path.resolve(
 	"../../data",
 );
 
-const allowPaths = [
-	...new Set(cmsConfig.descriptors.map((d) => d.base)),
-];
-
-export const cmsHost = createCmsHost({
-	root: contentRoot,
-	allowPaths,
-	writer: nodeFsWriter(),
-	collections: cmsConfig.descriptors,
-	schemas: { ...cmsConfig.schemas },
-});
+export const cmsHost = hostFromDefineCms(cmsConfig, { root: contentRoot });
 
 export { contentRoot };

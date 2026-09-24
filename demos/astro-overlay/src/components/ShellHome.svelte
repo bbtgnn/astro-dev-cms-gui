@@ -12,15 +12,15 @@
 			<a href="/cms"><strong>/cms</strong></a> — collections → entries →
 			overlay labels / custom author name editor
 		</li>
-		<li><a href="/_cms/ok">/_cms/ok</a> — API heartbeat</li>
-		<li><a href="/_cms/api/collections">/_cms/api/collections</a></li>
-		<li><a href="/_cms/api/collections/posts">/_cms/api/collections/posts</a></li>
+		<li><a href="/cms/api/ok">/cms/api/ok</a> — API heartbeat</li>
+		<li><a href="/cms/api/collections">/cms/api/collections</a></li>
+		<li><a href="/cms/api/collections/posts">/cms/api/collections/posts</a></li>
 		<li>
-			<a href="/_cms/api/collections/posts/hello">/_cms/api/collections/posts/hello</a>
+			<a href="/cms/api/collections/posts/hello">/cms/api/collections/posts/hello</a>
 		</li>
 		<li>
-			<a href="/_cms/api/collections/authors/ada"
-				>/_cms/api/collections/authors/ada</a
+			<a href="/cms/api/collections/authors/ada"
+				>/cms/api/collections/authors/ada</a
 			>
 			— custom <code>AuthorNameEditor</code>
 		</li>

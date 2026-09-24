@@ -20,12 +20,13 @@
  * Protocol-only: {@link createCmsMiddleware} from `@cms/astro`.
  */
 import { fileURLToPath } from "node:url";
-import { viteAliasesForBoot, vitePluginsForBoot } from "./content-proxy/boot";
 import { cmsCollectionTypesVitePlugin } from "./codegen/vite-collection-types-plugin";
+import { viteAliasesForBoot, vitePluginsForBoot } from "./content-proxy/boot";
 import {
 	type CmsDispatcherOptions,
 	type CmsMiddlewareHandler,
 	createCmsMiddleware,
+	DEFAULT_CMS_API_MOUNT,
 } from "./http";
 import {
 	CMS_COMPONENTS_CONVENTION,
@@ -64,7 +65,7 @@ export type CmsHarnessOptions = {
 	 * Project module exporting `createHost(): CmsHost`.
 	 * - omit → package default CmsHost (requires resolved content.config)
 	 * - string → that module
-	 * - `false` → skip protocol middleware / host virtual
+	 * - `false` → skip protocol route / host virtual
 	 */
 	host?: string | false;
 	/** Write-back root. Defaults to `src/content`. */
@@ -80,7 +81,7 @@ export type CmsHarnessOptions = {
 	 * do not break typecheck.
 	 */
 	generate?: boolean;
-	/** Mount prefix for `/_cms`. */
+	/** Protocol HTTP mount prefix (default `/cms/api`). */
 	mount?: string;
 	allowInProd?: boolean;
 	/**
@@ -116,7 +117,7 @@ type AstroConfigSetupParams = {
 
 export type CmsIntegration = {
 	name: "@cms/astro";
-	/** Mount prefix without trailing slash (default `/_cms`). */
+	/** Mount prefix without trailing slash (default `/cms/api`). */
 	mount: string;
 	/** Shell page pattern when injectRoute runs; omitted when skipped. */
 	shellPath?: string;
@@ -164,7 +165,9 @@ function missingContentConfigMessage(projectRoot: string): string {
 export function createCmsIntegration(
 	options: CmsHarnessOptions = {},
 ): CmsIntegration {
-	const mount = (options.mount ?? "/_cms").replace(/\/+$/, "") || "/_cms";
+	const mount =
+		(options.mount ?? DEFAULT_CMS_API_MOUNT).replace(/\/+$/, "") ||
+		DEFAULT_CMS_API_MOUNT;
 	const allowInProd = options.allowInProd;
 	const shellPathOption = options.shellPath;
 	const requireContentConfig = options.requireContentConfig === true;
@@ -198,19 +201,14 @@ export function createCmsIntegration(
 	}
 
 	integration.hooks = {
-		async "astro:config:setup"({
-			config,
-			updateConfig,
-			addMiddleware,
-			injectRoute,
-		}) {
+		async "astro:config:setup"({ config, updateConfig, injectRoute }) {
 			const root = projectRootFromAstroConfig(config.root);
 
 			// Content-proxy must land before Content Layer evaluates content.config.
 			// Plugin *array* order vs Astro’s content virtual-mod is not enough on its
 			// own (both enforce:"pre"; Astro is registered earlier). The boot proxy
 			// wins via resolveId hook `order: "pre"` + remapping `\0astro:content`.
-			const proxyPlugins = vitePluginsForBoot() as CmsVitePlugin[];
+			const proxyPlugins = vitePluginsForBoot() as unknown as CmsVitePlugin[];
 			const proxyAliases = viteAliasesForBoot();
 
 			const contentConfigEntry = resolveConventionEntry(
@@ -301,9 +299,10 @@ export function createCmsIntegration(
 
 			if (hostEntry != null) {
 				plugins.push(cmsHostVitePlugin({ entry: hostEntry }));
-				addMiddleware({
-					order: "pre",
-					entrypoint: new URL("./middleware-entry.ts", import.meta.url),
+				injectRoute({
+					pattern: `${mount}/[...path]`,
+					entrypoint: new URL("./protocol-route.ts", import.meta.url),
+					prerender: false,
 				});
 			}
 

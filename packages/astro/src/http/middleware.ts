@@ -1,7 +1,7 @@
 /**
- * Consumer middleware helper for the `/_cms` protocol transport.
+ * Consumer middleware helper for the CMS protocol transport (escape hatch).
  *
- * Prefer `@cms/astro` `cms()` for auto-mount (ADR-0016).
+ * Prefer `@cms/astro` `cms()` which injects a catch-all route at the API mount.
  * Use this when composing middleware manually (tests / advanced hosts):
  *
  * ```ts
@@ -9,13 +9,17 @@
  * import { createCmsMiddleware } from "@cms/astro";
  *
  * export const onRequest = defineMiddleware(
- *   createCmsMiddleware({ protocol, isDev: import.meta.env.DEV, mount: "/_cms" }),
+ *   createCmsMiddleware({ protocol, isDev: import.meta.env.DEV }),
  * );
  * ```
- *
- * Astro ignores `src/pages/_…`, so `/_cms` stays middleware-mounted.
  */
-import { type CmsDispatcherOptions, createCmsDispatcher } from "./dispatcher";
+import {
+	type CmsDispatcherOptions,
+	createCmsDispatcher,
+	DEFAULT_CMS_API_MOUNT,
+} from "@cms/core/http";
+
+export type { CmsDispatcherOptions };
 
 /** Minimal Astro middleware context shape (avoid importing astro:middleware here). */
 export type CmsMiddlewareContext = {
@@ -33,7 +37,9 @@ export type CmsMiddlewareHandler = (
 export function createCmsMiddleware(
 	options: CmsDispatcherOptions,
 ): CmsMiddlewareHandler {
-	const mount = (options.mount ?? "/_cms").replace(/\/+$/, "") || "/_cms";
+	const mount =
+		(options.mount ?? DEFAULT_CMS_API_MOUNT).replace(/\/+$/, "") ||
+		DEFAULT_CMS_API_MOUNT;
 	const dispatch = createCmsDispatcher({ ...options, mount });
 
 	return async function cmsMiddleware(context, next) {

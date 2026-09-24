@@ -1,13 +1,15 @@
 /**
- * HTTP transport for the CMS protocol (dispatcher + middleware).
- * Protocol construction lives in `@cms/core`.
+ * HTTP transport for the CMS protocol.
+ * Dispatcher lives in `@cms/core/http`; this package re-exports it and adds
+ * Astro middleware as an escape hatch (product `cms()` injects a route).
  */
 
-export { cmsDevOnlyGuard } from "./dev-guard";
 export {
 	type CmsDispatcherOptions,
+	cmsDevOnlyGuard,
 	createCmsDispatcher,
-} from "./dispatcher";
+	DEFAULT_CMS_API_MOUNT,
+} from "@cms/core/http";
 export {
 	type CmsMiddlewareContext,
 	type CmsMiddlewareHandler,

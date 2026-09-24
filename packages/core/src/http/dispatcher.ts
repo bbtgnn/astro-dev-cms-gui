@@ -1,22 +1,30 @@
 /**
- * Single /_cms/[...path] JSON dispatcher.
- * Thin Astro transport: maps CMS protocol outcomes ↔ HTTP; no domain rules.
+ * Protocol ↔ HTTP dispatcher (framework-agnostic).
+ * Maps CMS protocol outcomes ↔ HTTP; no domain rules.
+ *
+ * Default mount `/cms/api` — paths after the mount are
+ * `collections`, `capabilities`, `assets/…`, `images`, `ok`
+ * (no nested `/api` segment; that lived under the old `/_cms` prefix).
  */
-import type { CmsProtocol, ReadAssetResult } from "@cms/core";
-import { httpStatusForCmsErr } from "@cms/core";
+import type { CmsProtocol } from "../protocol";
+import { httpStatusForCmsErr } from "../protocol";
+import type { ReadAssetResult } from "../types";
 import { cmsDevOnlyGuard } from "./dev-guard";
+
+/** Default protocol HTTP mount (shell stays at `/cms`). */
+export const DEFAULT_CMS_API_MOUNT = "/cms/api";
 
 export type CmsDispatcherOptions = {
 	protocol: CmsProtocol;
 	/**
-	 * Host-side asset bytes for GET /api/assets/* (createCmsHost.readAsset).
+	 * Host-side asset bytes for GET …/assets/* (createCmsHost.readAsset).
 	 * Kept off the serializable CMS protocol so paths stay in the adapter.
 	 */
 	readAsset?: (relFromRoot: string) => Promise<ReadAssetResult>;
-	/** import.meta.env.DEV in Astro */
+	/** import.meta.env.DEV / Kit `dev` / equivalent */
 	isDev: boolean;
 	allowInProd?: boolean;
-	/** Mount prefix without trailing slash, default /_cms */
+	/** Mount prefix without trailing slash, default {@link DEFAULT_CMS_API_MOUNT} */
 	mount?: string;
 };
 
@@ -53,11 +61,13 @@ function protocolErrResponse(result: {
 }
 
 /**
- * Handle a request whose pathname is under the CMS mount.
- * `path` is the rest after `/_cms/` (e.g. `api/collections/posts/hello`).
+ * Handle a request whose pathname is under the CMS API mount.
+ * `pathSegments` is the rest after the mount (e.g. `collections/posts/hello`).
  */
 export function createCmsDispatcher(options: CmsDispatcherOptions) {
-	const mount = (options.mount ?? "/_cms").replace(/\/+$/, "");
+	const mount =
+		(options.mount ?? DEFAULT_CMS_API_MOUNT).replace(/\/+$/, "") ||
+		DEFAULT_CMS_API_MOUNT;
 
 	return async function handleCms(
 		request: Request,
@@ -79,29 +89,33 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				return Response.json({ ok: true, mount });
 			}
 
-			// GET /api/capabilities
-			if (path === "api/capabilities" && method === "GET") {
+			// GET /capabilities
+			if (path === "capabilities" && method === "GET") {
 				const result = await protocol.getCapabilities();
 				return Response.json(result.value);
 			}
 
-			// GET /api/collections
-			if (path === "api/collections" && method === "GET") {
+			// GET /collections
+			if (path === "collections" && method === "GET") {
 				const result = await protocol.listCollections();
 				return Response.json(result.value);
 			}
 
-			// GET /api/assets/<rel-from-content-root> — host readAsset, not protocol
-			if (path.startsWith("api/assets/") && method === "GET") {
+			// GET /assets/<rel-from-content-root> — host readAsset, not protocol
+			if (path.startsWith("assets/") && method === "GET") {
 				if (!options.readAsset) {
 					return Response.json(
 						{ error: "Asset reads are not configured", code: "not_found" },
 						{ status: 404 },
 					);
 				}
-				const rel = path.slice("api/assets/".length);
+				const rel = path.slice("assets/".length);
 				const asset = await options.readAsset(decodeURIComponent(rel));
-				return new Response(Buffer.from(asset.bytes), {
+				const body = asset.bytes.buffer.slice(
+					asset.bytes.byteOffset,
+					asset.bytes.byteOffset + asset.bytes.byteLength,
+				) as ArrayBuffer;
+				return new Response(body, {
 					status: 200,
 					headers: {
 						"content-type": asset.contentType,
@@ -110,8 +124,8 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				});
 			}
 
-			// POST /api/images — multipart: file, collection, id, name?
-			if (path === "api/images" && method === "POST") {
+			// POST /images — multipart: file, collection, id, name?
+			if (path === "images" && method === "POST") {
 				const form = await request.formData();
 				const file = form.get("file");
 				const collection = String(form.get("collection") ?? "");
@@ -146,8 +160,8 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				return Response.json(result.value);
 			}
 
-			// /api/collections/:collection[/:id]
-			const collMatch = /^api\/collections\/([^/]+)(?:\/([^/]+))?$/.exec(path);
+			// /collections/:collection[/:id]
+			const collMatch = /^collections\/([^/]+)(?:\/([^/]+))?$/.exec(path);
 			if (collMatch) {
 				const rawCollection = collMatch[1];
 				if (rawCollection === undefined) {

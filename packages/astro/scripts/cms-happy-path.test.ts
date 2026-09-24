@@ -161,9 +161,13 @@ describe("cms() schema-first setup", () => {
 		await hook(params);
 
 		expect(integration.shellPath).toBe("/cms");
-		expect(calls.injectRoute.length).toBe(1);
-		expect(calls.addMiddleware.length).toBe(1);
-		expect((calls.injectRoute[0] as { pattern: string }).pattern).toBe("/cms");
+		expect(calls.injectRoute.length).toBe(2);
+		expect(calls.addMiddleware.length).toBe(0);
+		const patterns = calls.injectRoute.map(
+			(r) => (r as { pattern: string }).pattern,
+		);
+		expect(patterns).toContain("/cms");
+		expect(patterns).toContain("/cms/api/[...path]");
 	});
 
 	test("hard-fails when content.config is missing", async () => {

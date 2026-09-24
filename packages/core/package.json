@@ -9,6 +9,7 @@
 		"./define-cms": "./src/define-cms.ts",
 		"./fetch-client": "./src/fetch-client.ts",
 		"./form-tree": "./src/form-tree.ts",
+		"./http": "./src/http/index.ts",
 		"./protocol": "./src/protocol.ts",
 		"./semantic": "./src/semantic/index.ts"
 	},
@@ -20,7 +21,8 @@
 	},
 	"scripts": {
 		"check": "tsc -p . && bunx tsc -p ./scripts/tsconfig.fixtures.json",
-		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/schema-form-projection.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts",
-		"test:semantic": "bun test ./scripts/schema-form-projection.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts"
+		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/schema-form-projection.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts ./scripts/http-dispatcher.test.ts",
+		"test:semantic": "bun test ./scripts/schema-form-projection.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts",
+		"test:http": "bun test ./scripts/http-dispatcher.test.ts"
 	}
 }

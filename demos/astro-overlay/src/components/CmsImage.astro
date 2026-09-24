@@ -20,7 +20,7 @@ const {
 	src,
 	base = "posts",
 	alt = "",
-	assetBase = "/_cms/api/assets",
+	assetBase = "/cms/api/assets",
 } = Astro.props as Props;
 
 const imgSrc = `${assetBase.replace(/\/+$/, "")}/${contentAssetPath(base, src)}`;

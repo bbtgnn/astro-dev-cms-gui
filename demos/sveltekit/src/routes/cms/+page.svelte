@@ -5,8 +5,8 @@
 	} from "@cms/authoring";
 	import { createFetchClient } from "@cms/core/fetch-client";
 	import type { FormTree } from "@cms/core/form-tree";
-	import catalog from "$lib/cms-components";
 	import { cmsConfig } from "$lib/cms";
+	import catalog from "$lib/cms-components";
 
 	const forms = Object.fromEntries(
 		Object.entries(cmsConfig.forms).filter(
@@ -20,7 +20,7 @@
 		{ forms },
 	);
 
-	const client = createFetchClient("/_cms");
+	const client = createFetchClient();
 	const getPreviewUrl = cmsConfig.getPreviewUrl;
 </script>
 

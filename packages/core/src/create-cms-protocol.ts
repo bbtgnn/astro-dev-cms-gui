@@ -288,7 +288,7 @@ export type CmsHost = {
 
 /**
  * Construct filesystem/memory write-back for an Astro (or other) host transport.
- * Prefer this when the dispatcher needs GET /api/assets/*.
+ * Prefer this when the dispatcher needs GET …/assets/*.
  */
 export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
 	const { capabilities, ...wmOptions } = options;

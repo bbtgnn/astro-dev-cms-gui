@@ -25,7 +25,7 @@ git CMS control plane.
 - **Local draft:** valid changes write atomically to the working tree with revision guards; invalid browser state does not replace canonical content (ADR-0014).
 - **Packages:** `@cms/authoring` ↔ `@cms/core` ↔ `@cms/astro` (+ `@cms/astro-demo-simple` / `@cms/astro-demo` reference hosts) — ADR-0018. UI must not import the `@cms/core` root or `@cms/astro`.
 - **Install surface:** convention-first `cms()` — ADR-0016 / ADR-0019. This branch (`explore/schema-first-overlay`) explores schema-first `content.config` + optional overlay vs ADR-0019 generate; demos are the live proof, not a superseding ADR.
-- **Reference host:** `demos/astro-simple` (`@cms/astro-demo-simple`, default `bun run dev` → `:4321`), `demos/astro-overlay` (`@cms/astro-demo`, `bun run dev:overlay` → `:4322`), and `demos/sveltekit` (`@cms/sveltekit-demo`, `bun run dev:kit` → `:4323`, no `@cms/astro`); shell `/cms`, API `/_cms`. Libraries stay under `packages/`.
+- **Reference host:** `demos/astro-simple` (`@cms/astro-demo-simple`, default `bun run dev` → `:4321`), `demos/astro-overlay` (`@cms/astro-demo`, `bun run dev:overlay` → `:4322`), and `demos/sveltekit` (`@cms/sveltekit-demo`, `bun run dev:kit` → `:4323`, no `@cms/astro`); shell `/cms`, API `/cms/api`. Libraries stay under `packages/`.
 - **Checks:** `bun run check && bun run check:allowlist && bun run lint`.
 
 ## Where work belongs

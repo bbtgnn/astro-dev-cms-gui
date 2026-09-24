@@ -106,7 +106,7 @@ describe("cmsIntegrationOptionsVitePlugin", () => {
 	test("emits mount, allowInProd, and contentRoot literals", async () => {
 		const contentRoot = path.resolve("/project", DEFAULT_CONTENT_ROOT);
 		const plugin = cmsIntegrationOptionsVitePlugin({
-			mount: "/_cms",
+			mount: "/cms/api",
 			allowInProd: false,
 			contentRoot,
 		});
@@ -114,7 +114,7 @@ describe("cmsIntegrationOptionsVitePlugin", () => {
 		expect(resolved).toBe(`\0${CMS_INTEGRATION_OPTIONS_VIRTUAL_ID}`);
 		if (resolved == null) throw new Error("expected resolved id");
 		const source = await plugin.load(resolved);
-		expect(source).toContain('export const mount = "/_cms";');
+		expect(source).toContain('export const mount = "/cms/api";');
 		expect(source).toContain("export const allowInProd = false;");
 		expect(source).toContain(
 			`export const contentRoot = ${JSON.stringify(contentRoot)};`,

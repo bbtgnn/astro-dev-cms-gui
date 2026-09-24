@@ -1,8 +1,9 @@
 /**
- * Thin protocol client for shell UI → /_cms transport.
+ * Thin protocol client for shell UI → /cms/api transport.
  * Browser-safe: import from `@cms/core/fetch-client` (not package root —
  * root re-exports Node FS writers).
  */
+import { DEFAULT_CMS_API_MOUNT } from "./http/dispatcher";
 import type {
 	CmsCapabilities,
 	CmsErr,
@@ -185,8 +186,10 @@ export type CmsFetchClient = Omit<CmsProtocol, "uploadImage"> & {
  * Browser protocol client — same read/write surface as CmsProtocol, over HTTP.
  * Typed read/save/delete failures are outcomes; other transport failures throw CmsFetchError.
  */
-export function createFetchClient(base = "/_cms"): CmsFetchClient {
-	const root = base.replace(/\/+$/, "");
+export function createFetchClient(
+	base = DEFAULT_CMS_API_MOUNT,
+): CmsFetchClient {
+	const root = base.replace(/\/+$/, "") || DEFAULT_CMS_API_MOUNT;
 
 	async function request(path: string, init?: RequestInit): Promise<Response> {
 		return fetch(`${root}${path}`, {
@@ -215,18 +218,18 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 
 	return {
 		async getCapabilities(): Promise<GetCapabilitiesResult> {
-			const value = await jsonOk<CmsCapabilities>("/api/capabilities");
+			const value = await jsonOk<CmsCapabilities>("/capabilities");
 			return { ok: true, value };
 		},
 
 		async listCollections() {
-			const value = await jsonOk<CollectionSummary[]>("/api/collections");
+			const value = await jsonOk<CollectionSummary[]>("/collections");
 			return { ok: true, value };
 		},
 
 		async listEntries(collection: string) {
 			const listed = await jsonOk<Array<{ id: string } | EntryIdentity>>(
-				`/api/collections/${encodeURIComponent(collection)}`,
+				`/collections/${encodeURIComponent(collection)}`,
 			);
 			const value: EntryIdentity[] = listed.map((row) =>
 				"collection" in row && typeof row.collection === "string"
@@ -238,7 +241,7 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 
 		async getEntry(collection: string, id: string): Promise<GetEntryResult> {
 			const res = await request(
-				`/api/collections/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,
+				`/collections/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,
 			);
 			if (res.ok) {
 				return { ok: true, value: (await res.json()) as ContentEntry };
@@ -252,7 +255,7 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 
 		async upsertEntry(input: UpsertEntryInput): Promise<SaveEntryResult> {
 			const res = await request(
-				`/api/collections/${encodeURIComponent(input.collection)}/${encodeURIComponent(input.id)}`,
+				`/collections/${encodeURIComponent(input.collection)}/${encodeURIComponent(input.id)}`,
 				{
 					method: "PUT",
 					body: JSON.stringify({
@@ -279,7 +282,7 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			id: string,
 		): Promise<DeleteEntryResult> {
 			const res = await request(
-				`/api/collections/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,
+				`/collections/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,
 				{ method: "DELETE" },
 			);
 			if (res.ok || res.status === 204) {
@@ -299,7 +302,7 @@ export function createFetchClient(base = "/_cms"): CmsFetchClient {
 			body.append("id", input.id);
 			if (input.name) body.append("name", input.name);
 
-			const res = await fetch(`${root}/api/images`, {
+			const res = await fetch(`${root}/images`, {
 				method: "POST",
 				headers: { accept: "application/json" },
 				body,

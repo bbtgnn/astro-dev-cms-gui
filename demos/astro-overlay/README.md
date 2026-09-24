@@ -20,8 +20,8 @@ bun install
 bun run --filter @cms/astro-demo dev
 ```
 
-Happy path: `http://127.0.0.1:4322/cms` (shell via `injectRoute`) and `/_cms`
-(JSON API via default host middleware). Port **4322** so it can run beside
+Happy path: `http://127.0.0.1:4322/cms` (shell via `injectRoute`) and `/cms/api`
+(JSON API via injected catch-all route). Port **4322** so it can run beside
 simple demo on 4321.
 
 `astro.config.mjs` uses `cms()` plus a monorepo-only Vite tweak so workspace
@@ -55,10 +55,10 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 |------|---------|
 | `/` | Demo home |
 | `/cms` | Authoring shell (overlay labels + custom editors) |
-| `/_cms/ok` | API heartbeat (via `cms()`) |
-| `/_cms/api/collections` | List collections (`authors`, `posts`) |
-| `/_cms/api/collections/authors/ada` | Author entry (custom name editor in shell) |
-| `/_cms/api/collections/posts/hello` | Post entry (SEO nested chrome in shell) |
+| `/cms/api/ok` | API heartbeat (via `cms()`) |
+| `/cms/api/collections` | List collections (`authors`, `posts`) |
+| `/cms/api/collections/authors/ada` | Author entry (custom name editor in shell) |
+| `/cms/api/collections/posts/hello` | Post entry (SEO nested chrome in shell) |
 | `PUT` invalid posts body | Authoritative schema Input validate → 400 |
 
 ## Curl smoke (with `dev` running)
@@ -66,7 +66,7 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 ```bash
 # overlay still validates via Astro/Zod Input
 curl -sS -o /tmp/cms-400.json -w "%{http_code}\n" -X PUT \
-  http://127.0.0.1:4322/_cms/api/collections/posts/smoke-temp \
+  http://127.0.0.1:4322/cms/api/collections/posts/smoke-temp \
   -H 'content-type: application/json' \
   -d '{"id":"smoke-temp","collection":"posts","data":{"title":1}}'
 ```

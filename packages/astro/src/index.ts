@@ -13,6 +13,7 @@ export {
 	cmsDevOnlyGuard,
 	createCmsDispatcher,
 	createCmsMiddleware,
+	DEFAULT_CMS_API_MOUNT,
 } from "./http";
 export {
 	type CmsIntegration,

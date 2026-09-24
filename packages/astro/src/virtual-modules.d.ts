@@ -58,7 +58,7 @@ declare module "virtual:@cms/host" {
 }
 
 declare module "virtual:@cms/integration-options" {
-	/** Mount prefix without trailing slash (default `/_cms`). */
+	/** Mount prefix without trailing slash (default `/cms/api`). */
 	export const mount: string;
 	export const allowInProd: boolean | undefined;
 	/** Absolute write-back root (default `src/content`). */
