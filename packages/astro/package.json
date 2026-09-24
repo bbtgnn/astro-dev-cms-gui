@@ -35,7 +35,7 @@
 		"zod": "catalog:"
 	},
 	"scripts": {
-		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-cms.test.ts ./scripts/cms-happy-path.test.ts ./scripts/content-proxy.test.ts ./scripts/stamped-host.test.ts ./scripts/codegen-input-types.test.ts",
+		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/vite-virtuals.test.ts ./scripts/define-astro-cms.test.ts ./scripts/cms-happy-path.test.ts ./scripts/content-proxy.test.ts ./scripts/stamped-host.test.ts ./scripts/codegen-input-types.test.ts",
 		"test:content-proxy": "bun test ./scripts/content-proxy.test.ts",
 		"test:stamped-host": "bun test ./scripts/stamped-host.test.ts",
 		"test:happy-path": "bun test ./scripts/cms-happy-path.test.ts",

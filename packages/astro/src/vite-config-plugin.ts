@@ -166,7 +166,7 @@ export function cmsConfigVitePlugin(
 					"export default { forms, types, getPreviewUrl };",
 				].join("\n");
 			}
-			// Prefer default export (defineCms result); named exports are legacy fallback.
+			// Prefer default export (defineAstroCms result); named exports are legacy fallback.
 			return [
 				`import * as __cmsConfig from ${entryLiteral};`,
 				"const __cfg = __cmsConfig.default ?? __cmsConfig;",

@@ -35,6 +35,7 @@ stay in `packages/`): `demos/astro-simple` (`@cms/astro-demo-simple`),
 `demos/astro-overlay` (`@cms/astro-demo`), and `demos/sveltekit`
 (`@cms/sveltekit-demo`). Astro: content.config-only and optional overlay
 demos; non-Astro: SvelteKit via portable `defineCms` (no `@cms/astro`).
+Astro overlay presentation uses `defineAstroCms` in `cms.config.ts`.
 Sample consumers, not the product identity.
 _Avoid_: dogfood app, prototype template (as the product name), `@cms/astro-template` (removed)
 

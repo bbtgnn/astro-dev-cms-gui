@@ -6,7 +6,7 @@
 
 ## Destination
 
-Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is validation + location authority; `@cms/astro` intercepts loaders/`image`/`reference` via content-proxy; optional `defineCms` overlay for presentation; self-host apps under top-level `demos/`; portable non-Astro `defineCms` on `@cms/core` with a SvelteKit demo. No generated `content.config` on product `cms()`.
+Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is validation + location authority; `@cms/astro` intercepts loaders/`image`/`reference` via content-proxy; optional `defineAstroCms` overlay for presentation; self-host apps under top-level `demos/`; portable `defineCms` on `@cms/core` with a SvelteKit demo. No generated `content.config` on product `cms()`.
 
 ## Notes
 
@@ -22,12 +22,12 @@ Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is
 - Schema-first + CMS overlay (sharper model); JSON Schema is form wire, not public seam.
 - Astro Input for CMS values; Output is render-only.
 - Image/ref kinds via stamp/proxy (astro-decap style); layout/singleton/editors via overlay — not FieldUi-on-Zod.
-- Astro `defineCms(options)` presentation-only; schemas from content.config; types via `cms.types.d.ts` module augmentation.
+- Astro `defineAstroCms(options)` presentation-only; schemas from content.config; types via `cms.types.d.ts` module augmentation.
 - Options-only cleanup: no collections arg on Astro face; host reads stamped content.config.
 - **Form tree:** one fluent structure (field refs + tabs/columns/group); tabs as objects; object enter = callback scope; lowers into `CollectionFormModel`.
-- **Non-Astro** `defineCms(cms => …)` on `@cms/core` with schema + location + form + leaf helpers.
+- **Portable** `defineCms(cms => …)` on `@cms/core` with schema + location + form + leaf helpers.
 - **demos/** top-level for self-host apps (`astro-simple`, `astro-overlay`, `sveltekit`); `packages/` for libraries only.
-- `defineCms` optional; singleton = editor flag; id↔path = host (ADR-0007).
+- Overlay optional; singleton = editor flag; id↔path = host (ADR-0007).
 - Full happy-path flip of `cms()` (kill generation); Q19–Q23 locked in parent research note.
 
 ## Frontier (local tickets)

@@ -6,12 +6,13 @@
  * Image/ref become CmsImage / CmsReference in generated cms.types.d.ts.
  *
  * Convention path `src/cms.config.ts` → `virtual:@cms/config`.
- * Prefer `export default defineCms(...)` only; Vite soft-binds named faces.
+ * Prefer `export default defineAstroCms(...)` only; Vite soft-binds named faces.
  * Live Svelte editors live in `src/cms.components.ts`.
+ * Portable schema + location + form uses `defineCms` from `@cms/core`.
  */
-import { defineCms } from "@cms/astro/config";
+import { defineAstroCms } from "@cms/astro/config";
 
-export default defineCms({
+export default defineAstroCms({
 	authors: {
 		form: (f) => [
 			f.field("name").label("Author name").editor("AuthorNameEditor"),

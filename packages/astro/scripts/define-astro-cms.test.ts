@@ -1,13 +1,13 @@
 /**
- * Host facade: `defineCms(options)` presentation-only face.
+ * Host facade: `defineAstroCms(options)` presentation-only face.
  */
 
 import { describe, expect, test } from "bun:test";
-import { defineCms } from "../src/config.ts";
+import { defineAstroCms } from "../src/config.ts";
 
-describe("defineCms", () => {
+describe("defineAstroCms", () => {
 	test("normalizes per-collection form + previewUrl + type", () => {
-		const config = defineCms({
+		const config = defineAstroCms({
 			posts: {
 				type: "collection",
 				previewUrl: (id) => `/posts/${id}`,
@@ -37,7 +37,7 @@ describe("defineCms", () => {
 	});
 
 	test("defaults type to collection and preview to null", () => {
-		const config = defineCms({
+		const config = defineAstroCms({
 			posts: { form: (f) => [f.field("title")] },
 		});
 		expect(config.types.posts).toBe("collection");
@@ -45,7 +45,7 @@ describe("defineCms", () => {
 	});
 
 	test("accepts a pre-built form tree", () => {
-		const config = defineCms({
+		const config = defineAstroCms({
 			posts: {
 				form: [
 					{

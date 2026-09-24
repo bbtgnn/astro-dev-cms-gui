@@ -9,7 +9,7 @@ import {
 	stampImageSchema,
 	stampRelationSchema,
 } from "../src/content-proxy/stamp-helpers";
-import { defineCms } from "../src/config.ts";
+import { defineAstroCms } from "../src/config.ts";
 
 describe("printZodInputType", () => {
 	test("maps stamped image/ref to CmsImage / CmsReference", () => {
@@ -52,9 +52,9 @@ describe("printCollectionTypesFile", () => {
 	});
 });
 
-describe("defineCms options overlay", () => {
+describe("defineAstroCms options overlay", () => {
 	test("applies form + previewUrl without schemas", () => {
-		const cms = defineCms({
+		const cms = defineAstroCms({
 			posts: {
 				previewUrl: (id) => `/posts/${id}`,
 				form: (f) => [

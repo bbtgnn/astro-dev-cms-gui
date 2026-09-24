@@ -1,7 +1,7 @@
 /**
- * Portable non-Astro `defineCms` — schema + location + form → host descriptors.
+ * Portable `defineCms` — schema + location + form → host descriptors.
  *
- * Distinct from `@cms/astro/config` {@link defineCms}, which is options-only
+ * Distinct from `@cms/astro/config` {@link defineAstroCms}, which is options-only
  * (presentation: `form` / `previewUrl` / `type`) and does **not** take
  * `schema` or `location` (those come from Astro `content.config` + stamps).
  *

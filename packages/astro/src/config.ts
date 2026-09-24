@@ -1,12 +1,12 @@
 /**
  * Host facade for `src/cms.config.ts` (schema-first overlay).
  *
- * {@link defineCms}`(options)` — presentation only (previewUrl, type, form).
- * Prefer `export default defineCms({ … })`.
+ * {@link defineAstroCms}`(options)` — presentation only (previewUrl, type, form).
+ * Prefer `export default defineAstroCms({ … })`.
  *
  * Does **not** accept `schema` or `location` — those stay on Astro
- * `content.config` + content-proxy stamps. Portable non-Astro hosts use
- * `defineCms` from `@cms/core/define-cms` instead.
+ * `content.config` + content-proxy stamps. Portable hosts use
+ * `defineCms` from `@cms/core/define-cms` instead (ADR-0019).
  *
  * Validation schemas come from `content.config` (stamped host / shell form
  * models). Form-tree field refs type against Input keys via `cms sync` /
@@ -71,11 +71,11 @@ export type CmsCollectionOptions = {
  * Overlay options: strict form builders when `CmsCollections` is augmented;
  * loose record before `cms sync`.
  */
-export type DefineCmsOptions = [keyof CmsCollections] extends [never]
+export type DefineAstroCmsOptions = [keyof CmsCollections] extends [never]
 	? Record<string, CmsCollectionOptions>
 	: DefineCmsOptionsFromGenerated;
 
-export type DefineCmsResult = {
+export type DefineAstroCmsResult = {
 	readonly forms: {
 		readonly [K in string]?: FormTree;
 	};
@@ -97,12 +97,14 @@ function resolveForm(
 }
 
 /**
- * Schema-first overlay entry for `src/cms.config.ts`.
+ * Astro overlay entry for `src/cms.config.ts`.
  *
  * Presentation only — schemas live in `content.config`.
- * Use {@link CmsCollectionOptions.form} (form tree); path-map `ui` is gone.
+ * Portable schema + location + form lives on `@cms/core` {@link defineCms}.
  */
-export function defineCms(options: DefineCmsOptions = {}): DefineCmsResult {
+export function defineAstroCms(
+	options: DefineAstroCmsOptions = {},
+): DefineAstroCmsResult {
 	const forms: Record<string, FormTree | undefined> = {};
 	const types: Record<string, CmsCollectionType | undefined> = {};
 	const previewByCollection = new Map<string, (id: string) => string | null>();

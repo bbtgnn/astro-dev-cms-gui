@@ -14,7 +14,7 @@ function printHelp(): void {
   cms sync       Emit src/cms.types.d.ts from content.config (CMS Input types)
   cms generate   (removed)
 
-Hand-authored src/content.config.ts + optional defineCms(options) overlay.
+Hand-authored src/content.config.ts + optional defineAstroCms(options) overlay.
 `);
 }
 

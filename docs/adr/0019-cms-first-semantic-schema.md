@@ -35,10 +35,17 @@ catalog keys** only; never live Svelte values. Live editors / wrappers / icons
 live in `src/cms.components.ts` and resolve only in the host Vite graph
 (`virtual:@cms/components` → `resolveBinding`).
 
-**Packages:** `@cms/core` owns IR and serializable models (no Svelte);
-`@cms/authoring` owns Svelte contracts and the form shell;
-`@cms/astro` owns `defineCms` / emission / generation / host validation
-([ADR-0018](0018-three-packages-for-adr-0008-layers.md)).
+**Packages:** `@cms/core` owns serializable models, CMS protocol, and portable
+`defineCms` (schema + location + form → host descriptors); `@cms/authoring`
+owns Svelte contracts and the form shell; `@cms/astro` owns `defineAstroCms`
+(presentation overlay for `cms.config`), content-proxy / stamped host, and
+`cms()` mount ([ADR-0018](0018-three-packages-for-adr-0008-layers.md)).
+
+**Schema-first exploration note:** on `explore/schema-first-overlay`, human
+`content.config` + optional `defineAstroCms` overlay replace CMS-first IR
+generation of `content.config`. The package ownership of `defineCms` /
+`defineAstroCms` above holds; generation lifecycle in this ADR remains the
+CMS-first destination until a superseding install-surface ADR.
 
 **Why not Astro-native schemas + sparse editor config:** Astro 7’s public
 `image()` typing blocks compile-time recovery of persisted path + image kind

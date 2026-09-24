@@ -95,7 +95,7 @@ export async function syncCmsCollectionTypes(
 	};
 }
 
-/** Materialize a single Astro collection config schema (for defineCms). */
+/** Materialize a single Astro collection config schema (for defineAstroCms). */
 export function materializeCollectionSchemas(
 	collections: Readonly<Record<string, StampedCollectionConfig>>,
 ): Record<string, z.ZodType> {

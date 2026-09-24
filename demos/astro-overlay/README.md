@@ -1,7 +1,7 @@
 # @cms/astro-demo
 
 **Demo / self-host fixture** at `demos/astro-overlay` for schema-first CMS with optional overlay:
-native Astro `content.config` + `defineCms(options)` + `cms.components`.
+native Astro `content.config` + `defineAstroCms(options)` + `cms.components`.
 Not a starter to copy into products.
 
 Proves the custom integration ladder — nested field chrome, catalog editors,
@@ -29,7 +29,7 @@ simple demo on 4321.
 Layout:
 
 - `src/content.config.ts` — hand-authored Astro collections (includes nested `seo`)
-- `src/cms.config.ts` — `export default defineCms({ authors, posts })`
+- `src/cms.config.ts` — `export default defineAstroCms({ authors, posts })`
 - `src/cms.components.ts` — live Svelte catalog (`AuthorNameEditor`)
 - `src/cms.types.d.ts` — generated Input types (`cms sync` / gitignored)
 - `src/content/` — JSON entries (seeded from simple; optional `seo` on posts)
@@ -40,7 +40,7 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 
 | Feature | Where |
 |---------|--------|
-| Multi-collection options | `authors` + `posts` keys in `defineCms` options |
+| Multi-collection options | `authors` + `posts` keys in `defineAstroCms` options |
 | Form tree tabs + nested scope | `posts.form` → content/media tabs; `seo.fields(…)` |
 | Custom editor | `authors.form` → `.editor("AuthorNameEditor")` via catalog |
 | Preview URL | `posts.previewUrl(id)` → `/posts/:id` |
