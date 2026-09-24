@@ -24,13 +24,9 @@ import {
 	scanEntryIds,
 	type Writer,
 } from "@cms/core";
+import { unwrapZod } from "@cms/core/semantic";
 import { z } from "zod";
-import {
-	CONTENT_FIELD_STAMP,
-	type ContentFieldStamp,
-	getContentFieldStamp,
-	stampImageSchema,
-} from "./content-proxy/stamp-helpers";
+import { stampImageSchema } from "./content-proxy/stamp-helpers";
 import { getLoaderStamp } from "./content-proxy/stamps";
 
 export type CollectionLocationOverride = {
@@ -82,11 +78,7 @@ export type BuildFsHostFromStampedResult = {
 	stampedSchemas: Readonly<Record<string, z.ZodType>>;
 };
 
-type CmsMeta = { cms?: { kind?: string; collection?: string } };
-
 type ZodWalkNode = {
-	readonly [CONTENT_FIELD_STAMP]?: ContentFieldStamp;
-	readonly meta?: (() => unknown) | unknown;
 	readonly type?: string;
 	readonly unwrap?: () => unknown;
 	readonly shape?: Record<string, unknown>;
@@ -98,75 +90,6 @@ type ZodWalkNode = {
 		readonly element?: unknown;
 	};
 };
-
-function readStamp(schema: unknown): ContentFieldStamp | undefined {
-	const fromSymbol = getContentFieldStamp(schema);
-	if (fromSymbol) return fromSymbol;
-	if (!schema || typeof schema !== "object") return undefined;
-	const node = schema as ZodWalkNode;
-	let meta: unknown = node.meta;
-	if (typeof meta === "function") {
-		try {
-			meta = meta.call(schema);
-		} catch {
-			meta = undefined;
-		}
-	}
-	const cms = (meta as CmsMeta | undefined)?.cms;
-	if (cms?.kind === "image") return { kind: "image" };
-	if (cms?.kind === "reference" && typeof cms.collection === "string") {
-		return { kind: "reference", collection: cms.collection };
-	}
-	return undefined;
-}
-
-function unwrapZod(schema: unknown): {
-	inner: unknown;
-	optional: boolean;
-	nullable: boolean;
-	defaultValue?: unknown;
-	stamp: ContentFieldStamp | undefined;
-} {
-	let optional = false;
-	let nullable = false;
-	let defaultValue: unknown;
-	let stamp = readStamp(schema);
-	let current: unknown = schema;
-
-	for (let i = 0; i < 8; i++) {
-		if (!current || typeof current !== "object") break;
-		const node = current as ZodWalkNode;
-		stamp = stamp ?? readStamp(current);
-		const t = node.type ?? node.def?.type;
-		if (t === "optional" && typeof node.unwrap === "function") {
-			optional = true;
-			current = node.unwrap();
-			continue;
-		}
-		if (t === "nullable" && typeof node.unwrap === "function") {
-			nullable = true;
-			current = node.unwrap();
-			continue;
-		}
-		if (t === "default" && typeof node.unwrap === "function") {
-			if (node.def?.defaultValue !== undefined) {
-				defaultValue = node.def.defaultValue;
-			}
-			current = node.unwrap();
-			continue;
-		}
-		break;
-	}
-
-	stamp = stamp ?? readStamp(current);
-	return {
-		inner: current,
-		optional,
-		nullable,
-		...(defaultValue !== undefined ? { defaultValue } : {}),
-		stamp,
-	};
-}
 
 function zodObjectShape(schema: unknown): Record<string, unknown> | undefined {
 	if (!schema || typeof schema !== "object") return undefined;

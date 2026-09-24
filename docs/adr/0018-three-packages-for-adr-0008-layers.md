@@ -13,9 +13,12 @@ reference host, matching the conceptual layers in
   `@cms/core/protocol` only — not the `@cms/core` root (FS writers) or
   `@cms/astro`.
 - **`@cms/core`** — semantic IR, CMS protocol, client, and FS write-back
-  adapters behind `createCmsProtocol` / `createCmsHost`.
+  adapters behind `createCmsProtocol` / `createCmsHost`. Content-field stamps
+  (image / file / reference marks on Zod leaves) live here —
+  [ADR-0024](0024-content-field-stamps-live-in-core.md).
 - **`@cms/astro`** — Astro host mount (`cms()`), HTTP dispatcher/middleware, and
-  content.config generation.
+  content.config generation. Content-proxy may wrap Astro helpers onto core
+  stamps; loader stamps stay Astro-owned (ADR-0024).
 - **`@cms/astro-template`** — reference host for self-host validation (not a
   product package).
 

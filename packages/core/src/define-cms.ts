@@ -17,9 +17,9 @@ import type {
 import type { FormTree, ScopedFormTreeHelpers } from "./form-tree";
 import { createScopedFormTreeHelpers } from "./form-tree";
 import {
-	CONTENT_FIELD_STAMP,
 	type ContentFieldStampMeta,
-} from "./semantic/schema-form-projection";
+	stampContentFieldLeaf,
+} from "./semantic/content-field-stamp";
 
 /** Persisted image path (Input). Brand enables kind-aware form chrome. */
 export type CmsImage = string & { readonly __cmsKind: "image" };
@@ -64,30 +64,6 @@ export type CmsCollectionBuilt<Schema extends z.ZodType = z.ZodType> = {
 	readonly previewUrl?: (id: string) => string | null;
 	readonly type: CmsCollectionType;
 };
-
-type MetaCapable = {
-	meta?: (m: unknown) => unknown;
-};
-
-type StampedSchema = {
-	[CONTENT_FIELD_STAMP]?: ContentFieldStampMeta;
-};
-
-function attachStamp<T>(schema: T, stamp: ContentFieldStampMeta): T {
-	(schema as StampedSchema)[CONTENT_FIELD_STAMP] = stamp;
-	return schema;
-}
-
-function stampLeaf<T extends MetaCapable>(
-	schema: T,
-	stamp: ContentFieldStampMeta,
-	meta: { readonly cms: ContentFieldStampMeta },
-): T {
-	if (schema && typeof schema.meta === "function") {
-		return attachStamp(schema.meta(meta) as T, stamp);
-	}
-	return attachStamp(schema, stamp);
-}
 
 function resolveForm<Data>(form: FormTree | FormBuilderFor<Data>): FormTree {
 	if (typeof form === "function") {
@@ -180,16 +156,18 @@ function createCmsHelpers(): CmsHelpers {
 			};
 		},
 		image(): z.ZodType<CmsImage, CmsImage> {
-			const base = z.string() as unknown as z.ZodType<CmsImage, CmsImage> &
-				MetaCapable;
+			const base = z.string() as unknown as z.ZodType<CmsImage, CmsImage> & {
+				meta?: (m: unknown) => unknown;
+			};
 			const stamp: ContentFieldStampMeta = { kind: "image" };
-			return stampLeaf(base, stamp, { cms: stamp });
+			return stampContentFieldLeaf(base, stamp, { cms: stamp });
 		},
 		file(): z.ZodType<CmsFile, CmsFile> {
-			const base = z.string() as unknown as z.ZodType<CmsFile, CmsFile> &
-				MetaCapable;
+			const base = z.string() as unknown as z.ZodType<CmsFile, CmsFile> & {
+				meta?: (m: unknown) => unknown;
+			};
 			const stamp: ContentFieldStampMeta = { kind: "file" };
-			return stampLeaf(base, stamp, { cms: stamp });
+			return stampContentFieldLeaf(base, stamp, { cms: stamp });
 		},
 		reference<C extends string>(
 			collection: C,
@@ -197,13 +175,14 @@ function createCmsHelpers(): CmsHelpers {
 			const base = z.string() as unknown as z.ZodType<
 				CmsReference<C>,
 				CmsReference<C>
-			> &
-				MetaCapable;
+			> & {
+				meta?: (m: unknown) => unknown;
+			};
 			const stamp: ContentFieldStampMeta = {
 				kind: "reference",
 				collection,
 			};
-			return stampLeaf(base, stamp, { cms: stamp });
+			return stampContentFieldLeaf(base, stamp, { cms: stamp });
 		},
 	};
 }

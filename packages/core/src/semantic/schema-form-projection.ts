@@ -7,13 +7,15 @@
  * - **Authoritative (host):** the live Zod / Standard Schema `.parse` / `.safeParse` on
  *   persisted Input. Do not chase Ajv ≡ Zod.
  *
- * Image / reference kinds come from content-proxy stamps (`Symbol.for` + `.meta.cms`),
- * not FieldUi-on-Zod. Optional **form tree** lowers layout + field-ref chrome
- * (label, editor catalog key, kind hints).
+ * Image / reference kinds come from content-field stamps (ADR-0024: Symbol +
+ * `.meta.cms`), not FieldUi-on-Zod. Optional **form tree** lowers layout +
+ * field-ref chrome (label, editor catalog key, kind hints).
  */
 
 import { z } from "zod";
 import type { FormTree, FormTreeFieldChrome, FormTreeNode } from "../form-tree";
+import type { ContentFieldStampMeta } from "./content-field-stamp";
+import { readContentFieldStamp, unwrapZod } from "./content-field-stamp";
 import type {
 	CollectionFormModel,
 	FormConstraintSummary,
@@ -23,13 +25,11 @@ import type {
 } from "./form-model";
 import type { SemanticKind } from "./types";
 
-/** Same key as `@cms/astro/content-proxy` — readable without importing the host package. */
-export const CONTENT_FIELD_STAMP = Symbol.for("@cms/astro.contentFieldStamp");
-
-export type ContentFieldStampMeta =
-	| { readonly kind: "image" }
-	| { readonly kind: "file" }
-	| { readonly kind: "reference"; readonly collection: string };
+export {
+	CONTENT_FIELD_STAMP,
+	type ContentFieldStamp,
+	type ContentFieldStampMeta,
+} from "./content-field-stamp";
 
 export type ProjectSchemaFormOptions = {
 	readonly collectionId?: string;
@@ -40,96 +40,6 @@ export type ProjectSchemaFormOptions = {
 export type ProjectSchemaFormModelsOptions = {
 	readonly forms?: Readonly<Record<string, FormTree>>;
 };
-
-type CmsMeta = {
-	readonly cms?: {
-		readonly kind?: string;
-		readonly collection?: string;
-	};
-};
-
-type StampedSchema = {
-	readonly [CONTENT_FIELD_STAMP]?: ContentFieldStampMeta;
-	readonly meta?: (() => unknown) | unknown;
-	readonly type?: string;
-	readonly unwrap?: () => unknown;
-	readonly def?: { readonly type?: string; readonly innerType?: unknown };
-};
-
-function readCmsMeta(schema: unknown): ContentFieldStampMeta | undefined {
-	if (!schema || typeof schema !== "object") return undefined;
-	const stamped = schema as StampedSchema;
-	const stamp = stamped[CONTENT_FIELD_STAMP];
-	if (stamp?.kind === "image") return { kind: "image" };
-	if (stamp?.kind === "file") return { kind: "file" };
-	if (stamp?.kind === "reference") {
-		return { kind: "reference", collection: stamp.collection };
-	}
-
-	let meta: unknown = stamped.meta;
-	if (typeof meta === "function") {
-		try {
-			meta = meta.call(schema);
-		} catch {
-			meta = undefined;
-		}
-	}
-	const cms = (meta as CmsMeta | undefined)?.cms;
-	if (cms?.kind === "image") return { kind: "image" };
-	if (cms?.kind === "file") return { kind: "file" };
-	if (cms?.kind === "reference" && typeof cms.collection === "string") {
-		return { kind: "reference", collection: cms.collection };
-	}
-	return undefined;
-}
-
-function unwrapZod(schema: unknown): {
-	inner: unknown;
-	optional: boolean;
-	nullable: boolean;
-	defaultValue?: unknown;
-	stamp: ContentFieldStampMeta | undefined;
-} {
-	let optional = false;
-	let nullable = false;
-	let defaultValue: unknown;
-	let stamp = readCmsMeta(schema);
-	let current: unknown = schema;
-
-	for (let i = 0; i < 8; i++) {
-		if (!current || typeof current !== "object") break;
-		const node = current as StampedSchema;
-		stamp = stamp ?? readCmsMeta(current);
-		const t = node.type ?? node.def?.type;
-		if (t === "optional" && typeof node.unwrap === "function") {
-			optional = true;
-			current = node.unwrap();
-			continue;
-		}
-		if (t === "nullable" && typeof node.unwrap === "function") {
-			nullable = true;
-			current = node.unwrap();
-			continue;
-		}
-		if (t === "default" && typeof node.unwrap === "function") {
-			const def = (current as { def?: { defaultValue?: unknown } }).def
-				?.defaultValue;
-			if (def !== undefined) defaultValue = def;
-			current = node.unwrap();
-			continue;
-		}
-		break;
-	}
-
-	stamp = stamp ?? readCmsMeta(current);
-	return {
-		inner: current,
-		optional,
-		nullable,
-		...(defaultValue !== undefined ? { defaultValue } : {}),
-		stamp,
-	};
-}
 
 function joinPath(parent: string, id: string): string {
 	return parent === "" ? id : `${parent}.${id}`;
@@ -272,7 +182,7 @@ function projectProperty(
 		let item: FormLayoutNode | undefined;
 		if (
 			itemsJson &&
-			kindFromJson(itemsJson, readCmsMeta(itemZod)) === "object"
+			kindFromJson(itemsJson, readContentFieldStamp(itemZod)) === "object"
 		) {
 			const itemPath = `${path}[]`;
 			const itemProps = asObject(itemsJson.properties) ?? {};

@@ -12,9 +12,9 @@ branch — schema + form tree are the only projection inputs.
 | `@cms/core/semantic` | `projectSchemaFormModel(s)` (+ optional `form` tree) | `CollectionFormModel` |
 | `@cms/authoring` | `editorCollectionsFromSchemas(collections, catalog, { forms? })` | `EditorCollectionInput` per collection |
 
-Stamps (`Symbol.for("@cms/astro.contentFieldStamp")` + `.meta.cms`) mark `image` /
-`reference` kinds. Presentation chrome and layout come from the **form tree**
-(field refs + tabs/columns/group) — not path-map overlays or FieldUi-on-Zod.
+Stamps (`Symbol.for("@cms/core.contentFieldStamp")` + `.meta.cms`, ADR-0024) mark
+`image` / `reference` kinds. Presentation chrome and layout come from the **form
+tree** (field refs + tabs/columns/group) — not path-map overlays or FieldUi-on-Zod.
 
 ## Dual engines (Ajv client vs authoritative parse)
 

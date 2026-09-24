@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from "bun:test";
 import { createFormTreeHelpers } from "@cms/core/form-tree";
-import { projectSchemaFormModel } from "@cms/core/semantic";
+import { CONTENT_FIELD_STAMP, projectSchemaFormModel } from "@cms/core/semantic";
 import { createFormValidator } from "@sjsf/ajv8-validator";
 import { z } from "zod";
 import { lowerFormModelToSjsf } from "../src/form/lower-sjsf";
@@ -14,8 +14,6 @@ import {
 	resolveFieldEditor,
 	stockEditorRegistry,
 } from "../src/form/stock-registry";
-
-const CONTENT_FIELD_STAMP = Symbol.for("@cms/astro.contentFieldStamp");
 
 function stampImage<T extends z.ZodType>(schema: T): T {
 	const withMeta = schema.meta({ cms: { kind: "image" as const } }) as T;

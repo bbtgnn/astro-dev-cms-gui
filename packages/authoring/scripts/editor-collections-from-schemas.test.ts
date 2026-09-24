@@ -3,10 +3,9 @@
  */
 import { describe, expect, test } from "bun:test";
 import { createFormTreeHelpers } from "@cms/core/form-tree";
+import { CONTENT_FIELD_STAMP } from "@cms/core/semantic";
 import { z } from "zod";
 import { editorCollectionsFromSchemas } from "../src/form/editor-collections";
-
-const CONTENT_FIELD_STAMP = Symbol.for("@cms/astro.contentFieldStamp");
 
 function stampImage<T extends z.ZodType>(schema: T): T {
 	const withMeta = schema.meta({ cms: { kind: "image" as const } }) as T;

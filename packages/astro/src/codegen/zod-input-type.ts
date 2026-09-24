@@ -3,10 +3,7 @@
  * Stamped image/ref → CmsImage / CmsReference<"collection">.
  */
 
-import type { ContentFieldStamp } from "../content-proxy/stamp-helpers";
-import { getContentFieldStamp } from "../content-proxy/stamp-helpers";
-
-type CmsMeta = { cms?: { kind?: string; collection?: string } };
+import { unwrapZod } from "@cms/core/semantic";
 
 type ZodWalkNode = {
 	readonly type?: string;
@@ -23,7 +20,6 @@ type ZodWalkNode = {
 		readonly entries?: Record<string, unknown>;
 		readonly options?: readonly unknown[];
 	};
-	readonly meta?: (() => unknown) | unknown;
 };
 
 export type PrintedFieldKind =
@@ -41,64 +37,10 @@ export type PrintedTypeTree = {
 	readonly fields?: Readonly<Record<string, PrintedTypeTree>>;
 };
 
-function readStamp(schema: unknown): ContentFieldStamp | undefined {
-	const fromSymbol = getContentFieldStamp(schema);
-	if (fromSymbol) return fromSymbol;
-	if (!schema || typeof schema !== "object") return undefined;
-	const node = schema as ZodWalkNode;
-	let meta: unknown = node.meta;
-	if (typeof meta === "function") {
-		try {
-			meta = meta.call(schema);
-		} catch {
-			meta = undefined;
-		}
-	}
-	const cms = (meta as CmsMeta | undefined)?.cms;
-	if (cms?.kind === "image") return { kind: "image" };
-	if (cms?.kind === "reference" && typeof cms.collection === "string") {
-		return { kind: "reference", collection: cms.collection };
-	}
-	return undefined;
-}
-
-function unwrapZod(schema: unknown): {
-	inner: unknown;
-	optional: boolean;
-	nullable: boolean;
-	stamp: ContentFieldStamp | undefined;
-} {
-	let optional = false;
-	let nullable = false;
-	let stamp = readStamp(schema);
-	let current: unknown = schema;
-
-	for (let i = 0; i < 8; i++) {
-		if (!current || typeof current !== "object") break;
-		const node = current as ZodWalkNode;
-		stamp = stamp ?? readStamp(current);
-		const t = node.type ?? node.def?.type;
-		if (t === "optional" && typeof node.unwrap === "function") {
-			optional = true;
-			current = node.unwrap();
-			continue;
-		}
-		if (t === "nullable" && typeof node.unwrap === "function") {
-			nullable = true;
-			current = node.unwrap();
-			continue;
-		}
-		if (t === "default" && typeof node.unwrap === "function") {
-			// Input: key optional when defaulted
-			optional = true;
-			current = node.unwrap();
-			continue;
-		}
-		break;
-	}
-
-	stamp = stamp ?? readStamp(current);
-	return { inner: current, optional, nullable, stamp };
+/** Input optionality: `.optional()` or `.default()` (defaulted keys are optional on Input). */
+function isInputOptional(schema: unknown): boolean {
+	const { optional, defaultValue } = unwrapZod(schema);
+	return optional || defaultValue !== undefined;
 }
 
 function objectShape(node: ZodWalkNode): Record<string, unknown> | undefined {
@@ -145,7 +87,7 @@ function printInner(schema: unknown): PrintedTypeTree {
 		for (const [key, child] of Object.entries(shape)) {
 			const printed = printZodInputType(child);
 			fields[key] = printed;
-			const opt = unwrapZod(child).optional ? "?" : "";
+			const opt = isInputOptional(child) ? "?" : "";
 			lines.push(`\t\t${JSON.stringify(key)}${opt}: ${printed.typeSource};`);
 		}
 		return {
@@ -197,7 +139,8 @@ function printInner(schema: unknown): PrintedTypeTree {
 
 /** Print CMS Input type for a materialized Zod schema. */
 export function printZodInputType(schema: unknown): PrintedTypeTree {
-	const { optional, nullable } = unwrapZod(schema);
+	const optional = isInputOptional(schema);
+	const { nullable } = unwrapZod(schema);
 	const inner = printInner(schema);
 	let typeSource = inner.typeSource;
 	if (nullable) typeSource = `${typeSource} | null`;

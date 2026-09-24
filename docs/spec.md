@@ -133,6 +133,8 @@ These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
   generate / default host / browser may each compile the unified tree for now.
 - [ADR-0023](adr/0023-semantic-projection-peers-stay.md) — no extra semantic
   “project everything” facade; depth stays on host/authoring mounts.
+- [ADR-0024](adr/0024-content-field-stamps-live-in-core.md) — content-field
+  stamps live in `@cms/core`; Astro content-proxy adapts native helpers.
 - [ADR-0003](adr/0003-field-ui-on-zod-meta.md) — superseded by ADR-0019.
 - [ADR-0004](adr/0004-live-content-config-discovery.md) — default host uses
   schema partition / IR; browser never loads `content.config` (amended by

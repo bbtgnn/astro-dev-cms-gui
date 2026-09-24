@@ -6,13 +6,11 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import { createFormTreeHelpers } from "../src/form-tree";
+import { CONTENT_FIELD_STAMP } from "../src/semantic/content-field-stamp";
 import {
 	projectSchemaFormModel,
 	projectSchemaFormModels,
 } from "../src/semantic/schema-form-projection";
-
-/** Mirror `@cms/astro` content-field stamp without importing the host package. */
-const CONTENT_FIELD_STAMP = Symbol.for("@cms/astro.contentFieldStamp");
 
 function stampImage<T extends z.ZodType>(schema: T): T {
 	const withMeta = schema.meta({ cms: { kind: "image" as const } }) as T;
