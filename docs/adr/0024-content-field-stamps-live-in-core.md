@@ -23,4 +23,5 @@ enough locality for the repeated seam.
 Clarifies package gravity relative to
 [ADR-0018](0018-three-packages-for-adr-0008-layers.md); does not change
 [ADR-0010](0010-persisted-input-with-environment-schema-projections.md)
-(one persisted-input model, environment projections).
+(one persisted-input model, environment projections). Install authority is
+schema-first ([ADR-0025](0025-schema-first-content-config-optional-overlay.md)).

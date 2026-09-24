@@ -1,7 +1,9 @@
 # Schema-first + CMS overlay — design exploration
 
 **Date:** 2026-09-23  
-**Status:** exploration only (branch `explore/schema-first-overlay`). **Not** map authority. Does **not** supersede ADRs until an explicit ADR says so.  
+**Status:** exploration **accepted** — product law is
+[ADR-0025](../adr/0025-schema-first-content-config-optional-overlay.md). This
+note remains design history from branch `explore/schema-first-overlay`.  
 **Question:** Soften CMS lock-in by making the user’s Standard Schema the validation authority, projecting JSON Schema for forms, and putting presentation chrome in an optional `defineCms` overlay — without losing image/ref semantics or portable (non-Astro) hosts.  
 **Method:** Design grilling in-session; grounded in current ADRs + the sibling `astro-decap-github-connect` stamp/proxy tricks + Fattura second-host stance.  
 **Honesty bar:** Exploration tree, not a decision. Recommendations below are locked *for this spike*, not product law.

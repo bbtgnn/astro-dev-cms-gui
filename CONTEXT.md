@@ -16,34 +16,33 @@ SvelteKit reference hosts) to prove integration and write-back — not only via 
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: `src/cms.config.ts` (human unified tree), generated `src/content.config.ts`, content under `src/content/`. Semantic IR and the CMS protocol live in `@cms/core`; the authoring UI lives in `@cms/authoring`.
+How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: required `src/content.config.ts` (stamped), optional `src/cms.config.ts` / `src/cms.components.ts` overlay, content under `src/content/`. Portable `defineCms`, stamps, and the CMS protocol live in `@cms/core`; the authoring UI lives in `@cms/authoring`.
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
 
 **Editor configuration**:
-The Node-safe project module (`src/cms.config.ts` by convention) that exports
-the CMS unified tree (closed semantic schema, layout, loaders, string catalog
-keys) and optional preview URL mapping. Compiled through the host Vite graph as
-`virtual:@cms/config`; never mixed into the CMS protocol. Also the human source
-and generation partition for `src/content.config.ts` (ADR-0019). Live Svelte
-editors live in `src/cms.components.ts` (`virtual:@cms/components`).
-_Avoid_: cms.config as a server discovery registry, content.config (for the browser edge)
+Optional project module (`src/cms.config.ts` by convention) that exports a
+`defineAstroCms` presentation overlay (form trees, leaf chrome) and optional
+preview URL mapping. Compiled through the host Vite graph as `virtual:@cms/config`;
+never mixed into the CMS protocol. Live Svelte editors live in
+`src/cms.components.ts` (`virtual:@cms/components`). Persisted shape and location
+live in `src/content.config.ts`, not here.
+_Avoid_: cms.config as a server discovery registry, content.config (for the browser edge), CMS unified tree (as the required human source)
 
 **Reference host**:
-The in-repo self-host apps used to exercise and validate the product. On
-`explore/schema-first-overlay` they live under top-level `demos/` (libraries
-stay in `packages/`): `demos/astro-simple` (`@cms/astro-demo-simple`),
+The in-repo self-host apps under top-level `demos/` (libraries stay in
+`packages/`): `demos/astro-simple` (`@cms/astro-demo-simple`),
 `demos/astro-overlay` (`@cms/astro-demo`), and `demos/sveltekit`
-(`@cms/sveltekit-demo`). Astro: content.config-only and optional overlay
-demos; non-Astro: SvelteKit via portable `defineCms` (no `@cms/astro`).
-Astro overlay presentation uses `defineAstroCms` in `cms.config.ts`.
-Sample consumers, not the product identity.
+(`@cms/sveltekit-demo`). Astro: content.config-only and optional overlay demos;
+non-Astro: SvelteKit via portable `defineCms` (no `@cms/astro`). Astro overlay
+presentation uses `defineAstroCms` in `cms.config.ts`. Sample consumers, not
+the product identity.
 _Avoid_: dogfood app, prototype template (as the product name), `@cms/astro-template` (removed)
 
 **Form tree**:
 The presentation tree for one collection’s editor: layout nodes (tabs, columns,
 group, default stack) plus **field refs** with fluent chrome. Does not declare
 persisted shape; schema (Zod / Astro content.config) remains validation
-authority. Schema-first overlay exploration; not the CMS-first unified IR tree.
+authority. Not a CMS-first unified IR tree.
 _Avoid_: ui+layout maps (as two peer authoring surfaces), FieldUi-on-Zod, IR `s.field` algebra (as the user face)
 
 **Field ref**:
@@ -75,30 +74,28 @@ view over the session.
 _Avoid_: autosave controller (as the public face), editor store, form state manager
 
 **Field schema**:
-A durable node in the CMS semantic tree: persisted input type, semantic kind,
-validation constraints, and optional editor binding (`component` / `props`).
-Projected to browser form model, authoritative validator, and native Astro Zod.
-_Avoid_: Astro schema alone, Zod schema alone, form config, Field ref
+Historical CMS-first IR node (persisted input type, semantic kind, constraints,
+editor binding). Product authoring no longer uses a user-facing IR algebra;
+prefer stamped Zod leaves and form-tree field refs.
+_Avoid_: Astro schema alone, Zod schema alone, form config, Field ref (as synonyms for this historical IR node)
 
 **FieldUi**:
-Authoring UI on a field or aggregate: stock editor from semantic kind, optional
-catalog-key `component`, optional `wrapper` on objects/arrays, and explicit
-`props`. Authored in the unified tree (ADR-0019). Keys resolve to live Svelte
-modules via the host components catalog. Schema-first exploration prefers form
-tree field-ref chrome over FieldUi-on-Zod.
+Historical authoring UI bag on a CMS-first IR field (stock editor, catalog
+`component` / `wrapper`, `props`). Schema-first chrome lives on form-tree field
+refs; stamps carry image / file / reference kinds.
 _Avoid_: form config, widget map alone, Zod meta UI, FieldUi-on-Zod
 
 **Form model**:
 The browser editor projection for one collection: JSON Schema plus layout and
-field bindings, without live Svelte values. Produced by IR compile + project, or
-by schema-first projection (+ optional form tree). SJSF `uiSchema` is form-shell
-implementation after lower — not part of the Form model.
+field bindings, without live Svelte values. Produced by schema→form projection
+(+ optional form tree). SJSF `uiSchema` is form-shell implementation after lower
+— not part of the Form model.
 _Avoid_: Zod editor schema, toFormSchemas output, content.config schema, SJSF
-uiSchema (as the Form model itself)
+uiSchema (as the Form model itself), IR form model (as the product face)
 
 **Field registry**:
 The map from semantic field kind to default validation helpers and stock
-editors; field-level `component` can override via the components catalog.
+editors; field-level catalog keys can override via the components catalog.
 _Avoid_: widget map (Decap-only sense), component library
 
 **Write-back**:
@@ -106,7 +103,7 @@ The path by which edits from the authoring shell land in project files (or a loc
 _Avoid_: persistence, save API, storage backend
 
 **CMS protocol**:
-The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsHost` from content root + writer + collection descriptors (from compiled IR on the default host, or stamped/host-declared schemas on schema-first paths). Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
+The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsHost` from content root + writer + collection descriptors (from stamped or host-declared schemas). Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
 _Avoid_: save API, REST CRUD, WriteMode (as a public API), content.config discovery (as the editor seam), createCmsProtocol (removed alias)
 
 **Portable CMS HTTP**:

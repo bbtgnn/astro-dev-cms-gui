@@ -1,43 +1,38 @@
-# Schema-first overlay — local map (exploration)
+# Schema-first overlay — local map (accepted)
 
-**Branch:** `explore/schema-first-overlay`  
-**Tracker:** local markdown under `docs/research/schema-first-overlay/` (not GitHub map #1).  
-**Authority:** exploration only. Does not supersede ADRs until an explicit ADR says so.
+**Status:** exploration **accepted** as product law via
+[ADR-0025](../../adr/0025-schema-first-content-config-optional-overlay.md).
+GitHub wayfinder map [#1](https://github.com/bbtgnn/astro-dev-cms-gui/issues/1)
+updated to match. Branch history: `explore/schema-first-overlay`.
 
-## Destination
+**Tracker:** this folder remains research/history; authority is ADRs + map #1.
 
-Full happy-path flip: user’s Astro `content.config` (Standard Schema Input) is validation + location authority; `@cms/astro` intercepts loaders/`image`/`reference` via content-proxy; optional `defineAstroCms` overlay for presentation; self-host apps under top-level `demos/`; portable `defineCms` on `@cms/core` with a SvelteKit demo. No generated `content.config` on product `cms()`.
+## Destination (landed)
+
+User-authored Astro `content.config` (Standard Schema Input) is validation +
+location authority; `@cms/astro` intercepts loaders/`image`/`reference` via
+content-proxy; optional `defineAstroCms` overlay for presentation; self-host
+apps under top-level `demos/`; portable `defineCms` on `@cms/core` with a
+SvelteKit demo. No generated `content.config` on product `cms()`.
 
 ## Notes
 
 - Research: [schema-first-overlay.md](../schema-first-overlay.md), [astro-loader-extraction.md](../astro-loader-extraction.md)
-- Astro flip plan: [plan.md](./plan.md) (tickets 01–10 — largely done)
-- Form-tree phase: [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md) (tickets 11–17 — implemented on this branch)
-- **IR authoring face stripped** on this branch (`s.field` / `compileSemanticIr` / `createCmsBuilders` / IR→form projections / IR validator). Schema-first + form tree + `CollectionFormModel` remain.
-- Breakage on this branch is accepted (Q22).
-- Do not edit GitHub wayfinder map #1 while exploring.
+- Astro flip plan: [plan.md](./plan.md) (tickets 01–10 — done)
+- Form-tree phase: [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md) (tickets 11–17 — done)
+- **IR authoring face stripped** (`s.field` / `compileSemanticIr` / IR→form projections). Schema-first + form tree + `CollectionFormModel` remain.
+- Codegen Input types: [codegen-input-types-plan.md](./codegen-input-types-plan.md)
 
-## Decisions so far
+## Decisions (now ADR-backed)
 
-- Schema-first + CMS overlay (sharper model); JSON Schema is form wire, not public seam.
+- Schema-first + optional CMS overlay; JSON Schema is form wire, not public seam.
 - Astro Input for CMS values; Output is render-only.
-- Image/ref kinds via stamp/proxy (astro-decap style); layout/singleton/editors via overlay — not FieldUi-on-Zod.
-- Astro `defineAstroCms(options)` presentation-only; schemas from content.config; types via `cms.types.d.ts` module augmentation.
-- Options-only cleanup: no collections arg on Astro face; host reads stamped content.config.
-- **Form tree:** one fluent structure (field refs + tabs/columns/group); tabs as objects; object enter = callback scope; lowers into `CollectionFormModel`.
-- **Portable** `defineCms(cms => …)` on `@cms/core` with schema + location + form + leaf helpers.
-- **demos/** top-level for self-host apps (`astro-simple`, `astro-overlay`, `sveltekit`); `packages/` for libraries only.
-- Overlay optional; singleton = editor flag; id↔path = host (ADR-0007).
-- Full happy-path flip of `cms()` (kill generation); Q19–Q23 locked in parent research note.
+- Image/ref kinds via stamp/proxy; layout/singleton/editors via form tree — not FieldUi-on-Zod.
+- Astro `defineAstroCms(options)` presentation-only; schemas from content.config.
+- Portable `defineCms` on `@cms/core`; demos under `demos/`.
+- Full happy-path flip of `cms()` (kill generation) — ADR-0025.
 
-## Frontier (local tickets)
+## Out of scope here (unchanged)
 
-**Form-tree phase (11–17) done** on this branch — see [plan-form-tree-and-non-astro.md](./plan-form-tree-and-non-astro.md).
-
-Prior phase tickets 01–10: see [plan.md](./plan.md). Codegen Input types: [codegen-input-types-plan.md](./codegen-input-types-plan.md) (implemented; Astro uses `form`, not path-map `ui`).
-
-## Out of scope here
-
-- Superseding ADR-0019 on `main` / map #1
 - Accordion / blocks / i18n layout in form-tree v1
 - MD/MDX body serialization, hosted git CMS
