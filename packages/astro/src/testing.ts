@@ -4,18 +4,23 @@
  * Prefer zero-arg `cms()` from `@cms/astro` for real hosts.
  * Use this module only in fixtures and advanced layouts.
  *
- * {@link buildFsHostFromStampedCollections} — stamped content.config collections
- * → CmsHost (product `cms()` default path).
+ * {@link assembleStampedCms} — stamped collections → paired CmsHost + form models
+ * (package-default path). {@link buildFsHostFromStampedCollections} — host-only.
  */
 
+export {
+	type AssembleStampedCmsOptions,
+	type AssembleStampedCmsResult,
+	assembleStampedCms,
+} from "./assemble-stamped-cms";
 export {
 	type BuildFsHostFromStampedOptions,
 	type BuildFsHostFromStampedResult,
 	buildFsHostFromStampedCollections,
 	type CollectionLocationOverride,
 	collectionsFromContentConfigExport,
-	materializeSchema,
 	type MaterializedStampedCollection,
+	materializeSchema,
 	type StampedCollectionConfig,
 } from "./build-fs-host-from-stamped";
 export {

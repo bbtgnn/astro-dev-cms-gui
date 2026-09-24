@@ -12,6 +12,7 @@ import {
 	stampRelationSchema,
 } from "../src/content-proxy/stamp-helpers";
 import {
+	assembleStampedCms,
 	buildFsHostFromStampedCollections,
 	collectionsFromContentConfigExport,
 } from "../src/testing.ts";
@@ -231,5 +232,32 @@ describe("buildFsHostFromStampedCollections", () => {
 			expectedRevision: null,
 		});
 		expect(ok.ok).toBe(true);
+	});
+});
+
+describe("assembleStampedCms", () => {
+	test("pairs host collection names with form model keys from one stamped graph", async () => {
+		const mod = await import("./fixtures/authors-posts-content.config.ts");
+		const writer = memoryWriter();
+		await writer.writeText(
+			path.join(contentRoot, "authors", "ada.json"),
+			JSON.stringify({ name: "Ada" }),
+		);
+
+		const { host, formModels } = assembleStampedCms({
+			collections: collectionsFromContentConfigExport(mod),
+			contentRoot,
+			writer,
+			fileExists: () => false,
+		});
+
+		const listed = await host.protocol.listCollections();
+		expect(listed.ok).toBe(true);
+		if (!listed.ok) return;
+		const hostNames = listed.value.map((c) => c.name).sort();
+		expect(hostNames).toEqual(["authors", "posts"]);
+		expect(Object.keys(formModels).sort()).toEqual(hostNames);
+		expect(formModels.posts?.collectionId).toBe("posts");
+		expect(formModels.authors?.collectionId).toBe("authors");
 	});
 });

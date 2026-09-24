@@ -35,7 +35,7 @@ through `@cms/authoring` (`authoringPropsFromFormModels`). See
 
 After Vite boot (or a shim-evaluated fixture), pass the content.config
 `collections` export through
-`collectionsFromContentConfigExport` → `buildFsHostFromStampedCollections`
+`collectionsFromContentConfigExport` → `assembleStampedCms` (or `buildFsHostFromStampedCollections` for host-only)
 (`@cms/astro/testing`):
 
 1. Read `LOADER_STAMP` → write base under `contentRoot` (ADR-0007)
