@@ -6,8 +6,12 @@ export { default as AuthoringApp } from "./AuthoringApp.svelte";
 export type {
 	AuthoringAppProps,
 	AuthoringPropsFromDefineCmsOptions,
-} from "./authoring-props-from-define-cms";
-export { authoringPropsFromDefineCms } from "./authoring-props-from-define-cms";
+	AuthoringPropsOptions,
+} from "./authoring-props";
+export {
+	authoringPropsFromDefineCms,
+	authoringPropsFromFormModels,
+} from "./authoring-props";
 export type { AuthoringStatus } from "./autosave";
 export { default as PlaceholderChrome } from "./components/PlaceholderChrome.svelte";
 export { default as EntryEditor } from "./EntryEditor.svelte";

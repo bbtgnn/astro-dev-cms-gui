@@ -1,10 +1,14 @@
 /**
- * Seam: authoringPropsFromDefineCms → AuthoringApp props.
+ * Seam: authoringPropsFromFormModels (+ defineCms sugar) → AuthoringApp props.
  */
 import { describe, expect, test } from "bun:test";
 import { defineCms } from "@cms/core/define-cms";
+import { projectSchemaFormModels } from "@cms/core/semantic";
 import { z } from "zod";
-import { authoringPropsFromDefineCms } from "../src/authoring-props-from-define-cms";
+import {
+	authoringPropsFromDefineCms,
+	authoringPropsFromFormModels,
+} from "../src/authoring-props";
 import type { AuthoringClient } from "../src/types";
 
 const stubClient = {
@@ -33,8 +37,27 @@ const stubClient = {
 	}),
 } satisfies AuthoringClient;
 
+describe("authoringPropsFromFormModels", () => {
+	test("lowers form models + defaults getPreviewUrl", () => {
+		const formModels = projectSchemaFormModels({
+			posts: z.object({ title: z.string() }),
+		});
+		const props = authoringPropsFromFormModels(
+			formModels,
+			{},
+			{ client: stubClient },
+		);
+
+		expect(props.client).toBe(stubClient);
+		expect(props.collections.posts?.schema).toMatchObject({
+			type: "object",
+		});
+		expect(props.getPreviewUrl("posts", "hello")).toBeNull();
+	});
+});
+
 describe("authoringPropsFromDefineCms", () => {
-	test("builds collections + multiplexed getPreviewUrl from defineCms", () => {
+	test("projects schemas then assembles via form-models face", () => {
 		const config = defineCms((cms) => ({
 			authors: cms.collection({
 				schema: z.object({ name: z.string() }),
