@@ -9,40 +9,12 @@
 
 import { z } from "zod";
 import { unwrapZod } from "./content-field-stamp";
+import { zodArrayElement, zodObjectShape } from "./zod-walk";
 
 export type InputValidatorDeps = {
 	isAcceptedImageAsset?: (path: string) => boolean | Promise<boolean>;
 	entryExists?: (collection: string, id: string) => boolean | Promise<boolean>;
 };
-
-type ZodWalkNode = {
-	readonly type?: string;
-	readonly unwrap?: () => unknown;
-	readonly shape?: Record<string, unknown>;
-	readonly element?: unknown;
-	readonly def?: {
-		readonly type?: string;
-		readonly innerType?: unknown;
-		readonly defaultValue?: unknown;
-		readonly element?: unknown;
-	};
-};
-
-function zodObjectShape(schema: unknown): Record<string, unknown> | undefined {
-	if (!schema || typeof schema !== "object") return undefined;
-	const shape = (schema as ZodWalkNode).shape;
-	if (shape && typeof shape === "object") {
-		return shape;
-	}
-	return undefined;
-}
-
-function zodArrayElement(schema: unknown): unknown {
-	if (!schema || typeof schema !== "object") return undefined;
-	const node = schema as ZodWalkNode;
-	if (node.element !== undefined) return node.element;
-	return node.def?.element;
-}
 
 /**
  * Rewrite stamped image/ref leaves to persisted Input strings (+ host checks).

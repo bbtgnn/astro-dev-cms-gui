@@ -3,24 +3,12 @@
  * Stamped image/ref → CmsImage / CmsReference<"collection">.
  */
 
-import { unwrapZod } from "@cms/core/semantic";
-
-type ZodWalkNode = {
-	readonly type?: string;
-	readonly unwrap?: () => unknown;
-	readonly shape?: Record<string, unknown>;
-	readonly element?: unknown;
-	readonly options?: readonly unknown[];
-	readonly def?: {
-		readonly type?: string;
-		readonly innerType?: unknown;
-		readonly defaultValue?: unknown;
-		readonly element?: unknown;
-		readonly shape?: Record<string, unknown>;
-		readonly entries?: Record<string, unknown>;
-		readonly options?: readonly unknown[];
-	};
-};
+import {
+	unwrapZod,
+	type ZodWalkNode,
+	zodArrayElement,
+	zodObjectShape,
+} from "@cms/core/semantic";
 
 export type PrintedFieldKind =
 	| { readonly kind: "image" }
@@ -41,22 +29,6 @@ export type PrintedTypeTree = {
 function isInputOptional(schema: unknown): boolean {
 	const { optional, defaultValue } = unwrapZod(schema);
 	return optional || defaultValue !== undefined;
-}
-
-function objectShape(node: ZodWalkNode): Record<string, unknown> | undefined {
-	if (node.shape && typeof node.shape === "object") return node.shape;
-	if (node.def?.shape && typeof node.def.shape === "object")
-		return node.def.shape;
-	if (node.def?.entries && typeof node.def.entries === "object") {
-		return node.def.entries;
-	}
-	return undefined;
-}
-
-function arrayElement(node: ZodWalkNode): unknown {
-	if (node.element !== undefined) return node.element;
-	if (node.def?.element !== undefined) return node.def.element;
-	return undefined;
 }
 
 function printInner(schema: unknown): PrintedTypeTree {
@@ -81,7 +53,7 @@ function printInner(schema: unknown): PrintedTypeTree {
 	const t = node.type ?? node.def?.type;
 
 	if (t === "object") {
-		const shape = objectShape(node) ?? {};
+		const shape = zodObjectShape(node) ?? {};
 		const fields: Record<string, PrintedTypeTree> = {};
 		const lines: string[] = [];
 		for (const [key, child] of Object.entries(shape)) {
@@ -101,7 +73,7 @@ function printInner(schema: unknown): PrintedTypeTree {
 	}
 
 	if (t === "array") {
-		const el = arrayElement(node);
+		const el = zodArrayElement(node);
 		const printed =
 			el !== undefined
 				? printInner(el)

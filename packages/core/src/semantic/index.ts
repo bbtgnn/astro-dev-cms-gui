@@ -1,6 +1,6 @@
 /**
  * Schema-first semantic face: kinds, form-model types, schema→form projection,
- * and stamped Zod → persisted-Input rewrite.
+ * stamped Zod → persisted-Input rewrite, and shared Zod graph accessors.
  *
  * Primary seams: `projectSchemaFormModel(s)` and `toPersistedInputSchema`.
  * No CMS-first IR builders / compile / IR→form projections on this branch.
@@ -53,3 +53,8 @@ export type {
 	SemanticKind,
 	StringConstraint,
 } from "./types";
+export {
+	type ZodWalkNode,
+	zodArrayElement,
+	zodObjectShape,
+} from "./zod-walk";

@@ -24,6 +24,7 @@ import type {
 	FormModelsByCollection,
 } from "./form-model";
 import type { SemanticKind } from "./types";
+import { zodArrayElement, zodObjectShape } from "./zod-walk";
 
 export {
 	CONTENT_FIELD_STAMP,
@@ -352,23 +353,6 @@ function lowerFormTreeNode(
 	}
 }
 
-function zodObjectShape(schema: unknown): Record<string, unknown> | undefined {
-	if (!schema || typeof schema !== "object") return undefined;
-	const shape = (schema as { shape?: unknown }).shape;
-	if (shape && typeof shape === "object") {
-		return shape as Record<string, unknown>;
-	}
-	return undefined;
-}
-
-function zodArrayElement(schema: unknown): unknown {
-	if (!schema || typeof schema !== "object") return undefined;
-	const el = (schema as { element?: unknown }).element;
-	if (el !== undefined) return el;
-	const def = (schema as { def?: { element?: unknown } }).def;
-	return def?.element;
-}
-
 function rewriteClientJsonSchema(
 	json: JsonSchemaNode,
 	zodSchema: unknown,
@@ -446,10 +430,7 @@ function applySemanticKindJsonSchemaRewrite(
 	fields: Readonly<Record<string, FormFieldDescriptor>>,
 ): void {
 	for (const field of Object.values(fields)) {
-		if (
-			field.semanticKind === "image" ||
-			field.semanticKind === "reference"
-		) {
+		if (field.semanticKind === "image" || field.semanticKind === "reference") {
 			setJsonSchemaAtPath(jsonSchema, field.path, { type: "string" });
 		}
 	}
