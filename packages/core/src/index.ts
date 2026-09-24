@@ -1,6 +1,6 @@
 /**
  * @cms/core — CMS protocol, FS write-back adapters, and schema→form projection.
- * Filesystem write-back sits behind createCmsProtocol / createCmsHost (ADR-0005).
+ * Filesystem write-back sits behind createCmsHost (ADR-0005).
  * Schema-first exploration: stamped Zod + form-tree builders (field refs + layout).
  * CMS-first IR authoring face is stripped on this branch.
  */
@@ -21,10 +21,7 @@ export type {
 	CreateCmsHostOptions,
 	CreateCmsProtocolOptions,
 } from "./create-cms-protocol";
-export {
-	createCmsHost,
-	createCmsProtocol,
-} from "./create-cms-protocol";
+export { createCmsHost } from "./create-cms-protocol";
 export type {
 	CmsCollectionBuilt,
 	CmsCollectionOptions,

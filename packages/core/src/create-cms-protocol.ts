@@ -1,7 +1,7 @@
 /**
  * Filesystem / memory write-back behind the CMS protocol seam (ADR-0005).
- * WriteMode stays private implementation; hosts construct via createCmsProtocol
- * or createCmsHost (protocol + host-only readAsset).
+ * WriteMode stays private implementation; hosts construct via createCmsHost
+ * (protocol + host-only readAsset).
  */
 
 import { nodeFsWriter } from "./node-fs-writer";
@@ -366,17 +366,4 @@ export function createCmsHost(
 ): CmsHost;
 export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
 	return createCmsHostImpl(options);
-}
-
-/** In-memory or filesystem CmsProtocol (same options as {@link createCmsHost}). */
-export function createCmsProtocol(
-	options: CreateCmsHostFromConfigOptions,
-): CmsProtocol;
-export function createCmsProtocol(
-	options: CreateCmsHostFromCollectionsOptions,
-): CmsProtocol;
-export function createCmsProtocol(
-	options: CreateCmsProtocolOptions,
-): CmsProtocol {
-	return createCmsHostImpl(options).protocol;
 }

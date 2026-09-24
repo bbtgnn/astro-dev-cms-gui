@@ -133,7 +133,7 @@ export type CreateCmsHostOptions =
 
 /**
  * Full WriteMode construction — includes internal test seams.
- * Hosts use {@link CreateCmsHostOptions} via createCmsHost / createCmsProtocol.
+ * Hosts use {@link CreateCmsHostOptions} via createCmsHost.
  */
 export type CreateWriteModeOptions = {
 	root: string;

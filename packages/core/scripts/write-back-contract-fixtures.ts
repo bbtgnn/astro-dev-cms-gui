@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import type { CollectionDescriptor } from "../src/collection-descriptors";
-import { createCmsProtocol } from "../src/create-cms-protocol";
+import { createCmsHost } from "../src/create-cms-protocol";
 import { memoryWriter } from "../src/memory-writer";
 import { nodeFsWriter } from "../src/node-fs-writer";
 import type { CmsProtocol } from "../src/protocol";
@@ -58,15 +58,15 @@ export function discoveryMode(
 export function discoveryProtocol(
 	root: string,
 	writer: Writer,
-	extras?: Partial<Parameters<typeof createCmsProtocol>[0]>,
+	extras?: Partial<Parameters<typeof createCmsHost>[0]>,
 ): CmsProtocol {
-	return createCmsProtocol({
+	return createCmsHost({
 		root,
 		allowPaths: ["posts"],
 		writer,
 		collections: [postsCollection],
 		...extras,
-	});
+	}).protocol;
 }
 
 /** Assert serialized protocol payloads do not leak filesystem paths (ADR-0005). */

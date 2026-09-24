@@ -106,8 +106,8 @@ The path by which edits from the authoring shell land in project files (or a loc
 _Avoid_: persistence, save API, storage backend
 
 **CMS protocol**:
-The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsProtocol` / `createCmsHost` from content root + writer + collection descriptors (from compiled IR on the default host, or stamped/host-declared schemas on schema-first paths). Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
-_Avoid_: save API, REST CRUD, WriteMode (as a public API), content.config discovery (as the editor seam)
+The serializable write-back face the authoring shell talks to (list/read/save/delete/assets/capabilities with typed outcomes). Entry identities, not filesystem paths. Hosts construct it with `createCmsHost` from content root + writer + collection descriptors (from compiled IR on the default host, or stamped/host-declared schemas on schema-first paths). Asset upload stores original files; Astro (or the host) optimizes images at render, not at upload.
+_Avoid_: save API, REST CRUD, WriteMode (as a public API), content.config discovery (as the editor seam), createCmsProtocol (removed alias)
 
 **Portable CMS HTTP**:
 The injectable face that builds a CmsHost and HTTP dispatcher from the createCmsHost `config` door (portable defineCms result) plus content root. Framework adapters supply path segments and verb exports; the authoring shell stays on authoringPropsFromDefineCms.
@@ -132,8 +132,7 @@ _Avoid_: form builder (sjsf demo sense), content editor
 **Write mode**:
 Internal filesystem write-back implementation (list/get/upsert/delete, path
 rules, JSON, revisions) constructed with an injected **writer**. Not a second
-public face beside the CMS protocol; hosts use `createCmsProtocol` /
-`createCmsHost`.
+public face beside the CMS protocol; hosts use `createCmsHost`.
 _Avoid_: storage backend, persistence driver, parallel public write-back API
 
 **Writer**:

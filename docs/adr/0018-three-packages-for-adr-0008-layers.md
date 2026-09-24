@@ -13,7 +13,7 @@ reference host, matching the conceptual layers in
   `@cms/core/protocol` only — not the `@cms/core` root (FS writers) or
   `@cms/astro`.
 - **`@cms/core`** — semantic IR, CMS protocol, client, FS write-back adapters
-  behind `createCmsProtocol` / `createCmsHost`, and portable `defineCms`.
+  behind `createCmsHost`, and portable `defineCms`.
   Content-field stamps (image / file / reference marks on Zod leaves) live here —
   [ADR-0024](0024-content-field-stamps-live-in-core.md).
 - **`@cms/astro`** — Astro host mount (`cms()`), `defineAstroCms` presentation

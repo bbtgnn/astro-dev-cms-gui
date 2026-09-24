@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { createCmsProtocol } from "../../core/src/create-cms-protocol.ts";
+import { createCmsHost } from "../../core/src/create-cms-protocol.ts";
 import { nodeFsWriter } from "../../core/src/node-fs-writer.ts";
 import {
 	type AuthoringStatus,
@@ -340,7 +340,7 @@ describe("authoring autosave self-host json", () => {
 
 	test("valid title autosave updates JSON; preview identity matches host route", async () => {
 		const postsDir = path.join(root, "posts");
-		const protocol = createCmsProtocol({
+		const protocol = createCmsHost({
 			root,
 			allowPaths: ["posts"],
 			writer: nodeFsWriter(),
@@ -354,7 +354,7 @@ describe("authoring autosave self-host json", () => {
 				},
 			],
 			capabilities: { deleteEntry: true, assets: { uploadImage: false } },
-		});
+		}).protocol;
 
 		const loaded = await protocol.getEntry("posts", "hello");
 		expect(loaded.ok).toBe(true);
