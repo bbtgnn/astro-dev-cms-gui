@@ -21,6 +21,7 @@
 		"../src/protocol.ts",
 		"../src/semantic/types.ts",
 		"../src/semantic/schema-form-projection.ts",
+		"../src/semantic/persisted-input-rewrite.ts",
 		"../src/semantic/form-model.ts",
 		"../src/semantic/content-field-stamp.ts"
 	]

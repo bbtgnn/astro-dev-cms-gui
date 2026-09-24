@@ -1,10 +1,20 @@
 /**
- * Schema-first semantic face: kinds, form-model types, and schema→form projection.
+ * Schema-first semantic face: kinds, form-model types, schema→form projection,
+ * and stamped Zod → persisted-Input rewrite.
  *
- * Primary seam: `projectSchemaFormModel` / `projectSchemaFormModels`.
+ * Primary seams: `projectSchemaFormModel(s)` and `toPersistedInputSchema`.
  * No CMS-first IR builders / compile / IR→form projections on this branch.
  */
 
+export {
+	attachContentFieldStamp,
+	CONTENT_FIELD_STAMP,
+	type ContentFieldStamp,
+	type ContentFieldStampMeta,
+	readContentFieldStamp,
+	stampContentFieldLeaf,
+	unwrapZod,
+} from "./content-field-stamp";
 export type {
 	CollectionFormModel,
 	FormConstraintSummary,
@@ -26,14 +36,9 @@ export type {
 	FormModelsByCollection,
 } from "./form-model";
 export {
-	attachContentFieldStamp,
-	CONTENT_FIELD_STAMP,
-	type ContentFieldStamp,
-	type ContentFieldStampMeta,
-	readContentFieldStamp,
-	stampContentFieldLeaf,
-	unwrapZod,
-} from "./content-field-stamp";
+	type InputValidatorDeps,
+	toPersistedInputSchema,
+} from "./persisted-input-rewrite";
 export {
 	type ProjectSchemaFormModelsOptions,
 	type ProjectSchemaFormOptions,
