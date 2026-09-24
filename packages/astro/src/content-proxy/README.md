@@ -26,8 +26,8 @@ Optional esbuild emit for CLI/host-without-Vite is deferred.
 ## Form projection
 
 Stamped schemas project to editor form models via
-`@cms/core/semantic` (`projectSchemaFormModels`) and
-`@cms/authoring` (`editorCollectionsFromSchemas`). See
+`@cms/core/semantic` (`projectSchemaFormModels`); the authoring shell mounts
+through `@cms/authoring` (`authoringPropsFromFormModels`). See
 [`packages/core/src/semantic/schema-form.md`](../../../core/src/semantic/schema-form.md)
 (Ajv client vs authoritative Zod parse).
 

@@ -9,9 +9,7 @@ import { createFetchClient } from "@cms/core/fetch-client";
 import type { FormTree } from "@cms/core/form-tree";
 import type { FormModelsByCollection } from "@cms/core/semantic";
 import { projectSchemaFormModels } from "@cms/core/semantic";
-import {
-	editorCollectionsFromFormModels,
-} from "./form/editor-collections";
+import { editorCollectionsFromFormModels } from "./form/editor-collections";
 import { resolveCatalogBinding } from "./form/stock-registry";
 import type {
 	AuthoringClient,

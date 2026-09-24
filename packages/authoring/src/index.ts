@@ -16,11 +16,6 @@ export type { AuthoringStatus } from "./autosave";
 export { default as PlaceholderChrome } from "./components/PlaceholderChrome.svelte";
 export { default as EntryEditor } from "./EntryEditor.svelte";
 export { default as CmsForm } from "./form/CmsForm.svelte";
-export {
-	type EditorCollectionsFromSchemasOptions,
-	editorCollectionsFromFormModels,
-	editorCollectionsFromSchemas,
-} from "./form/editor-collections";
 export type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,

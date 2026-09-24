@@ -10,7 +10,7 @@ branch — schema + form tree are the only projection inputs.
 | Package | API | Output |
 | --- | --- | --- |
 | `@cms/core/semantic` | `projectSchemaFormModel(s)` (+ optional `form` tree) | `CollectionFormModel` |
-| `@cms/authoring` | `editorCollectionsFromSchemas(collections, catalog, { forms? })` | `EditorCollectionInput` per collection |
+| `@cms/authoring` | `authoringPropsFromFormModels` / `authoringPropsFromDefineCms` | `AuthoringApp` props (collections lowered internally) |
 
 Stamps (`Symbol.for("@cms/core.contentFieldStamp")` + `.meta.cms`, ADR-0024) mark
 `image` / `reference` kinds. Presentation chrome and layout come from the **form

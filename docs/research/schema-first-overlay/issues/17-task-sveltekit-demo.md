@@ -28,7 +28,7 @@ Does not use content-proxy or `cms()`. Protocol + form models only.
 - `@cms/sveltekit-demo` at `demos/sveltekit`
 - `src/lib/cms.ts` — `defineCms` with authors + posts (tabs, columns, `cms.image` / `cms.reference`, `AuthorNameEditor` key)
 - `src/lib/cms-components.ts` + `AuthorNameEditor.svelte` catalog
-- `/cms` — `AuthoringApp` + `editorCollectionsFromSchemas` (`ssr = false`)
+- `/cms` — `AuthoringApp` + `authoringPropsFromDefineCms` (`ssr = false`)
 - `/_cms` — thin dispatcher via `hooks.server.ts` (SvelteKit `_` dirs are private)
 - `createCmsHost` + `nodeFsWriter` over `./data`
 - Root `dev:kit`; README marks demo fixture / no Astro

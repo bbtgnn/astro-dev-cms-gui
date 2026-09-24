@@ -1,5 +1,7 @@
 /**
- * Form-shell mount seams → EditorCollections.
+ * Package-private form-shell lowering → EditorCollections.
+ * Not part of the public `@cms/authoring` mount face — hosts use
+ * {@link authoringPropsFromFormModels} / {@link authoringPropsFromDefineCms}.
  * Schema projection, form-model walk, SJSF lowering, and catalog binding stay
  * implementation (ADR-0011 / exploration schema-first path).
  */
@@ -16,6 +18,7 @@ import { resolveCatalogBinding } from "./stock-registry";
 
 /**
  * Lower each collection form model to JSON Schema + uiSchema for CmsForm.
+ * Package-private — prefer {@link authoringPropsFromFormModels}.
  */
 export function editorCollectionsFromFormModels(
 	models: FormModelsByCollection,
@@ -33,11 +36,12 @@ export type EditorCollectionsFromSchemasOptions =
 	ProjectSchemaFormModelsOptions;
 
 /**
- * Schema-first face: stamped Zod collection schemas (+ optional form trees)
- * → EditorCollections for the form shell. Stock editors apply by semantic kind;
- * form-tree `.editor` keys resolve through the live catalog.
+ * Package-private schema-first lowering: stamped Zod collection schemas
+ * (+ optional form trees) → EditorCollections. Stock editors apply by
+ * semantic kind; form-tree `.editor` keys resolve through the live catalog.
  *
- * Client validation uses the lowered Ajv JSON Schema; authoritative parse stays
+ * Hosts mount via {@link authoringPropsFromDefineCms} instead. Client
+ * validation uses the lowered Ajv JSON Schema; authoritative parse stays
  * on the host Zod / Standard Schema Input (dual engines OK).
  */
 export function editorCollectionsFromSchemas(

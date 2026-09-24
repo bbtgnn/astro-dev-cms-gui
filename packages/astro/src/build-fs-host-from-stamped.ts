@@ -4,7 +4,7 @@
  * Location comes from {@link LOADER_STAMP} on `glob` loaders (ADR-0007 write bases).
  * Authoritative validate uses persisted **Input** Zod (paths / ids for image/ref —
  * ADR-0010), not Astro-transformed Output. Form projection uses the returned
- * stamped schemas via ticket 03 (`editorCollectionsFromSchemas`).
+ * stamped schemas via ticket 03 (`projectSchemaFormModels` → authoringProps*).
  *
  * Escape (documented choice): **fail closed** when a loader has no stamp, unless
  * `locations[name]` supplies an explicit write base. `file()` loaders are
@@ -76,7 +76,7 @@ export type BuildFsHostFromStampedResult = {
 	host: CmsHost;
 	/**
 	 * Materialized stamped collection schemas for form projection
-	 * (`editorCollectionsFromSchemas` / `projectSchemaFormModels`).
+	 * (`projectSchemaFormModels` → `authoringPropsFromFormModels`).
 	 */
 	stampedSchemas: Readonly<Record<string, z.ZodType>>;
 };

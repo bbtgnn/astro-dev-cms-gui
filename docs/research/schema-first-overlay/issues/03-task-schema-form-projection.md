@@ -28,5 +28,5 @@ Do not resurrect FieldUi-on-Zod as the primary overlay API. Overlay is `defineCm
 ## Delivered
 
 - `@cms/core/semantic`: `projectSchemaFormModel(s)`, `applySchemaFormOverlay`
-- `@cms/authoring`: `editorCollectionsFromSchemas` → `EditorCollectionInput`
+- `@cms/authoring`: `authoringPropsFromFormModels` / `authoringPropsFromDefineCms` (editorCollections* internal lowering)
 - Docs: `packages/core/src/semantic/schema-form.md`
