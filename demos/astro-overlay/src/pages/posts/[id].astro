@@ -1,7 +1,7 @@
 ---
 /**
  * Real Astro site route for posts — default preview target (ADR-0013).
- * Cover uses Astro `image()` output when present; body/title stay plain fields.
+ * Cover via Astro `<Image>` (schema `image()`); author via `getEntry` on `reference()`.
  */
 import { Image } from "astro:assets";
 import { getCollection, getEntry } from "astro:content";
@@ -23,16 +23,8 @@ if (!entry) {
 	return new Response(null, { status: 404, statusText: "Not Found" });
 }
 
-const data = entry.data;
-const title = data.title;
-const body = data.body;
-const draft = data.draft;
-const cover = data.cover;
-const authorRef = data.author;
-const authorId =
-	authorRef && typeof authorRef === "object" && "id" in authorRef
-		? String(authorRef.id)
-		: null;
+const { title, body, draft, cover, author: authorRef } = entry.data;
+const author = await getEntry(authorRef);
 ---
 
 <html lang="en">
@@ -51,9 +43,9 @@ const authorId =
 						<small>draft</small>
 					</p>
 				) : null}
-				{authorId ? (
+				{author ? (
 					<p>
-						<small>author: {authorId}</small>
+						<small>author: {author.data.name}</small>
 					</p>
 				) : null}
 			</header>

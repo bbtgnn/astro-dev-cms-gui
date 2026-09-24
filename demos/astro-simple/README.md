@@ -34,6 +34,7 @@ Checks (from root): `bun run check && bun run check:allowlist && bun run lint`.
 | Path | Purpose |
 |------|---------|
 | `/` | Demo home |
+| `/posts/hello` | Real Astro preview — cover via `<Image>` (schema `image()`) |
 | `/cms` | Authoring shell (stock editors from content.config stamps) |
 | `/cms/api/ok` | API heartbeat (via `cms()`) |
 | `/cms/api/collections` | List collections (`authors`, `posts`) |
