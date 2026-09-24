@@ -1,7 +1,7 @@
 {
-	"name": "astro-dev-cms",
+	"name": "dev-cms",
 	"private": true,
-	"description": "Astro Dev CMS — authoring shell for Astro content collections (dev-mode route)",
+	"description": "Dev CMS — host-agnostic authoring shell for file-backed content collections (dev-mode route)",
 	"packageManager": "bun@1.3.12",
 	"workspaces": {
 		"packages": [

@@ -1,4 +1,4 @@
-# Fresh vs reusable — Astro Dev CMS product surface
+# Fresh vs reusable — Dev CMS product surface
 
 **Date:** 2026-09-22  
 **Question:** What parts of this product are genuinely fresh/interesting, and what parts could reuse other libraries / packages?  
@@ -9,7 +9,7 @@
 
 ## Product identity (baseline)
 
-Astro Dev CMS is a **backend-agnostic authoring UI** over Astro content collections, delivered mainly as a **dev-mode route** inside a consumer Astro project. Config is code (`cms.config.ts`); a closed semantic IR projects to form model + authoritative validation + generated Astro Zod; SJSF drives forms; the real Astro page is the default preview; filesystem write-back sits behind a CMS protocol. It is **not** a hosted git CMS control plane.
+Dev CMS is a **backend-agnostic authoring UI** over Astro content collections, delivered mainly as a **dev-mode route** inside a consumer Astro project. Config is code (`cms.config.ts`); a closed semantic IR projects to form model + authoritative validation + generated Astro Zod; SJSF drives forms; the real Astro page is the default preview; filesystem write-back sits behind a CMS protocol. It is **not** a hosted git CMS control plane.
 
 Sources: [CONTEXT.md](../../CONTEXT.md), [AGENTS.md](../../AGENTS.md), [docs/spec.md](../spec.md), [docs/adr/0008-backend-agnostic-ui-fs-first-adapter.md](../adr/0008-backend-agnostic-ui-fs-first-adapter.md).
 
@@ -143,7 +143,7 @@ SJSF is the Svelte-side cousin of the mature **RJSF** (react-jsonschema-form) sc
 
 | Concern | Prefer / consider | Notes |
 | --- | --- | --- |
-| Form state, widgets, validation plumbing | Keep **SJSF**; do not reimplement form engines | Escape hatches stay advanced ([ADR-0011](../adr/0011-sjsf-internal-one-form-recursive-layout.md)); open threads [#7](https://github.com/bbtgnn/astro-dev-cms-gui/issues/7), [#8](https://github.com/bbtgnn/astro-dev-cms-gui/issues/8) should stay “bindings over SJSF,” not a second form library |
+| Form state, widgets, validation plumbing | Keep **SJSF**; do not reimplement form engines | Escape hatches stay advanced ([ADR-0011](../adr/0011-sjsf-internal-one-form-recursive-layout.md)); open threads [#7](https://github.com/bbtgnn/dev-cms/issues/7), [#8](https://github.com/bbtgnn/dev-cms/issues/8) should stay “bindings over SJSF,” not a second form library |
 | JSON Schema / Ajv idiosyncrasies | Stay on SJSF’s Ajv path; strip presentation bags before validate (`stripUiFromJsonSchema`) | `packages/authoring/src/form/ui-schema.ts` |
 | Shell chrome (nav, lists, dialogs, buttons) | **bits-ui / shadcn-svelte** (or similar) when chrome lands | `packages/authoring/src/components/shadcn/index.ts` is currently an empty socket — correct instinct |
 | HTTP catch-all dispatcher / middleware | Keep thin Astro middleware; no custom HTTP framework | `packages/astro/src/http/`, [ADR-0005](../adr/0005-write-back-contract.md) (`/_cms` is transport) |

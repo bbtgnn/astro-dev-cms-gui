@@ -1,7 +1,7 @@
 # JS/TS libraries: editorial hooks + CRUD / collection abstraction
 
 **Date:** 2026-09-22 · **updated 2026-09-22 — deepened/widened**  
-**Question:** Across the JS/TS ecosystem — thin hook buses, client collection stores, ORM lifecycle hooks, CMS frameworks, BaaS products, authz filter languages, typed API layers, and FS/KV storage adapters — which pieces help with (1) editorial / lifecycle hooks (`beforeSave`, `afterValidate`, middleware-style write pipelines) and/or (2) abstracting CRUD / collections / queryable local-or-remote data stores? How do they map to Astro Dev CMS’s protocol + FS-first adapter stack **without** changing product identity (backend-agnostic authoring UI ↔ CMS protocol ↔ host/adapters; no “become a real backend”)?  
+**Question:** Across the JS/TS ecosystem — thin hook buses, client collection stores, ORM lifecycle hooks, CMS frameworks, BaaS products, authz filter languages, typed API layers, and FS/KV storage adapters — which pieces help with (1) editorial / lifecycle hooks (`beforeSave`, `afterValidate`, middleware-style write pipelines) and/or (2) abstracting CRUD / collections / queryable local-or-remote data stores? How do they map to Dev CMS’s protocol + FS-first adapter stack **without** changing product identity (backend-agnostic authoring UI ↔ CMS protocol ↔ host/adapters; no “become a real backend”)?  
 **Method:** Primary sources only (official docs, GitHub READMEs, package docs, first-party API references). Every factual claim below cites a source URL. Fit scoring uses in-repo product constraints for context only.  
 **Honesty bar:** Prefer “composition of known pieces” over claiming a drop-in PocketBase substitute in TypeScript. Call out IndexedDB / sync-engine / React / hosted-control-plane assumptions. Do not invent APIs. Mark expansions relative to the first pass.
 
@@ -126,7 +126,7 @@ Custom collection types are explicitly supported by implementing the collection 
 | Best for CMS shell | Wrapping CMS protocol list/get/write | Session UI state, form drafts that must **not** be SoT |
 | Docs | [Query Collection](https://tanstack.com/db/latest/docs/collections/query-collection) | [LocalOnly Collection](https://tanstack.com/db/latest/docs/collections/local-only-collection) |
 
-**Can collection options creators wrap an arbitrary protocol?** Yes — that is the documented purpose of the collection options creator / custom collection path: implement load + mutation handlers against whatever API you own. Source: [Collection Options Creator](https://tanstack.com/db/latest/docs/guides/collection-options-creator). For Astro Dev CMS, that API is the serializable CMS protocol, not FS paths ([ADR-0005](../adr/0005-write-back-contract.md)).
+**Can collection options creators wrap an arbitrary protocol?** Yes — that is the documented purpose of the collection options creator / custom collection path: implement load + mutation handlers against whatever API you own. Source: [Collection Options Creator](https://tanstack.com/db/latest/docs/guides/collection-options-creator). For Dev CMS, that API is the serializable CMS protocol, not FS paths ([ADR-0005](../adr/0005-write-back-contract.md)).
 
 ### 3.3 Mutations (closest thing to “hooks”) *(expanded)*
 
@@ -187,7 +187,7 @@ Observed limits from the same docs:
 - `usePacedMutations` is documented primarily under the **React** mutations guide; core `createPacedMutations` from `@tanstack/db` is the portable path for Svelte/authoring-session code.  
 - Query identity / `queryKey` rules for opaque `.fn.where` closures — same IR model as React.
 
-### 3.7 Fit for Astro Dev CMS (protocol / FS-first editorial lifecycle)
+### 3.7 Fit for Dev CMS (protocol / FS-first editorial lifecycle)
 
 | Need | TanStack DB fit | Notes |
 | --- | --- | --- |
@@ -476,7 +476,7 @@ Thinnest → thickest. What you **gain** vs **lose** at each step:
 | 8 | End-to-end types for `/_cms` | No collections/hooks for free |
 | 9–10 | Integrated hooks+CRUD+rules UX | **Become that backend** |
 
-**Composition honesty:** Astro Dev CMS already occupies a custom band between 1–4 and 8 (protocol + FS adapter). Adding **6** in the authoring shell and **1–3** in the host is coherent. Jumping to **7** or **10** changes product identity.
+**Composition honesty:** Dev CMS already occupies a custom band between 1–4 and 8 (protocol + FS adapter). Adding **6** in the authoring shell and **1–3** in the host is coherent. Jumping to **7** or **10** changes product identity.
 
 ---
 

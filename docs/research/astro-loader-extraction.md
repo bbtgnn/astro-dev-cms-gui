@@ -1,9 +1,9 @@
 # Astro loader / collection-location extraction
 
 **Date:** 2026-09-23  
-**Status:** exploration only (branch `explore/schema-first-overlay`). **Not** map authority. Does **not** update GitHub [#1](https://github.com/bbtgnn/astro-dev-cms-gui/issues/1) or ADRs.  
+**Status:** exploration only (branch `explore/schema-first-overlay`). **Not** map authority. Does **not** update GitHub [#1](https://github.com/bbtgnn/dev-cms/issues/1) or ADRs.  
 **Parent:** [schema-first-overlay.md](./schema-first-overlay.md)  
-**Question:** How can Astro Dev CMS extract **collection location metadata** (loader kind, `glob`/`file` `base`, pattern, entry path mapping) from a consumer Astro project’s content collections — without making authors re-declare folders in CMS config?  
+**Question:** How can Dev CMS extract **collection location metadata** (loader kind, `glob`/`file` `base`, pattern, entry path mapping) from a consumer Astro project’s content collections — without making authors re-declare folders in CMS config?  
 **Method:** Primary sources only — Astro docs (MCP / docs.astro.build), installed Astro 7.3.3 package source under `node_modules`, sibling `astro-decap-github-connect` stamp/proxy code + ADR, in-repo ADRs and `@cms/astro`. Runtime probe of `glob()` / `file()` return shapes in the reference host demos (originally probed under the former `@cms/astro-template`; now `@cms/astro-demo-simple` / `@cms/astro-demo`).  
 **Honesty bar:** Prefer what Astro’s public types and returned objects actually expose. Do not invent an official “list loaders” integration API. Prior art from zod-decap is real but is a **private intercept**, not Astro-supported introspection.
 

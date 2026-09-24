@@ -1,16 +1,16 @@
-# Astro Dev CMS — architecture index
+# Dev CMS — architecture index
 
 Status: navigation document
 
-This document is the compact entry point for Astro Dev CMS architecture. It is
-not an ADR, backlog, open-thread answer, or implementation spec. Durable
-decisions live in ADRs; unresolved product questions and implementation work
-live in GitHub Issues.
+This document is the compact entry point for Dev CMS architecture. It is not an
+ADR, backlog, open-thread answer, or implementation spec. Durable decisions live
+in ADRs; unresolved product questions and implementation work live in GitHub
+Issues.
 
 ## Product direction
 
 **North star:** the best **code-extensible building blocks** for a **tidy**
-content editing experience over Astro content collections.
+content editing experience over file-backed content collections (Astro first).
 
 Steal Kirby’s panel *feel* (composable, calm) and Payload’s *config-in-code*
 habit; reject Kirby’s YAML blueprints and Payload’s Next-shaped admin clunk.
@@ -122,6 +122,8 @@ These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
   authoring UI; filesystem first.
 - [ADR-0018](adr/0018-three-packages-for-adr-0008-layers.md) — three packages for
   those layers (`authoring`, `core`, `astro` + `demos/` hosts).
+- [ADR-0026](adr/0026-product-name-dev-cms.md) — product name **Dev CMS**; npm
+  packages stay `@cms/*`.
 - [ADR-0009](adr/0009-conceptual-layers-before-package-extraction.md) —
   superseded by ADR-0018 (historical “stabilize before extract” guidance).
 - [ADR-0016](adr/0016-astro-convention-install-surface.md) — convention-first
@@ -177,34 +179,34 @@ ADR-0001 and ADR-0002 are retained as superseded history.
 
 ## Open threads
 
-The [wayfinder map](https://github.com/bbtgnn/astro-dev-cms-gui/issues/1) owns
+The [wayfinder map](https://github.com/bbtgnn/dev-cms/issues/1) owns
 ordering and deferred fog.
 
 Active design questions:
 
-- [#2 — end-user form UI composition](https://github.com/bbtgnn/astro-dev-cms-gui/issues/2)
-- [#7 — custom field and SJSF binding contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/7)
-- [#8 — recursive form layout contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/8)
-- [#9 — preview surface and unsaved draft transport](https://github.com/bbtgnn/astro-dev-cms-gui/issues/9)
-- [#10 — invalid browser-state recovery](https://github.com/bbtgnn/astro-dev-cms-gui/issues/10)
-- [#31 — entry list sort, filter, search, and pagination](https://github.com/bbtgnn/astro-dev-cms-gui/issues/31)
+- [#2 — end-user form UI composition](https://github.com/bbtgnn/dev-cms/issues/2)
+- [#7 — custom field and SJSF binding contract](https://github.com/bbtgnn/dev-cms/issues/7)
+- [#8 — recursive form layout contract](https://github.com/bbtgnn/dev-cms/issues/8)
+- [#9 — preview surface and unsaved draft transport](https://github.com/bbtgnn/dev-cms/issues/9)
+- [#10 — invalid browser-state recovery](https://github.com/bbtgnn/dev-cms/issues/10)
+- [#31 — entry list sort, filter, search, and pagination](https://github.com/bbtgnn/dev-cms/issues/31)
 
 Closed (keep linked):
 
-- [#6 — semantic schema and projection contract](https://github.com/bbtgnn/astro-dev-cms-gui/issues/6)
+- [#6 — semantic schema and projection contract](https://github.com/bbtgnn/dev-cms/issues/6)
   → ADR-0019 / 0020 (historical) → [ADR-0025](adr/0025-schema-first-content-config-optional-overlay.md)
 
 Other deferred product questions:
 
-- [#3 — shell commands seam](https://github.com/bbtgnn/astro-dev-cms-gui/issues/3)
-- [#4 — schema builder UI](https://github.com/bbtgnn/astro-dev-cms-gui/issues/4)
+- [#3 — shell commands seam](https://github.com/bbtgnn/dev-cms/issues/3)
+- [#4 — schema builder UI](https://github.com/bbtgnn/dev-cms/issues/4)
 
 An open thread records a question, not an implementation contract. Its Answer
 is unset until the decision is explicitly resolved.
 
 ## Implementation planning
 
-[#5 — Extract backend-agnostic authoring UI behind CMS protocol](https://github.com/bbtgnn/astro-dev-cms-gui/issues/5)
+[#5 — Extract backend-agnostic authoring UI behind CMS protocol](https://github.com/bbtgnn/dev-cms/issues/5)
 captures the cross-cutting migration spec. It remains intact for later ticket
 splitting.
 

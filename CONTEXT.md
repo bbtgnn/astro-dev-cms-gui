@@ -1,10 +1,15 @@
-# Astro Dev CMS
+# Dev CMS
 
-Domain language for a server-light authoring shell over Astro content collections.
-Primary usage: a **dev-mode route** inside an Astro project. The authoring UI stays
-backend-agnostic; Astro + filesystem write-back is the first host path.
+Domain language for a host-agnostic authoring shell over file-backed content
+collections. Primary usage: a **dev-mode route** inside the host app. Astro is
+the first host; filesystem write-back is the first adapter.
 
 ## Language
+
+**Dev CMS**:
+The product: a local CMS that mounts an authoring shell in the host app. Slug
+`dev-cms`. npm packages remain `@cms/*`.
+_Avoid_: Astro Dev CMS, astro-dev-cms, astro-dev-cms-gui
 
 **Authoring shell**:
 The UI an editor uses at author-time to create and change content entries. Not a production runtime CMS server.
@@ -16,7 +21,7 @@ SvelteKit reference hosts) to prove integration and write-back — not only via 
 _Avoid_: dogfood, dogfooding, dogfoodable
 
 **Dev integration**:
-How the authoring shell is hooked into an Astro project so it runs during local development (dev-only by default). Consumer Astro hosts use `@cms/astro` (`cms()`) with convention defaults: required `src/content.config.ts` (stamped), optional `src/cms.config.ts` / `src/cms.components.ts` overlay, content under `src/content/`. Portable `defineCms`, stamps, and the CMS protocol live in `@cms/core`; the authoring UI lives in `@cms/authoring`.
+How the authoring shell is hooked into a host project so it runs during local development (dev-only by default). Astro hosts use `@cms/astro` (`cms()`) with convention defaults: required `src/content.config.ts` (stamped), optional `src/cms.config.ts` / `src/cms.components.ts` overlay, content under `src/content/`. Portable `defineCms`, stamps, and the CMS protocol live in `@cms/core`; the authoring UI lives in `@cms/authoring`.
 _Avoid_: install, plugin (unless naming a specific Astro/Vite plugin)
 
 **Editor configuration**:

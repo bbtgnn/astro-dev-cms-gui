@@ -2,7 +2,7 @@
 
 **Status:** exploration **accepted** as product law via
 [ADR-0025](../../adr/0025-schema-first-content-config-optional-overlay.md).
-GitHub wayfinder map [#1](https://github.com/bbtgnn/astro-dev-cms-gui/issues/1)
+GitHub wayfinder map [#1](https://github.com/bbtgnn/dev-cms/issues/1)
 updated to match. Branch history: `explore/schema-first-overlay`.
 
 **Tracker:** this folder remains research/history; authority is ADRs + map #1.
