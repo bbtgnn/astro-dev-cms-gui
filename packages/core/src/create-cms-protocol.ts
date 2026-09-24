@@ -3,6 +3,8 @@
  * WriteMode stays private implementation; hosts construct via createCmsProtocol
  * or createCmsHost (protocol + host-only readAsset).
  */
+
+import { nodeFsWriter } from "./node-fs-writer";
 import {
 	type CmsCapabilitiesInput,
 	type CmsProtocol,
@@ -23,6 +25,7 @@ import {
 } from "./protocol";
 import type {
 	CreateCmsHostOptions,
+	CreateWriteModeOptions,
 	ReadAssetResult,
 	UpsertEntryInput,
 	WriteImageAssetsInput,
@@ -289,9 +292,34 @@ export type CmsHost = {
 /**
  * Construct filesystem/memory write-back for an Astro (or other) host transport.
  * Prefer this when the dispatcher needs GET …/assets/*.
+ *
+ * Happy path with portable defineCms:
+ * `createCmsHost({ root, config })` — allowPaths / collections / schemas derived;
+ * writer defaults to nodeFsWriter().
  */
 export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
-	const { capabilities, ...wmOptions } = options;
+	const { capabilities, config, ...rest } = options;
+	const writer = rest.writer ?? nodeFsWriter();
+	const collections = rest.collections ?? config?.descriptors;
+	const schemas =
+		rest.schemas ?? (config !== undefined ? { ...config.schemas } : undefined);
+	const allowPaths =
+		rest.allowPaths ??
+		(config !== undefined
+			? [...new Set(config.descriptors.map((d) => d.base))]
+			: undefined);
+	if (allowPaths == null) {
+		throw new Error("createCmsHost requires allowPaths or config");
+	}
+
+	const wmOptions: CreateWriteModeOptions = {
+		root: rest.root,
+		allowPaths,
+		writer,
+		...(collections !== undefined ? { collections } : {}),
+		...(schemas !== undefined ? { schemas } : {}),
+		...(rest.entryIndex !== undefined ? { entryIndex: rest.entryIndex } : {}),
+	};
 	const writeMode = createWriteMode(wmOptions);
 	return {
 		protocol: adaptWriteModeToProtocol(writeMode, { capabilities }),

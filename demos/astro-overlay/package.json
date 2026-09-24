@@ -14,7 +14,6 @@
 	"dependencies": {
 		"@astrojs/svelte": "catalog:",
 		"@cms/astro": "workspace:*",
-		"@cms/astro-demo-simple": "workspace:*",
 		"@cms/authoring": "workspace:*",
 		"@cms/core": "workspace:*",
 		"astro": "catalog:",

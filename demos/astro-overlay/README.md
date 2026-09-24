@@ -8,8 +8,7 @@ Proves the custom integration ladder — nested field chrome, catalog editors,
 preview URLs — while Astro/Zod Input remains validation authority.
 `cms sync` emits Input types (`CmsImage` / `CmsReference`) for typed `ui`.
 
-Companion: [`@cms/astro-demo-simple`](../astro-simple) (same schemas, no
-overlay).
+Companion: [`@cms/astro-demo-simple`](../astro-simple) (no overlay).
 
 ## Run
 
@@ -29,8 +28,7 @@ simple demo on 4321.
 
 Layout:
 
-- `src/content.config.ts` — hand-authored Astro collections (schemas from
-  `@cms/astro-demo-simple/schemas`)
+- `src/content.config.ts` — hand-authored Astro collections (includes nested `seo`)
 - `src/cms.config.ts` — `export default defineCms({ authors, posts })`
 - `src/cms.components.ts` — live Svelte catalog (`AuthorNameEditor`)
 - `src/cms.types.d.ts` — generated Input types (`cms sync` / gitignored)

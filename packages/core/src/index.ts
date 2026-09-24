@@ -60,8 +60,6 @@ export {
 	createFormTreeHelpers,
 	createScopedFormTreeHelpers,
 } from "./form-tree";
-export type { HostFromDefineCmsOptions } from "./host-from-define-cms";
-export { hostFromDefineCms } from "./host-from-define-cms";
 export type { CmsDispatcherOptions } from "./http";
 export {
 	cmsDevOnlyGuard,

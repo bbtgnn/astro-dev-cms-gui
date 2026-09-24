@@ -1,23 +1,31 @@
 /**
  * Catch-all protocol transport at /cms/api.
- * Optional rest so /cms/api and /cms/api/ok both hit the dispatcher.
  * (SvelteKit rest segments are always optional — use `[...path]`, not `[[...path]]`.)
  */
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { createCmsHost } from "@cms/core";
 import { createCmsDispatcher, DEFAULT_CMS_API_MOUNT } from "@cms/core/http";
 import type { RequestHandler } from "@sveltejs/kit";
 import { dev } from "$app/environment";
-import { cmsHost } from "$lib/cms-host.server";
+import { cmsConfig } from "$lib/cms";
+
+const contentRoot = path.resolve(
+	path.dirname(fileURLToPath(import.meta.url)),
+	"../../../../../data",
+);
+
+const host = createCmsHost({ root: contentRoot, config: cmsConfig });
 
 const dispatch = createCmsDispatcher({
-	protocol: cmsHost.protocol,
-	readAsset: (rel) => cmsHost.readAsset(rel),
+	host,
 	isDev: dev,
 	mount: DEFAULT_CMS_API_MOUNT,
 });
 
-function segmentsFromParam(path: string | undefined): string[] {
-	if (path == null || path === "") return [];
-	return path.split("/").filter(Boolean);
+function segmentsFromParam(pathParam: string | undefined): string[] {
+	if (pathParam == null || pathParam === "") return [];
+	return pathParam.split("/").filter(Boolean);
 }
 
 const handle: RequestHandler = ({ request, params }) =>

@@ -4,9 +4,6 @@
 	"private": true,
 	"type": "module",
 	"description": "Schema-first demo: content.config-only CMS (no overlay)",
-	"exports": {
-		"./schemas": "./src/schemas.ts"
-	},
 	"scripts": {
 		"dev": "astro dev --host 127.0.0.1 --port 4321",
 		"build": "astro build",

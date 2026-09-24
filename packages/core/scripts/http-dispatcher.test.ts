@@ -4,8 +4,8 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { z } from "zod";
+import { createCmsHost } from "../src/create-cms-protocol";
 import { defineCms } from "../src/define-cms";
-import { hostFromDefineCms } from "../src/host-from-define-cms";
 import {
 	createCmsDispatcher,
 	DEFAULT_CMS_API_MOUNT,
@@ -26,14 +26,14 @@ function testHost() {
 			title: "Hello",
 		}),
 	});
-	return hostFromDefineCms(config, { root: MEMORY_ROOT, writer });
+	return createCmsHost({ root: MEMORY_ROOT, config, writer });
 }
 
 describe("createCmsDispatcher", () => {
 	test("default mount is /cms/api", async () => {
 		const host = testHost();
 		const dispatch = createCmsDispatcher({
-			protocol: host.protocol,
+			host,
 			isDev: true,
 		});
 		const res = await dispatch(new Request("http://x/cms/api/ok"), ["ok"]);
@@ -45,7 +45,7 @@ describe("createCmsDispatcher", () => {
 	test("lists collections under /collections (no nested /api)", async () => {
 		const host = testHost();
 		const dispatch = createCmsDispatcher({
-			protocol: host.protocol,
+			host,
 			isDev: true,
 		});
 		const res = await dispatch(new Request("http://x/cms/api/collections"), [
@@ -59,7 +59,7 @@ describe("createCmsDispatcher", () => {
 	test("gets an entry at collections/:name/:id", async () => {
 		const host = testHost();
 		const dispatch = createCmsDispatcher({
-			protocol: host.protocol,
+			host,
 			isDev: true,
 		});
 		const res = await dispatch(
@@ -80,7 +80,7 @@ describe("createCmsDispatcher", () => {
 	test("blocks outside DEV unless allowInProd", async () => {
 		const host = testHost();
 		const dispatch = createCmsDispatcher({
-			protocol: host.protocol,
+			host,
 			isDev: false,
 		});
 		const res = await dispatch(new Request("http://x/cms/api/ok"), ["ok"]);
@@ -88,7 +88,7 @@ describe("createCmsDispatcher", () => {
 	});
 });
 
-describe("hostFromDefineCms", () => {
+describe("createCmsHost({ config })", () => {
 	test("derives allowPaths from collection bases", async () => {
 		const config = defineCms((cms) => ({
 			authors: cms.collection({
@@ -105,7 +105,7 @@ describe("hostFromDefineCms", () => {
 				name: "Ada",
 			}),
 		});
-		const host = hostFromDefineCms(config, { root: MEMORY_ROOT, writer });
+		const host = createCmsHost({ root: MEMORY_ROOT, config, writer });
 		const listed = await host.protocol.listCollections();
 		expect(listed.value.map((c) => c.name).sort()).toEqual([
 			"authors",

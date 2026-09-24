@@ -1,18 +1,20 @@
 /**
  * Hand-authored Astro content collections (schema-first).
- * Same schemas as @cms/astro-demo-simple (+ nested seo for overlay chrome).
  * CMS stamps `glob` / `image` / `reference` via content-proxy; no generate.
+ * Nested optional `seo` supports overlay field chrome.
  */
-import { defineCollection } from "astro:content";
-import { authorsSchema, postsSchema } from "@cms/astro-demo-simple/schemas";
+import { defineCollection, reference } from "astro:content";
 import { glob } from "astro/loaders";
+import { z } from "astro/zod";
 
 const authors = defineCollection({
 	loader: glob({
 		base: "./src/content/authors",
 		pattern: "**/*.json",
 	}),
-	schema: authorsSchema,
+	schema: z.object({
+		name: z.string().min(1),
+	}),
 });
 
 const posts = defineCollection({
@@ -20,7 +22,19 @@ const posts = defineCollection({
 		base: "./src/content/posts",
 		pattern: "**/*.json",
 	}),
-	schema: postsSchema,
+	schema: ({ image }) =>
+		z.object({
+			title: z.string().min(1),
+			draft: z.boolean().default(false),
+			body: z.string(),
+			cover: image().optional(),
+			author: reference("authors"),
+			seo: z
+				.object({
+					description: z.string().optional(),
+				})
+				.optional(),
+		}),
 });
 
 export const collections = { authors, posts };

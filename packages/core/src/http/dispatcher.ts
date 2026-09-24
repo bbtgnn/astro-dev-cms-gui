@@ -6,6 +6,7 @@
  * `collections`, `capabilities`, `assets/…`, `images`, `ok`
  * (no nested `/api` segment; that lived under the old `/_cms` prefix).
  */
+import type { CmsHost } from "../create-cms-protocol";
 import type { CmsProtocol } from "../protocol";
 import { httpStatusForCmsErr } from "../protocol";
 import type { ReadAssetResult } from "../types";
@@ -15,10 +16,16 @@ import { cmsDevOnlyGuard } from "./dev-guard";
 export const DEFAULT_CMS_API_MOUNT = "/cms/api";
 
 export type CmsDispatcherOptions = {
-	protocol: CmsProtocol;
+	/**
+	 * Prefer passing the whole host — protocol + readAsset are taken from it.
+	 * Or pass `protocol` (+ optional `readAsset`) without `host`.
+	 */
+	host?: CmsHost;
+	protocol?: CmsProtocol;
 	/**
 	 * Host-side asset bytes for GET …/assets/* (createCmsHost.readAsset).
 	 * Kept off the serializable CMS protocol so paths stay in the adapter.
+	 * Ignored when `host` is set (uses `host.readAsset`).
 	 */
 	readAsset?: (relFromRoot: string) => Promise<ReadAssetResult>;
 	/** import.meta.env.DEV / Kit `dev` / equivalent */
@@ -68,6 +75,11 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 	const mount =
 		(options.mount ?? DEFAULT_CMS_API_MOUNT).replace(/\/+$/, "") ||
 		DEFAULT_CMS_API_MOUNT;
+	const protocol = options.host?.protocol ?? options.protocol;
+	if (protocol == null) {
+		throw new Error("createCmsDispatcher requires host or protocol");
+	}
+	const readAsset = options.host?.readAsset ?? options.readAsset;
 
 	return async function handleCms(
 		request: Request,
@@ -81,7 +93,6 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 
 		const path = pathSegments.filter(Boolean).join("/");
 		const method = request.method.toUpperCase();
-		const protocol = options.protocol;
 
 		try {
 			// Heartbeat
@@ -103,14 +114,14 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 
 			// GET /assets/<rel-from-content-root> — host readAsset, not protocol
 			if (path.startsWith("assets/") && method === "GET") {
-				if (!options.readAsset) {
+				if (!readAsset) {
 					return Response.json(
 						{ error: "Asset reads are not configured", code: "not_found" },
 						{ status: 404 },
 					);
 				}
 				const rel = path.slice("assets/".length);
-				const asset = await options.readAsset(decodeURIComponent(rel));
+				const asset = await readAsset(decodeURIComponent(rel));
 				const body = asset.bytes.buffer.slice(
 					asset.bytes.byteOffset,
 					asset.bytes.byteOffset + asset.bytes.byteLength,

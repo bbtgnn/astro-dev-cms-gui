@@ -15,8 +15,7 @@ export const prerender = false;
 
 const host = createHost();
 const dispatch = createCmsDispatcher({
-	protocol: host.protocol,
-	readAsset: (rel) => host.readAsset(rel),
+	host,
 	isDev: import.meta.env.DEV,
 	allowInProd,
 	mount,

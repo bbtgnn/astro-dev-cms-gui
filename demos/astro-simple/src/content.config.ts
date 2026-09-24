@@ -2,9 +2,22 @@
  * Hand-authored Astro content collections (schema-first).
  * CMS stamps `glob` / `image` / `reference` via content-proxy; no generate.
  */
-import { defineCollection } from "astro:content";
+import { defineCollection, reference, type SchemaContext } from "astro:content";
 import { glob } from "astro/loaders";
-import { authorsSchema, postsSchema } from "./schemas";
+import { z } from "astro/zod";
+
+const authorsSchema = z.object({
+	name: z.string().min(1),
+});
+
+const postsSchema = ({ image }: SchemaContext) =>
+	z.object({
+		title: z.string().min(1),
+		draft: z.boolean().default(false),
+		body: z.string(),
+		cover: image().optional(),
+		author: reference("authors"),
+	});
 
 const authors = defineCollection({
 	loader: glob({
@@ -23,4 +36,3 @@ const posts = defineCollection({
 });
 
 export const collections = { authors, posts };
-export { authorsSchema, postsSchema, postsSchemaInput } from "./schemas";

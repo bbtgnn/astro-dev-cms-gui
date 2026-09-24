@@ -81,9 +81,19 @@ export type WriteMode = {
 
 export type CreateCmsHostOptions = {
 	root: string;
+	/**
+	 * Portable {@link defineCms} result (descriptors + schemas).
+	 * When set, `allowPaths` defaults to unique collection bases and
+	 * `collections` / `schemas` default from the config.
+	 */
+	config?: {
+		readonly descriptors: CollectionDescriptor[];
+		readonly schemas: Readonly<Record<string, z.ZodType>>;
+	};
 	/** Absolute or root-relative path prefixes that may be written. */
-	allowPaths: string[];
-	writer: Writer;
+	allowPaths?: string[];
+	/** Defaults to {@link nodeFsWriter} when omitted. */
+	writer?: Writer;
 	/**
 	 * Collection descriptors — preferred happy path (ADR-0007 / 0019 / 0020).
 	 * Path = root + collection.base + id + ext (or pathTemplate).
@@ -102,7 +112,13 @@ export type CreateCmsHostOptions = {
  * Full WriteMode construction — includes internal test seams.
  * Hosts use {@link CreateCmsHostOptions} via createCmsHost / createCmsProtocol.
  */
-export type CreateWriteModeOptions = CreateCmsHostOptions & {
+export type CreateWriteModeOptions = {
+	root: string;
+	allowPaths: string[];
+	writer: Writer;
+	collections?: CollectionDescriptor[];
+	entryIndex?: Record<string, string[]>;
+	schemas?: Record<string, z.ZodType>;
 	/**
 	 * Internal test seam: (collection, id) → relative path overrides.
 	 * Not part of the public host construction face.

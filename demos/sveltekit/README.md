@@ -28,9 +28,8 @@ beside Astro demos.
 - `src/lib/cms.ts` — `defineCms((cms) => …)` with authors + posts (tabs,
   columns, stamped image + reference, catalog editor key)
 - `src/lib/cms-components.ts` — live Svelte catalog (`AuthorNameEditor`)
-- `src/lib/cms-host.server.ts` — `hostFromDefineCms` over `./data`
-- `src/routes/cms/api/[...path]/+server.ts` — protocol ↔ HTTP via
-  `@cms/core/http` `createCmsDispatcher`
+- `src/routes/cms/api/[...path]/+server.ts` — `createCmsHost({ config })` +
+  dispatcher over `./data`
 - `src/routes/cms/+page.svelte` — `authoringPropsFromDefineCms` → `AuthoringApp`
   (`ssr = false`)
 - `data/` — seed JSON entries (`authors/ada.json`, `posts/hello.json`)

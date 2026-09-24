@@ -220,7 +220,7 @@ function createCmsHelpers(): CmsHelpers {
  *     form: (f) => [f.field("name").label("Name")],
  *   }),
  * }));
- * createCmsHost({ root, allowPaths, writer, collections: config.descriptors });
+ * createCmsHost({ root, config }); // or explicit allowPaths / collections
  * ```
  */
 export function defineCms<
