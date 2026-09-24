@@ -10,6 +10,7 @@ product identity. Astro is the first host; not a hosted git CMS control plane.
 
 - **Domain language** — always: [CONTEXT.md](CONTEXT.md). Prefer glossary terms; avoid listed synonyms.
 - **Architecture index** — navigate decisions and open threads from [docs/spec.md](docs/spec.md). The index is not an implementation spec.
+- **Graph** — callers, call chains, symbols, impact, package shape: use [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp); follow the installed `codebase-memory` skill.
 - **Authority** — accepted ADRs first, then the current issue and resolved Answer, then the architecture index. Temporary handoffs are never authoritative. Supersede an ADR explicitly; do not override one inside an implementation issue.
 - **Map / open threads** — GitHub [#1](https://github.com/bbtgnn/dev-cms/issues/1) (`wayfinder:map`). Decisions: [`docs/adr/`](docs/adr/).
 
@@ -49,12 +50,12 @@ backends are allowed later; they are not the v1 deliverable.
 
 ### Issue tracker
 
-Issues live in GitHub Issues for `bbtgnn/dev-cms` (via `gh`). See `docs/agents/issue-tracker.md`.
+GitHub Issues via `gh` (create/list/claim/resolve, wayfinding map+children). See [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md).
 
 ### Triage labels
 
-Defaults: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+Role → label map for triage skills. See [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md).
 
 ### Domain docs
 
-Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
+How skills consume `CONTEXT.md` + ADRs. See [`docs/agents/domain.md`](docs/agents/domain.md).
