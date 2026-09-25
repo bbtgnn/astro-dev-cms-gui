@@ -15,6 +15,15 @@ How agents behave in this repo: what to open, how to edit, where work goes.
 - **Svelte files** — kebab-case (`authoring-app.svelte`); SvelteKit route files (`+page.svelte`) unchanged.
 - **Comments** — only for _why_ (a non-obvious constraint, tradeoff, or invariant the code cannot say).
 
+## When documenting
+
+- **CONTEXT** — glossary only (“what it is” + `_Avoid_`). No implementation, anti-goals, or history sections.
+- **AGENTS** — behavior only (Reach / When coding / Place work / Skills). No product fences, architecture invariants, roadmaps, gap inventories, or feature requirements.
+- **ADRs** — durable choice + rationale. Change via a new ADR that explicitly supersedes; do not quietly rewrite the decision into an issue, AGENTS, or the architecture index.
+- **Architecture index** — product direction, system shape, live ADR links, map pointer. No authority ladder, thread lists, or ADR blurbs.
+- **`docs/agents/` adapters** — repo facts skills do not know (`gh`, labels). Delete if the file would only restate Reach or Place work.
+- **One meaning, one place** — edit the authority; prefer a pointer over a restatement.
+
 ## Place work
 
 - Durable architectural choice and rationale → `docs/adr/`.
@@ -23,10 +32,7 @@ How agents behave in this repo: what to open, how to edit, where work goes.
 - Navigation and system summary → `docs/spec.md` and map issue #1.
 - Session state not captured elsewhere → temporary handoff only; link to durable artifacts rather than duplicating them.
 
-Do not put roadmaps, gap inventories, or feature requirements in agent instructions.
-
 ## Skills
 
 - **Issues / map / claim** — GitHub via `gh`: [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md).
 - **Labels / triage** — role → label map: [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md).
-- **Grill / domain-modeling** — how those skills consume CONTEXT + ADRs: [`docs/agents/domain.md`](docs/agents/domain.md).
