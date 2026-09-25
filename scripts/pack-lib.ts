@@ -6,6 +6,9 @@
  * derived from the workspace `exports` map — one source of truth for subpaths.
  * Never mutates the live workspace face.
  *
+ * Authoring keeps tests colocated under `src/`. `@sveltejs/package` has no
+ * exclude, so {@link filterPublishDist} strips test/fixture emit before pack.
+ *
  * Usage: bun run scripts/pack-lib.ts @cms/core | @cms/authoring
  */
 import { spawnSync } from "node:child_process";
@@ -172,7 +175,12 @@ function publishExportsFromSrc(
 	return out;
 }
 
-function pruneDist(distDir: string): void {
+/**
+ * Owned publish filter (post-emit): drop colocated test/fixture artifacts from
+ * `dist` so the tarball never ships them. Harmless when the build already
+ * emits public entries only (e.g. core `tsdown`).
+ */
+function filterPublishDist(distDir: string): void {
 	const stack: string[] = [distDir];
 	while (stack.length > 0) {
 		const dir = stack.pop();
@@ -234,7 +242,7 @@ const publishExports = publishExportsFromSrc(
 );
 
 run(cfg.build, pkgDir);
-pruneDist(path.join(pkgDir, "dist"));
+filterPublishDist(path.join(pkgDir, "dist"));
 
 rmSync(stagingDir, { recursive: true, force: true });
 mkdirSync(stagingDir, { recursive: true });
