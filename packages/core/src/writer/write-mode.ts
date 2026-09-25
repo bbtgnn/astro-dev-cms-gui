@@ -1,6 +1,6 @@
 /**
  * createWriteMode with allowlisted paths.
- * Prefer discovered collections; pathMap / fakeCatalog are internal test seams.
+ * Collection descriptors + FS scan (or optional entryIndex).
  * Guarded write-back: opaque revisions + async Zod input validation (ADR-0010, 0014).
  */
 import * as pathe from "pathe";
@@ -75,9 +75,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 		writer,
 		collections = [],
 		entryIndex = {},
-		pathMap = {},
 		schemas: schemaOverrides = {},
-		fakeCatalog = {},
 	} = options;
 
 	const byName = new Map<string, CollectionDescriptor>(
@@ -88,11 +86,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 		if (!schemas[c.name]) schemas[c.name] = c.schema;
 	}
 
-	// Revisions for fakeCatalog entries without one are filled on getEntry.
-	const catalog: Record<string, ContentEntry[]> = structuredClone(fakeCatalog);
-
 	const exists = writerExists((p) => writer.readText(p));
-	const useDiscovery = collections.length > 0;
 
 	function assertAllowed(absolutePath: string): void {
 		if (!isPathAllowed(absolutePath, root, allowPaths)) {
@@ -108,11 +102,6 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 		id: string,
 		forCreate: boolean,
 	): Promise<string> {
-		const mapped = pathMap[collection]?.[id];
-		if (mapped) {
-			return joinRoot(root, mapped);
-		}
-
 		const discovered = byName.get(collection);
 		if (discovered) {
 			assertSafeEntryId(id);
@@ -149,58 +138,32 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 
 	return {
 		async listCollections() {
-			if (useDiscovery) {
-				return collections
-					.filter((c) => !c.hidden && !c.config?.hidden)
-					.map((c) => ({
-						name: c.name,
-						label: c.label ?? c.config?.label,
-						loaderHint: c.loaderHint,
-					}));
-			}
-			const names = new Set([...Object.keys(catalog), ...Object.keys(pathMap)]);
-			return [...names].sort().map((name) => ({ name }));
+			return collections
+				.filter((c) => !c.hidden && !c.config?.hidden)
+				.map((c) => ({
+					name: c.name,
+					label: c.label ?? c.config?.label,
+					loaderHint: c.loaderHint,
+				}));
 		},
 
 		async listEntries(collection: string) {
-			if (useDiscovery) {
-				const discovered = byName.get(collection);
-				if (!discovered) return [];
-				const indexed = entryIndex[collection];
-				if (indexed) {
-					return [...indexed].sort().map((id) => ({ id }));
-				}
-				const baseAbs = joinRoot(
-					root,
-					discovered.config?.base ?? discovered.base,
-				);
-				const ids = await scanEntryIds(writer, baseAbs);
-				return ids.map((id) => ({ id }));
+			const discovered = byName.get(collection);
+			if (!discovered) return [];
+			const indexed = entryIndex[collection];
+			if (indexed) {
+				return [...indexed].sort().map((id) => ({ id }));
 			}
-
-			const fromCatalog = catalog[collection] ?? [];
-			const fromMap = Object.keys(pathMap[collection] ?? {});
-			const ids = new Set([...fromCatalog.map((e) => e.id), ...fromMap]);
-			return [...ids].sort().map((id) => ({ id }));
+			const baseAbs = joinRoot(
+				root,
+				discovered.config?.base ?? discovered.base,
+			);
+			const ids = await scanEntryIds(writer, baseAbs);
+			return ids.map((id) => ({ id }));
 		},
 
 		async getEntry(collection: string, id: string) {
-			if (!useDiscovery) {
-				const hit = (catalog[collection] ?? []).find((e) => e.id === id);
-				if (hit) {
-					return {
-						id: hit.id,
-						collection: hit.collection,
-						data: hit.data,
-						revision:
-							hit.revision ||
-							(await opaqueRevision(serializeEntryFile(hit.data))),
-					};
-				}
-				if (!pathMap[collection]?.[id]) return null;
-			} else if (!byName.has(collection) && !pathMap[collection]?.[id]) {
-				return null;
-			}
+			if (!byName.has(collection)) return null;
 
 			let absolutePath: string;
 			try {
@@ -274,17 +237,6 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			// nodeFsWriter replaces atomically (temp + rename); memoryWriter is path-key.
 			await writer.writeText(absolutePath, serialized);
 
-			if (!useDiscovery) {
-				let list = catalog[input.collection];
-				if (!list) {
-					list = [];
-					catalog[input.collection] = list;
-				}
-				const idx = list.findIndex((e) => e.id === input.id);
-				if (idx >= 0) list[idx] = next;
-				else list.push(next);
-			}
-
 			return next;
 		},
 
@@ -292,11 +244,6 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			const absolutePath = await resolvePath(collection, id, false);
 			assertAllowed(absolutePath);
 			await writer.remove(absolutePath);
-			if (!useDiscovery) {
-				catalog[collection] = (catalog[collection] ?? []).filter(
-					(e) => e.id !== id,
-				);
-			}
 		},
 
 		async writeImageAssets(

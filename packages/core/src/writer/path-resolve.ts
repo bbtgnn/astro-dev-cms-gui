@@ -1,6 +1,5 @@
 /**
  * Id ↔ entry relpath helpers (ticket 11).
- * P1 still resolves via pathMap in write-mode; these helpers are the P2 seam.
  */
 import * as pathe from "pathe";
 import { normalizeFs } from "./path-normalize";

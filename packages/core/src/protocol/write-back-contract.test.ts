@@ -55,15 +55,15 @@ forEachBackend("write-back contract", (backend) => {
 			root,
 			allowPaths: ["posts"],
 			writer,
-			pathMap: {
-				posts: {
-					ok: "posts/ok.json",
-					evil: "../evil.json",
+			collections: [
+				{
+					...postsCollection,
+					config: {
+						...postsCollection.config,
+						pathTemplate: "{base}/../{id}.json",
+					},
 				},
-				secrets: {
-					env: "../../.env",
-				},
-			},
+			],
 		});
 		await expect(
 			wm.upsertEntry({
@@ -81,15 +81,15 @@ forEachBackend("write-back contract", (backend) => {
 			root,
 			allowPaths: ["posts"],
 			writer,
-			pathMap: {
-				posts: {
-					ok: "posts/ok.json",
-					evil: "../evil.json",
+			collections: [
+				postsCollection,
+				{
+					name: "secrets",
+					schema: z.object({ x: z.number() }),
+					base: "secrets",
+					config: { base: "secrets" },
 				},
-				secrets: {
-					env: "../../.env",
-				},
-			},
+			],
 		});
 		await expect(
 			wm.upsertEntry({
@@ -103,20 +103,7 @@ forEachBackend("write-back contract", (backend) => {
 
 	test("unsafe nested id", async () => {
 		const { root, writer } = fx.get();
-		const wm = createWriteMode({
-			root,
-			allowPaths: ["posts"],
-			writer,
-			pathMap: {
-				posts: {
-					ok: "posts/ok.json",
-					evil: "../evil.json",
-				},
-				secrets: {
-					env: "../../.env",
-				},
-			},
-		});
+		const wm = discoveryMode(root, writer);
 		await expect(
 			wm.upsertEntry({
 				id: "../escape",
@@ -283,11 +270,15 @@ forEachBackend("read-side protocol contract", (backend) => {
 				root,
 				allowPaths: ["posts"],
 				writer,
-				pathMap: {
-					posts: {
-						blocked: "../blocked.json",
+				collections: [
+					{
+						...postsCollection,
+						config: {
+							...postsCollection.config,
+							pathTemplate: "{base}/../{id}.json",
+						},
 					},
-				},
+				],
 			}),
 		);
 		const forbidden = await forbiddenProtocol.getEntry("posts", "blocked");
