@@ -2,8 +2,8 @@
  * Verify publish-face tarballs in a scratch Astro consumer (no workspace Vite
  * hacks). Day-to-day demos stay workspace:* — this is publish-face validation.
  *
- * Import: `verifyPublishFace(tarballPaths)` — absolute `.tgz` paths in
- * packLib inventory order (core → authoring → astro).
+ * Import: `verifyPublishFace(tarballs)` — named absolute `.tgz` paths from
+ * `packAll()`.
  * CLI: bun run smoke:publish-face → packAll() then verify.
  */
 import { spawnSync } from "node:child_process";
@@ -17,12 +17,16 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { packAll } from "./pack-lib.ts";
+import {
+	type PackedTarball,
+	type PublishPackageName,
+	packAll,
+	publishPackageNames,
+} from "./pack-lib.ts";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 
-const PKG_ORDER = ["@cms/core", "@cms/authoring", "@cms/astro"] as const;
-type CmsPackage = (typeof PKG_ORDER)[number];
+type CmsPackage = PublishPackageName;
 
 type PackageJson = {
 	workspaces?: { catalog?: Record<string, string> };
@@ -59,22 +63,35 @@ function catalogRange(catalog: Record<string, string>, name: string): string {
 	return range;
 }
 
-function namedTarballs(tarballPaths: string[]): Record<CmsPackage, string> {
-	if (tarballPaths.length !== PKG_ORDER.length) {
+export function tarballsByPackage(
+	packedTarballs: readonly PackedTarball[],
+): Record<CmsPackage, string> {
+	const names = publishPackageNames();
+	if (packedTarballs.length !== names.length) {
 		throw new Error(
-			`Expected ${PKG_ORDER.length} tarball paths (${PKG_ORDER.join(", ")}), got ${tarballPaths.length}`,
+			`Expected ${names.length} named tarballs (${names.join(", ")}), got ${packedTarballs.length}`,
 		);
 	}
-	const out = {} as Record<CmsPackage, string>;
-	for (let i = 0; i < PKG_ORDER.length; i++) {
-		const name = PKG_ORDER[i];
-		const file = tarballPaths[i];
-		if (!name || !file) {
-			throw new Error(`Missing tarball path for ${PKG_ORDER[i] ?? i}`);
+	const expected = new Set<CmsPackage>(names);
+	const out: Partial<Record<CmsPackage, string>> = {};
+	for (const { name, tarballPath } of packedTarballs) {
+		if (!expected.has(name)) {
+			throw new Error(`Unexpected publish tarball for ${name}`);
 		}
-		out[name] = file;
+		if (out[name] !== undefined) {
+			throw new Error(`Duplicate publish tarball for ${name}`);
+		}
+		if (!tarballPath) {
+			throw new Error(`Missing tarball path for ${name}`);
+		}
+		out[name] = tarballPath;
 	}
-	return out;
+	for (const name of names) {
+		if (out[name] === undefined) {
+			throw new Error(`Missing publish tarball for ${name}`);
+		}
+	}
+	return out as Record<CmsPackage, string>;
 }
 
 function scaffold(appDir: string, tarballs: Record<CmsPackage, string>): void {
@@ -83,7 +100,7 @@ function scaffold(appDir: string, tarballs: Record<CmsPackage, string>): void {
 	mkdirSync(tgzDir, { recursive: true });
 
 	const localTgz = {} as Record<CmsPackage, string>;
-	for (const name of PKG_ORDER) {
+	for (const name of publishPackageNames()) {
 		const src = tarballs[name];
 		const dest = path.join(tgzDir, path.basename(src));
 		cpSync(src, dest);
@@ -208,14 +225,13 @@ export default defineConfig({
  * run `astro check`. Scratch under `.smoke-publish-face/` is removed on
  * success and kept on failure.
  *
- * @param tarballPaths Absolute `.tgz` paths in packLib inventory order
- *   (`@cms/core`, `@cms/authoring`, `@cms/astro`).
+ * @param tarballs Named absolute `.tgz` paths returned by `packAll()`.
  */
-export function verifyPublishFace(tarballPaths: string[]): void {
-	const tarballs = namedTarballs(tarballPaths);
+export function verifyPublishFace(tarballs: readonly PackedTarball[]): void {
+	const tarballsByName = tarballsByPackage(tarballs);
 
-	for (const name of PKG_ORDER) {
-		console.log(`  ${name}: ${path.relative(root, tarballs[name])}`);
+	for (const name of publishPackageNames()) {
+		console.log(`  ${name}: ${path.relative(root, tarballsByName[name])}`);
 	}
 
 	const smokeRoot = path.join(root, ".smoke-publish-face");
@@ -225,7 +241,7 @@ export function verifyPublishFace(tarballPaths: string[]): void {
 
 	try {
 		step(`Scaffolding scratch consumer at ${appDir}`);
-		scaffold(appDir, tarballs);
+		scaffold(appDir, tarballsByName);
 
 		step("bun install (file: tarballs + catalog peers)");
 		run(["bun", "install"], appDir);
@@ -249,9 +265,9 @@ export function verifyPublishFace(tarballPaths: string[]): void {
 
 function main(): void {
 	step("Packing @cms/core → @cms/authoring → @cms/astro");
-	const tarballPaths = packAll();
+	const tarballs = packAll();
 	step("Verifying publish face in scratch consumer");
-	verifyPublishFace(tarballPaths);
+	verifyPublishFace(tarballs);
 }
 
 if (import.meta.main) {

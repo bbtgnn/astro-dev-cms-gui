@@ -9,7 +9,7 @@
  * Authoring keeps tests colocated under `src/`. `@sveltejs/package` has no
  * exclude, so {@link filterPublishDist} strips test/fixture emit before pack.
  *
- * Import: `packLib(name)` / `packAll()` → absolute tarball path(s).
+ * Import: `packLib(name)` / `packAll()` → named tarball record(s).
  * CLI: bun run scripts/pack-lib.ts @cms/core | @cms/authoring | @cms/astro
  */
 import { spawnSync } from "node:child_process";
@@ -57,7 +57,7 @@ type PackConfig = {
 	svelteCondition?: boolean;
 };
 
-const PACKAGES: Record<string, PackConfig> = {
+const PACKAGES = {
 	"@cms/core": {
 		dir: "packages/core",
 		build: ["bunx", "tsdown"],
@@ -71,7 +71,22 @@ const PACKAGES: Record<string, PackConfig> = {
 		dir: "packages/astro",
 		build: ["bunx", "tsdown"],
 	},
+} satisfies Record<string, PackConfig>;
+
+export type PublishPackageName = keyof typeof PACKAGES;
+
+export type PackedTarball = {
+	readonly name: PublishPackageName;
+	readonly tarballPath: string;
 };
+
+export function publishPackageNames(): PublishPackageName[] {
+	return Object.keys(PACKAGES) as PublishPackageName[];
+}
+
+function isPublishPackageName(name: string): name is PublishPackageName {
+	return name in PACKAGES;
+}
 
 function readJson(file: string): PackageJson {
 	return JSON.parse(readFileSync(file, "utf8")) as PackageJson;
@@ -277,8 +292,8 @@ function publishPackageJson(
 	return pkg;
 }
 
-/** Pack one named workspace package; return absolute path of the `.tgz`. */
-export function packLib(name: string): string {
+/** Pack one named workspace package; return its absolute `.tgz` path. */
+export function packLib(name: PublishPackageName): PackedTarball {
 	const cfg = PACKAGES[name];
 	if (!cfg) {
 		throw new Error(
@@ -324,22 +339,22 @@ export function packLib(name: string): string {
 		}
 		const tarballPath = path.join(pkgDir, entry);
 		renameSync(path.join(stagingDir, entry), tarballPath);
-		return tarballPath;
+		return { name, tarballPath };
 	} finally {
 		rmSync(stagingDir, { recursive: true, force: true });
 	}
 }
 
-/** Pack every known workspace package; return absolute `.tgz` paths in inventory order. */
-export function packAll(): string[] {
-	return Object.keys(PACKAGES).map((name) => packLib(name));
+/** Pack every known workspace package; preserve identity with each `.tgz` path. */
+export function packAll(): PackedTarball[] {
+	return publishPackageNames().map((name) => packLib(name));
 }
 
 if (import.meta.main) {
 	const name = process.argv[2];
-	if (!name || !(name in PACKAGES)) {
+	if (!name || !isPublishPackageName(name)) {
 		console.error(
-			`Usage: bun run scripts/pack-lib.ts <${Object.keys(PACKAGES).join("|")}>`,
+			`Usage: bun run scripts/pack-lib.ts <${publishPackageNames().join("|")}>`,
 		);
 		process.exit(1);
 	}
