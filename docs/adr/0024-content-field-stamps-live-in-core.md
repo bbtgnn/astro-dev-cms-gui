@@ -15,6 +15,20 @@ keeps only the host adapter that wraps Astro `image()` / `reference()` onto
 that contract. Loader stamps (`glob` / `file` location) stay Astro-owned —
 they are host-loader metadata, not portable schema semantics.
 
+**Content-proxy coverage (Astro host):** stamps apply to aliased
+`astro/loaders` (`glob` / `file`) and `astro:content` (`reference`; `image`
+only when the schema is a function using `ctx.image`). Not stamped: custom
+`Loader` objects, third-party packages, re-export wrappers that bypass the
+loader alias, and deep imports of Astro’s loader implementation. Read stamps
+only on the host/Node side — never import `content.config` or the content-proxy
+face into the browser authoring shell ([ADR-0004](0004-live-content-config-discovery.md)).
+
+**Host join:** fail closed if a collection loader has no stamp, unless an
+explicit location override supplies `{ base }`. v1 write-back supports glob +
+JSON; `file()` loaders error clearly as unsupported
+([ADR-0007](0007-entry-id-path-conventions.md),
+[ADR-0017](0017-json-only-entry-serialization-v1.md)).
+
 **Rejected:** keeping the contract under `@cms/astro` (forces core to duplicate
 or import the host package for portable hosts). Unifying form projection and
 Input rewrite into one walk engine is deferred; shared attach/read/unwrap is

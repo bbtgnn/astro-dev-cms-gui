@@ -23,6 +23,13 @@ Astro-transformed output such as image metadata.
 Authoritative validation must not write transformed Astro output. It validates
 persisted input and serializes that input after acceptance.
 
+**Dual engines:** the client gate (projected JSON Schema → Ajv via SJSF) is a
+structural UX check only. It may strip Zod / draft features the editor does not
+need (`$schema`, stamp `cms` meta). Do **not** require client Ajv ≡
+authoritative Zod. Image / reference stamps force editor schema
+`{ type: "string" }` (persisted path / id Input) even when Astro’s native
+`image()` Zod shape looks like metadata Output.
+
 **Amended by [ADR-0025](0025-schema-first-content-config-optional-overlay.md):**
 persisted Input authority is the stamped schema (Zod / Astro content.config),
 not a user-authored CMS IR. Content-field stamps
