@@ -9,7 +9,8 @@
  * Authoring keeps tests colocated under `src/`. `@sveltejs/package` has no
  * exclude, so {@link filterPublishDist} strips test/fixture emit before pack.
  *
- * Usage: bun run scripts/pack-lib.ts @cms/core | @cms/authoring | @cms/astro
+ * Import: `packLib(name)` / `packAll()` → absolute tarball path(s).
+ * CLI: bun run scripts/pack-lib.ts @cms/core | @cms/authoring | @cms/astro
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -276,50 +277,74 @@ function publishPackageJson(
 	return pkg;
 }
 
-const name = process.argv[2];
-const cfg = name ? PACKAGES[name] : undefined;
-if (!cfg) {
-	console.error(
-		`Usage: bun run scripts/pack-lib.ts <${Object.keys(PACKAGES).join("|")}>`,
-	);
-	process.exit(1);
-}
-
-const pkgDir = path.join(root, cfg.dir);
-const pkgPath = path.join(pkgDir, "package.json");
-const stagingDir = path.join(pkgDir, STAGING);
-const catalog = catalogVersions();
-const workspacePkg = readJson(pkgPath);
-const publishExports = publishExportsFromSrc(
-	workspaceSrcExports(workspacePkg.exports, name),
-	{ svelte: cfg.svelteCondition },
-);
-
-run(cfg.build, pkgDir);
-filterPublishDist(path.join(pkgDir, "dist"));
-
-rmSync(stagingDir, { recursive: true, force: true });
-mkdirSync(stagingDir, { recursive: true });
-cpSync(path.join(pkgDir, "dist"), path.join(stagingDir, "dist"), {
-	recursive: true,
-});
-
-const publishPkg = publishPackageJson(workspacePkg, publishExports, catalog);
-writeFileSync(
-	path.join(stagingDir, "package.json"),
-	`${JSON.stringify(publishPkg, null, "\t")}\n`,
-);
-
-try {
-	run(["bun", "pm", "pack"], stagingDir);
-	for (const entry of readdirSync(stagingDir)) {
-		if (!entry.endsWith(".tgz")) continue;
-		renameSync(path.join(stagingDir, entry), path.join(pkgDir, entry));
+/** Pack one named workspace package; return absolute path of the `.tgz`. */
+export function packLib(name: string): string {
+	const cfg = PACKAGES[name];
+	if (!cfg) {
+		throw new Error(
+			`Unknown package ${name}; expected one of ${Object.keys(PACKAGES).join(", ")}`,
+		);
 	}
-} finally {
+
+	const pkgDir = path.join(root, cfg.dir);
+	const pkgPath = path.join(pkgDir, "package.json");
+	const stagingDir = path.join(pkgDir, STAGING);
+	const catalog = catalogVersions();
+	const workspacePkg = readJson(pkgPath);
+	const publishExports = publishExportsFromSrc(
+		workspaceSrcExports(workspacePkg.exports, name),
+		{ svelte: cfg.svelteCondition },
+	);
+
+	run(cfg.build, pkgDir);
+	filterPublishDist(path.join(pkgDir, "dist"));
+
 	rmSync(stagingDir, { recursive: true, force: true });
+	mkdirSync(stagingDir, { recursive: true });
+	cpSync(path.join(pkgDir, "dist"), path.join(stagingDir, "dist"), {
+		recursive: true,
+	});
+
+	const publishPkg = publishPackageJson(workspacePkg, publishExports, catalog);
+	writeFileSync(
+		path.join(stagingDir, "package.json"),
+		`${JSON.stringify(publishPkg, null, "\t")}\n`,
+	);
+
+	try {
+		run(["bun", "pm", "pack"], stagingDir);
+		const tarballs = readdirSync(stagingDir).filter((entry) =>
+			entry.endsWith(".tgz"),
+		);
+		const entry = tarballs[0];
+		if (tarballs.length !== 1 || entry === undefined) {
+			throw new Error(
+				`${name}: expected exactly one .tgz from bun pm pack, got ${tarballs.length}`,
+			);
+		}
+		const tarballPath = path.join(pkgDir, entry);
+		renameSync(path.join(stagingDir, entry), tarballPath);
+		return tarballPath;
+	} finally {
+		rmSync(stagingDir, { recursive: true, force: true });
+	}
 }
 
-console.log(
-	`Packed ${name} (staging dir cleaned; workspace package.json untouched).`,
-);
+/** Pack every known workspace package; return absolute `.tgz` paths in inventory order. */
+export function packAll(): string[] {
+	return Object.keys(PACKAGES).map((name) => packLib(name));
+}
+
+if (import.meta.main) {
+	const name = process.argv[2];
+	if (!name || !(name in PACKAGES)) {
+		console.error(
+			`Usage: bun run scripts/pack-lib.ts <${Object.keys(PACKAGES).join("|")}>`,
+		);
+		process.exit(1);
+	}
+	packLib(name);
+	console.log(
+		`Packed ${name} (staging dir cleaned; workspace package.json untouched).`,
+	);
+}
