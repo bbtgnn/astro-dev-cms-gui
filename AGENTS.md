@@ -18,7 +18,7 @@ How agents behave in this repo: what to open, how to edit, where work goes.
 ## When documenting
 
 - **CONTEXT** — glossary only (“what it is” + `_Avoid_`). No implementation, anti-goals, or history sections.
-- **AGENTS** — behavior only (Reach / When coding / Place work / Skills). No product fences, architecture invariants, roadmaps, gap inventories, or feature requirements.
+- **AGENTS** — behavior only (Reach / When coding / When documenting / Place work / Titles / Skills). No product fences, architecture invariants, roadmaps, gap inventories, or feature requirements.
 - **ADRs** — durable choice + rationale. Change via a new ADR that explicitly supersedes; do not quietly rewrite the decision into an issue, AGENTS, or the architecture index.
 - **Architecture index** — product direction, system shape, live ADR links, map pointer. No authority ladder, thread lists, or ADR blurbs.
 - **`docs/agents/` adapters** — repo facts skills do not know (`gh`, labels). Delete if the file would only restate Reach or Place work.
@@ -31,6 +31,10 @@ How agents behave in this repo: what to open, how to edit, where work goes.
 - Implementable behavior → a small GitHub issue with acceptance criteria, tests, dependencies, and `ready-for-agent` only when complete.
 - Navigation and system summary → `docs/spec.md` and map issue #1.
 - Session state not captured elsewhere → temporary handoff only; link to durable artifacts rather than duplicating them.
+
+## Titles
+
+- **Commits, issues, and PR titles** — [Conventional Commits](https://www.conventionalcommits.org/): `type(optional-scope): summary`. Imperative summary; lowercase `type`. Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `build`, `perf`. Scope optional (e.g. `authoring`, `core`, `astro`).
 
 ## Skills
 
