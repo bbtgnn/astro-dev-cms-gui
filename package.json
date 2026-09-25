@@ -35,7 +35,9 @@
 		"lint": "biome check .",
 		"format": "biome check --write .",
 		"pack:core": "bun run scripts/pack-lib.ts @cms/core",
-		"pack:authoring": "bun run scripts/pack-lib.ts @cms/authoring"
+		"pack:authoring": "bun run scripts/pack-lib.ts @cms/authoring",
+		"pack:astro": "bun run scripts/pack-lib.ts @cms/astro",
+		"smoke:publish-face": "bun run scripts/smoke-publish-face.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.2.0",

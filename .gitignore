@@ -4,6 +4,9 @@ node_modules/
 # local git worktrees
 .worktrees/
 
+# publish-face smoke scratch consumers
+.smoke-publish-face/
+
 # build / cache
 dist/
 .pack/

@@ -1,6 +1,6 @@
 {
 	"name": "@cms/astro",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"private": true,
 	"type": "module",
 	"description": "Astro host \u2014 cms() integration, /cms shell, /cms/api protocol transport",
@@ -36,6 +36,7 @@
 	},
 	"scripts": {
 		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test src",
+		"pack:lib": "bun run ../../scripts/pack-lib.ts @cms/astro",
 		"test:content-proxy": "bun test ./src/content-proxy/content-proxy.test.ts",
 		"test:stamped-host": "bun test ./src/stamped/stamped-host.test.ts",
 		"test:happy-path": "bun test ./src/host/cms-happy-path.test.ts",

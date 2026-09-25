@@ -9,7 +9,7 @@
  * Authoring keeps tests colocated under `src/`. `@sveltejs/package` has no
  * exclude, so {@link filterPublishDist} strips test/fixture emit before pack.
  *
- * Usage: bun run scripts/pack-lib.ts @cms/core | @cms/authoring
+ * Usage: bun run scripts/pack-lib.ts @cms/core | @cms/authoring | @cms/astro
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -34,6 +34,7 @@ type PackageJson = {
 	private?: boolean;
 	exports?: unknown;
 	files?: string[];
+	bin?: string | Record<string, string>;
 	dependencies?: Record<string, string>;
 	devDependencies?: Record<string, string>;
 	peerDependencies?: Record<string, string>;
@@ -42,9 +43,10 @@ type PackageJson = {
 };
 
 type PublishExport = {
-	types: string;
+	types?: string;
 	import: string;
 	svelte?: string;
+	default?: string;
 };
 
 type PackConfig = {
@@ -52,6 +54,11 @@ type PackConfig = {
 	build: string[];
 	/** Add a `svelte` condition pointing at the same JS as `import` (authoring). */
 	svelteCondition?: boolean;
+	/**
+	 * Publish-face `bin` map. When set, replaces workspace bin after rewrite
+	 * (e.g. workspace `./bin/cms.ts` → packed `./dist/cli.js`).
+	 */
+	publishBin?: string | Record<string, string>;
 };
 
 const PACKAGES: Record<string, PackConfig> = {
@@ -63,6 +70,11 @@ const PACKAGES: Record<string, PackConfig> = {
 		dir: "packages/authoring",
 		build: ["bunx", "svelte-package", "-i", "src", "-o", "dist"],
 		svelteCondition: true,
+	},
+	"@cms/astro": {
+		dir: "packages/astro",
+		build: ["bunx", "tsdown"],
+		publishBin: { cms: "./dist/cli.js" },
 	},
 };
 
@@ -127,7 +139,7 @@ function rewriteDeps(
 	return out;
 }
 
-/** Workspace face: subpath → `./src/….ts`. */
+/** Workspace face: subpath → `./src/…` (.ts / .astro / .svelte). */
 function workspaceSrcExports(
 	exportsField: unknown,
 	pkgLabel: string,
@@ -137,7 +149,9 @@ function workspaceSrcExports(
 		typeof exportsField !== "object" ||
 		Array.isArray(exportsField)
 	) {
-		throw new Error(`${pkgLabel}: exports must be a map of ./src/*.ts paths`);
+		throw new Error(
+			`${pkgLabel}: exports must be a map of ./src/* string paths`,
+		);
 	}
 	const out: Record<string, string> = {};
 	for (const [key, value] of Object.entries(exportsField)) {
@@ -146,9 +160,18 @@ function workspaceSrcExports(
 				`${pkgLabel} export "${key}": expected string path, got ${typeof value}`,
 			);
 		}
-		if (!value.startsWith("./src/") || !value.endsWith(".ts")) {
+		if (!value.startsWith("./src/")) {
 			throw new Error(
-				`${pkgLabel} export "${key}": expected ./src/*.ts, got ${value}`,
+				`${pkgLabel} export "${key}": expected ./src/*, got ${value}`,
+			);
+		}
+		if (
+			!value.endsWith(".ts") &&
+			!value.endsWith(".astro") &&
+			!value.endsWith(".svelte")
+		) {
+			throw new Error(
+				`${pkgLabel} export "${key}": expected ./src/*.{ts,astro,svelte}, got ${value}`,
 			);
 		}
 		out[key] = value;
@@ -156,13 +179,27 @@ function workspaceSrcExports(
 	return out;
 }
 
-/** Publish face: rewrite `./src/foo.ts` → dist types/import (+ optional svelte). */
+/** Publish face: rewrite `./src/foo.*` → dist conditions by extension. */
 function publishExportsFromSrc(
 	srcExports: Record<string, string>,
 	opts: { svelte?: boolean } = {},
 ): Record<string, PublishExport> {
 	const out: Record<string, PublishExport> = {};
 	for (const [key, srcPath] of Object.entries(srcExports)) {
+		if (srcPath.endsWith(".astro")) {
+			const distPath = `./dist/${srcPath.slice("./src/".length)}`;
+			out[key] = { import: distPath, default: distPath };
+			continue;
+		}
+		if (srcPath.endsWith(".svelte")) {
+			const distPath = `./dist/${srcPath.slice("./src/".length)}`;
+			out[key] = {
+				svelte: distPath,
+				import: distPath,
+				default: distPath,
+			};
+			continue;
+		}
 		const rel = srcPath.slice("./src/".length, -".ts".length);
 		const base = `./dist/${rel}`;
 		const entry: PublishExport = {
@@ -176,9 +213,34 @@ function publishExportsFromSrc(
 }
 
 /**
+ * Workspace `./bin/foo.ts` → publish `./dist/bin/foo.js`.
+ * Workspace `./src/foo.ts` → publish `./dist/foo.js` (CLI under src/).
+ */
+function rewriteBinPath(binPath: string): string {
+	if (binPath.startsWith("./bin/") && binPath.endsWith(".ts")) {
+		return `./dist/bin/${path.basename(binPath, ".ts")}.js`;
+	}
+	if (binPath.startsWith("./src/") && binPath.endsWith(".ts")) {
+		return `./dist/${binPath.slice("./src/".length, -".ts".length)}.js`;
+	}
+	return binPath;
+}
+
+function rewriteBin(bin: PackageJson["bin"]): PackageJson["bin"] | undefined {
+	if (bin == null) return undefined;
+	if (typeof bin === "string") return rewriteBinPath(bin);
+	const out: Record<string, string> = {};
+	for (const [name, binPath] of Object.entries(bin)) {
+		out[name] = rewriteBinPath(binPath);
+	}
+	return out;
+}
+
+/**
  * Owned publish filter (post-emit): drop colocated test/fixture artifacts from
  * `dist` so the tarball never ships them. Harmless when the build already
- * emits public entries only (e.g. core `tsdown`).
+ * emits public entries only (e.g. core `tsdown`). Does not strip public
+ * export files named `testing.*`.
  */
 function filterPublishDist(distDir: string): void {
 	const stack: string[] = [distDir];
@@ -189,7 +251,7 @@ function filterPublishDist(distDir: string): void {
 			const full = path.join(dir, entry);
 			const st = statSync(full);
 			if (st.isDirectory()) {
-				if (entry === "testing") {
+				if (entry === "testing" || entry === "fixtures") {
 					rmSync(full, { recursive: true, force: true });
 					continue;
 				}
@@ -210,6 +272,7 @@ function publishPackageJson(
 	workspacePkg: PackageJson,
 	exportMap: PackageJson["exports"],
 	catalog: Record<string, string>,
+	opts: { publishBin?: PackConfig["publishBin"] } = {},
 ): PackageJson {
 	const pkg: PackageJson = { ...workspacePkg };
 	pkg.private = false;
@@ -217,6 +280,8 @@ function publishPackageJson(
 	pkg.exports = exportMap;
 	pkg.dependencies = rewriteDeps(pkg.dependencies, catalog);
 	pkg.peerDependencies = rewriteDeps(pkg.peerDependencies, catalog);
+	const bin = opts.publishBin ?? rewriteBin(workspacePkg.bin);
+	if (bin != null) pkg.bin = bin;
 	delete pkg.devDependencies;
 	delete pkg.scripts;
 	return pkg;
@@ -250,7 +315,9 @@ cpSync(path.join(pkgDir, "dist"), path.join(stagingDir, "dist"), {
 	recursive: true,
 });
 
-const publishPkg = publishPackageJson(workspacePkg, publishExports, catalog);
+const publishPkg = publishPackageJson(workspacePkg, publishExports, catalog, {
+	publishBin: cfg.publishBin,
+});
 writeFileSync(
 	path.join(stagingDir, "package.json"),
 	`${JSON.stringify(publishPkg, null, "\t")}\n`,

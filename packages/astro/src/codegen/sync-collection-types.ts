@@ -12,6 +12,7 @@ import {
 	CONTENT_CONFIG_CONVENTION,
 	resolveConventionEntry,
 } from "../host/vite-config-plugin";
+import { colocatedUrl } from "../module-sibling";
 import {
 	collectionsFromContentConfigExport,
 	materializeSchema,
@@ -34,7 +35,7 @@ export type SyncCollectionTypesResult = {
 };
 
 const syncContentShim = fileURLToPath(
-	new URL("../content-proxy/shims/astro-content-sync.ts", import.meta.url),
+	colocatedUrl(import.meta.url, "../content-proxy/shims/astro-content-sync.ts"),
 );
 
 export async function syncCmsCollectionTypes(
