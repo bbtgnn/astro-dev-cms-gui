@@ -11,7 +11,6 @@ export type ProxyAssets = {
 	stampHelpersHref: string;
 };
 
-/** Content-proxy package root(s) relative to this module's import.meta.url. */
 function contentProxyRoots(base: string): string[] {
 	return [
 		// Running from src/content-proxy/*.ts (bun / direct source).

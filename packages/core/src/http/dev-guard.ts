@@ -1,6 +1,3 @@
-/**
- * Refuse write API outside DEV unless overridden.
- */
 export function cmsDevOnlyGuard(opts: {
 	isDev: boolean;
 	allowInProd?: boolean;

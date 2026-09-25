@@ -1,8 +1,3 @@
-/**
- * Portable CMS HTTP from the createCmsHost `config` door (defineCms result).
- * Returns paired CmsHost + dispatcher; framework adapters supply path segments.
- */
-
 import { type CmsHost, createCmsHost } from "../protocol/create-cms-protocol";
 import type { CreateCmsHostConfig, Writer } from "../writer/types";
 import {

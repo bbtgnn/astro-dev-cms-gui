@@ -114,7 +114,6 @@ export function defineCollection(config) {
 	};
 }
 
-/** Boot-time aliases for `astro/loaders` (stamp glob/file inputs). */
 export function viteAliasesForBoot(): {
 	find: string | RegExp;
 	replacement: string;
@@ -123,7 +122,6 @@ export function viteAliasesForBoot(): {
 	return [{ find: /^astro\/loaders$/, replacement: loaders }];
 }
 
-/** Boot-time Vite plugins — live `astro:content` proxy for reference/image meta. */
 export function vitePluginsForBoot() {
 	return [astroContentBootProxy()];
 }

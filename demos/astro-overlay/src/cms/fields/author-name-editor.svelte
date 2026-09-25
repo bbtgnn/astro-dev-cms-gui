@@ -1,7 +1,3 @@
-<!--
-  Direct string field for authors.name — FieldEditorProps (shell-owned contract).
-  Bound via cms.components catalog key + virtual:@cms/components.
--->
 <script lang="ts">
 	import type { FieldEditorProps } from "@cms/authoring/config";
 

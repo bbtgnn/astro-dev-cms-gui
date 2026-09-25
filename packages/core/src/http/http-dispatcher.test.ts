@@ -1,6 +1,3 @@
-/**
- * Seam: createCmsDispatcher — protocol ↔ HTTP under /cms/api mount.
- */
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { z } from "zod";

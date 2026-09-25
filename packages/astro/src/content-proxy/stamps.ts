@@ -1,4 +1,3 @@
-/** Loader stamp symbol — passthrough wrap of Astro `glob` / `file`. */
 import type { glob as AstroGlob, Loader } from "astro/loaders";
 
 export const LOADER_STAMP = Symbol.for("@cms/astro.loaderStamp");

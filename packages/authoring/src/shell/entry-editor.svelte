@@ -30,7 +30,7 @@ let {
 	onCancel?: () => void;
 } = $props();
 
-/** Bumped on session notify so snapshot re-reads reactively. */
+/** void version forces snapshot re-read on session notify. */
 let version = $state(0);
 let lastNotifiedSaved = $state.raw<ContentEntry | null>(null);
 
@@ -64,7 +64,6 @@ function onFormChange(data: Record<string, unknown>) {
 	session.handleChange(data);
 }
 
-/** Explicit Save — flush pending valid payload immediately. */
 function saveNow(data: Record<string, unknown>) {
 	session.handleChange(data);
 	session.flushNow();

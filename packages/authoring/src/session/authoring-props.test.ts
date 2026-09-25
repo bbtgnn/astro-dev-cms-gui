@@ -1,6 +1,3 @@
-/**
- * Seam: authoringPropsFromFormModels (+ defineCms sugar) → AuthoringApp props.
- */
 import { describe, expect, test } from "bun:test";
 import { defineCms } from "@cms/core/define-cms";
 import { projectSchemaFormModels } from "@cms/core/semantic";

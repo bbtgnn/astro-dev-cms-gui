@@ -1,9 +1,4 @@
-/**
- * Draft-write eligibility from Ajv-safe editor schema (AJV).
- * Session injects the predicate; this module owns the default adapter.
- * Dirty Form model schemas must be lowered first (see lowerFormModelToSjsf /
- * ajv-schema tests) — this module does not strip.
- */
+/** Must receive already-lowered Ajv-safe schema (see ajv-schema tests). */
 
 import { describe, expect, test } from "bun:test";
 import { createDraftEligibility } from "./draft-eligibility";

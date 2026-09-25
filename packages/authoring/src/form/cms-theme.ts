@@ -1,6 +1,3 @@
-/**
- * Basic theme + CMS FieldEditorProps stock editors (bridged for SJSF).
- */
 import { theme as basicTheme } from "@sjsf/basic-theme";
 import { extendByRecord } from "@sjsf/form/lib/resolver";
 import ImageField from "./image-field.svelte";

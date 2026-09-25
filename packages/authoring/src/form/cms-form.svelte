@@ -37,7 +37,6 @@ let {
 	title?: string;
 	collection?: string;
 	entryId?: string;
-	/** Capability-aware image upload seam (omit / null → upload disabled). */
 	assets?: CmsAssetsFieldContext | null;
 	onSubmit?: (data: Record<string, unknown>) => void;
 	/**

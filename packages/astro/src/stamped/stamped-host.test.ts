@@ -1,7 +1,4 @@
-/**
- * FS host from stamped content.config collections (schema-first overlay ticket 04).
- * Shims active via fixture imports; memoryWriter mirrors authors/posts layout.
- */
+/** ticket 04 */
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { memoryWriter } from "@cms/core";

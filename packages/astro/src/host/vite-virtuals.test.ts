@@ -1,6 +1,3 @@
-/**
- * Contract tests for Vite virtual modules used by createCmsIntegration.
- */
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import {

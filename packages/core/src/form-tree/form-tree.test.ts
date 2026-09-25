@@ -1,7 +1,4 @@
-/**
- * Form tree builders — runtime node shape (ticket 12).
- * Typing intent lives in form-tree.fixtures.ts (compile-time).
- */
+/** ticket 12 — typing intent in form-tree.fixtures.ts */
 import { describe, expect, test } from "bun:test";
 import { createFormTreeHelpers } from "./form-tree";
 

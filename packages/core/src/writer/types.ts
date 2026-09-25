@@ -42,7 +42,6 @@ export type WriteImageAssetsInput = {
 	collection: string;
 	id: string;
 	name?: string;
-	/** Sanitized basename is applied by write-mode. */
 	filename: string;
 	bytes: Uint8Array;
 };
@@ -110,7 +109,6 @@ export type CreateCmsHostFromCollections = CreateCmsHostShared & {
 	 * Defaults to unique `collections[].base` values.
 	 */
 	allowPaths?: string[];
-	/** Per-collection Zod schemas. Merged under descriptor schemas when both set. */
 	schemas?: Record<string, z.ZodType>;
 	config?: never;
 };

@@ -1,8 +1,3 @@
-/**
- * Schema-first form projection: stamped Zod Input → CollectionFormModel.
- * Client JSON Schema is Ajv-oriented; authoritative parse stays on the Zod schema.
- * Optional form tree lowers layout + field-ref chrome onto the model.
- */
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import { createFormTreeHelpers } from "../form-tree/form-tree";
@@ -87,7 +82,6 @@ describe("projectSchemaFormModel", () => {
 		expect(
 			(props.cover as { properties?: unknown }).properties,
 		).toBeUndefined();
-		// cms stamp meta is not part of the Ajv client schema.
 		expect((props.author as { cms?: unknown }).cms).toBeUndefined();
 	});
 });
@@ -184,7 +178,6 @@ describe("projectSchemaFormModel with form tree", () => {
 		expect(model.fields.author?.label).toBe("Author");
 		expect(model.fields.author?.component).toBe("AuthorPicker");
 
-		// Unplaced top-level keys (count, tags) append to the default stack.
 		const unplaced = model.layout.content.slice(1);
 		expect(unplaced.map((n) => ("path" in n ? n.path : n.kind))).toEqual([
 			"count",

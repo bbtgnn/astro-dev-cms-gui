@@ -1,7 +1,3 @@
-/**
- * Internal lowering: stamped Zod schemas (+ form tree) → EditorCollections.
- * Public mount coverage lives in authoring-props.test.ts.
- */
 import { describe, expect, test } from "bun:test";
 import { createFormTreeHelpers } from "@cms/core/form-tree";
 import { CONTENT_FIELD_STAMP } from "@cms/core/semantic";

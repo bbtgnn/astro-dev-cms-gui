@@ -1,6 +1,3 @@
-/**
- * Codegen: Zod Input types + CmsImage / CmsReference brands from stamps.
- */
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {

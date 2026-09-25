@@ -16,7 +16,6 @@ import {
 } from "./build-fs-host-from-stamped";
 
 export type AssembleStampedCmsOptions = BuildFsHostFromStampedOptions & {
-	/** Optional form trees keyed by collection (overlay / defineAstroCms). */
 	readonly forms?: Readonly<Record<string, FormTree>>;
 };
 
@@ -25,9 +24,6 @@ export type AssembleStampedCmsResult = {
 	readonly formModels: FormModelsByCollection;
 };
 
-/**
- * One injectable face: stamped collections → paired CmsHost + form models.
- */
 export function assembleStampedCms(
 	options: AssembleStampedCmsOptions,
 ): AssembleStampedCmsResult {

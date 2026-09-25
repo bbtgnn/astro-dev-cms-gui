@@ -46,7 +46,6 @@ export function getContentFieldStamp(
 	return readContentFieldStamp(schema);
 }
 
-/** Stamp relation meta onto an existing schema (boot wrap of Astro `reference`). */
 export function stampRelationSchema<T extends MetaCapable>(
 	schema: T,
 	collection: string,
@@ -57,7 +56,6 @@ export function stampRelationSchema<T extends MetaCapable>(
 	});
 }
 
-/** Stamp image meta onto an existing schema (boot wrap of function-schema `image()`). */
 export function stampImageSchema<T extends MetaCapable>(schema: T): T {
 	const stamp: ImageFieldStamp = { kind: "image" };
 	return stampContentFieldLeaf(schema, stamp, { cms: imageFieldMeta().cms });

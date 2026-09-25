@@ -1,7 +1,3 @@
-/**
- * Host facade: `defineAstroCms(options)` presentation-only face.
- */
-
 import { describe, expect, test } from "bun:test";
 import { defineAstroCms } from "./config.ts";
 

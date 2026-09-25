@@ -438,7 +438,6 @@ function applySemanticKindJsonSchemaRewrite(
 }
 
 /**
- * Project one collection Zod object schema into a serializable form model.
  * Thin internal form IR — not a user-authored algebra.
  * Optional {@link ProjectSchemaFormOptions.form} lowers a form tree into layout
  * and merges field-ref chrome onto descriptors.
@@ -468,8 +467,6 @@ export function projectSchemaFormModel(
 	for (const key of Object.keys(props)) {
 		const childJson = asObject(props[key]);
 		if (!childJson) continue;
-		// Use raw property JSON before rewrite for walk? We already rewrote —
-		// stamps are recovered from Zod, kinds from rewritten + stamp.
 		const rawProps = asObject(rawJson.properties) ?? {};
 		const rawChild = asObject(rawProps[key]) ?? childJson;
 		rootKeys.push(key);
@@ -477,7 +474,7 @@ export function projectSchemaFormModel(
 			projectProperty(
 				key,
 				shape[key],
-				// Prefer raw for kind detection (cms meta), then fields use rewritten schema.
+				// Raw JSON for stamp/kind detection; rewritten schema for fields.
 				rawChild,
 				"",
 				required.has(key),
@@ -510,9 +507,6 @@ export function projectSchemaFormModel(
 	};
 }
 
-/**
- * Project a map of collection schemas to form models.
- */
 export function projectSchemaFormModels(
 	collections: Readonly<Record<string, z.ZodType>>,
 	options?: ProjectSchemaFormModelsOptions,

@@ -39,7 +39,6 @@ void config.descriptors;
 void config.forms.posts;
 void config.schemas.authors;
 
-// Input brands flow from leaf helpers into form field keys
 type PostsInput = z.input<(typeof config.schemas)["posts"]>;
 type _CoverIsImage = PostsInput["cover"] extends CmsImage ? true : false;
 type _FileIsFile = PostsInput["attachment"] extends CmsFile ? true : false;
@@ -48,7 +47,6 @@ type _AuthorIsRef =
 const _brands: [_CoverIsImage, _FileIsFile, _AuthorIsRef] = [true, true, true];
 void _brands;
 
-// Form field keys are keyof schema Input
 defineCms((cms) => ({
 	posts: cms.collection({
 		schema: z.object({ title: z.string() }),

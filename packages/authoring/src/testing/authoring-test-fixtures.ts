@@ -1,5 +1,4 @@
 /**
- * Shared fixtures for authoring contract tests.
  * Fake protocol client + deterministic timers — no pass/fail recording.
  */
 
@@ -12,7 +11,6 @@ export const sampleEntry: ContentEntry = {
 	revision: "rev-1",
 };
 
-/** Deterministic timer queue for debounce tests. */
 export function createFakeTimers() {
 	let nextId = 1;
 	const pending = new Map<number, { fn: () => void; at: number }>();
@@ -43,7 +41,6 @@ export function createFakeTimers() {
 	};
 }
 
-/** Drain until predicate holds. Uses a short sleep so async work can settle. */
 export async function waitUntil(
 	pred: () => boolean,
 	label: string,

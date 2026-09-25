@@ -1,9 +1,3 @@
-/**
- * Authoring session seam (architecture candidate #2).
- * Guarded write-back, create→edit remount, preview eligibility, capability gates.
- * Debounce stays an internal seam — exercised only as observable timing.
- */
-
 import { describe, expect, test } from "bun:test";
 import { resolveCmsCapabilities } from "@cms/core/fetch-client";
 import {

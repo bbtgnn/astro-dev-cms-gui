@@ -92,7 +92,6 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 	}
 
 	const catalog: Record<string, ContentEntry[]> = structuredClone(fakeCatalog);
-	// Ensure catalog rows always carry a revision derived from serialized input.
 	for (const list of Object.values(catalog)) {
 		for (const entry of list) {
 			if (!entry.revision) {
@@ -390,7 +389,6 @@ function sanitizeAssetFolderName(name: string): string {
 	return name;
 }
 
-/** Basename only; alphanumeric / `.` / `_` / `-`; no leading dots. */
 function sanitizeAssetFileName(name: string): string {
 	const base = path.basename(name.replace(/\\/g, "/"));
 	const cleaned = base.replace(/[^a-zA-Z0-9._-]/g, "_");

@@ -40,7 +40,7 @@ type StampedSchema = {
 	};
 };
 
-/** Attach a content-field stamp on the Symbol slot (mutates schema object). */
+/** Mutates the schema object (Symbol stamp slot). */
 export function attachContentFieldStamp<T>(
 	schema: T,
 	stamp: ContentFieldStamp,

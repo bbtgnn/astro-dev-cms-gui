@@ -21,7 +21,6 @@ type Data = {
 
 const cms: FormTreeHelpers<Data> = createFormTreeHelpers<Data>();
 
-// Root keys are keyof Data
 const titleRef: FieldRefBuilder<Data, "title"> = cms
 	.field("title")
 	.label("Title")
@@ -32,7 +31,6 @@ void titleRef;
 // @ts-expect-error "missing" is not a key of Data
 cms.field("missing");
 
-// Layout does not change key space — same field helper inside tabs/columns/group
 const layoutTree: FormTree = [
 	cms.tabs([
 		{
@@ -56,7 +54,6 @@ const layoutTree: FormTree = [
 
 void layoutTree;
 
-// Object enter rebinds f to keyof seo
 const seoFields: FormTreeNode = cms.field("seo").fields((f) => [
 	f("description").label("Desc"),
 	f("keywords"),
@@ -81,14 +78,12 @@ const seoForm: FormTreeNode = cms.field("seo").form((f) =>
 
 void seoForm;
 
-// Scalar field refs do not expose object enter
 const scalar = cms.field("title");
 // @ts-expect-error title is string — no .fields callback scope
 scalar.fields;
 // @ts-expect-error title is string — no .form callback scope
 scalar.form;
 
-// Tab entries are objects — there is no tab() helper on the factory
 const helpers = createFormTreeHelpers<Data>();
 // @ts-expect-error no singular tab() on form-tree helpers
 helpers.tab;

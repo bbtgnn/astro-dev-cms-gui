@@ -82,7 +82,6 @@ export function resolveProjectEntry(
 /** @deprecated Prefer {@link resolveProjectEntry}. */
 export const resolveEditorConfigEntry = resolveProjectEntry;
 
-/** First existing convention file under the project root, if any. */
 export function resolveConventionEntry(
 	projectRoot: string,
 	candidates: readonly string[],

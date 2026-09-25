@@ -1,5 +1,4 @@
 /**
- * Walk materialized Zod (CMS Input) → TypeScript type source + field kinds.
  * Stamped image/ref → CmsImage / CmsReference<"collection">.
  */
 
@@ -23,7 +22,7 @@ export type PrintedTypeTree = {
 	readonly fields?: Readonly<Record<string, PrintedTypeTree>>;
 };
 
-/** Input optionality: `.optional()` or `.default()` (defaulted keys are optional on Input). */
+/** Defaulted keys are optional on Zod Input (not only `.optional()`). */
 function isInputOptional(schema: unknown): boolean {
 	const { optional, defaultValue } = unwrapZod(schema);
 	return optional || defaultValue !== undefined;

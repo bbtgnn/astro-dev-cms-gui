@@ -20,7 +20,6 @@ export type ZodWalkNode = {
 	};
 };
 
-/** Object field map from a Zod object (or Zod-internal def.shape / def.entries). */
 export function zodObjectShape(
 	schema: unknown,
 ): Record<string, unknown> | undefined {
@@ -36,7 +35,6 @@ export function zodObjectShape(
 	return undefined;
 }
 
-/** Array element schema from `.element` or `def.element`. */
 export function zodArrayElement(schema: unknown): unknown {
 	if (!schema || typeof schema !== "object") return undefined;
 	const node = schema as ZodWalkNode;

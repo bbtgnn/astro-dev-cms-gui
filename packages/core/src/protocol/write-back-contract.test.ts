@@ -1,7 +1,4 @@
-/**
- * Write-back + CMS protocol contracts (#11–#13, #16–#17).
- * Same scenarios on memory and filesystem writers via bun:test.
- */
+/** #11–#13, #16–#17 */
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
@@ -522,7 +519,6 @@ forEachBackend("assets capability contract", (backend) => {
 			expect(created.ok).toBe(true);
 			if (!created.ok) return;
 
-			/** Minimal 1×1 PNG. */
 			const png = Uint8Array.from(
 				atob(
 					"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",

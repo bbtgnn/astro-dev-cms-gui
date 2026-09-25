@@ -389,7 +389,6 @@ describe("authoring autosave self-host json", () => {
 			},
 		});
 
-		// Valid title edit — no explicit submit; debounce then write.
 		ctrl.handleChange({ title: "Autosaved title" });
 		await waitUntil(() => status === "saved", "self-host autosave settle", 200);
 

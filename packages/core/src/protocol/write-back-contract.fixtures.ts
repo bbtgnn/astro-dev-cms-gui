@@ -1,5 +1,4 @@
 /**
- * Shared fixtures for write-back + CMS protocol contract tests.
  * Memory and filesystem backends only — no pass/fail recording.
  */
 
@@ -23,7 +22,6 @@ export type BackendFixture = {
 	root: string;
 	writer: Writer;
 	cleanup: () => Promise<void>;
-	/** Seed a relative path under root (for collision / pre-existing files). */
 	seedFile: (relPath: string, contents: string) => Promise<void>;
 };
 

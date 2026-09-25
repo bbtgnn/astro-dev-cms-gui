@@ -1,6 +1,4 @@
-/**
- * Non-Astro defineCms — schema + location + form → host descriptors (ticket 15).
- */
+/** ticket 15 */
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
@@ -142,7 +140,6 @@ describe("defineCms", () => {
 		expect(model.fields.cover?.semanticKind).toBe("image");
 		expect(model.fields.author?.semanticKind).toBe("reference");
 		expect(model.fields.author?.referenceCollection).toBe("authors");
-		// file stamp is present for kinds; projection may keep string until later
 		expect(model.fields.attachment?.semanticKind).toBe("string");
 	});
 });

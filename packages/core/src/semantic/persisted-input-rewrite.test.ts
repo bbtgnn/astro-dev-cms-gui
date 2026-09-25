@@ -1,7 +1,3 @@
-/**
- * Persisted-Input rewrite: stamped Zod → authoritative Input (paths / ids).
- * Peer of schema-form-projection; host injects existence checks via deps.
- */
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import { CONTENT_FIELD_STAMP } from "./content-field-stamp";

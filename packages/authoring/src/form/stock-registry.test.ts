@@ -1,7 +1,3 @@
-/**
- * Stock-by-kind registry + schema-form model → SJSF lowering.
- */
-
 import { describe, expect, test } from "bun:test";
 import { createFormTreeHelpers } from "@cms/core/form-tree";
 import {

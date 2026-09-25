@@ -140,8 +140,7 @@ export type ShellCompatibleWrapper<C extends AnySvelteComponent> =
 export type FieldIcon = Component<Record<string, never> | { class?: string }>;
 
 /**
- * Catalog of live Svelte editors / wrappers / icons (Vite-only module).
- * Keys are authored in `cms.config.ts`; values resolve in the host graph.
+ * Vite-only module. Keys in `cms.config.ts`; values resolve in the host graph.
  */
 export type ComponentsCatalog = Record<string, AnySvelteComponent>;
 

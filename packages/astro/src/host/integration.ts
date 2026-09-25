@@ -50,15 +50,7 @@ export type CmsIntegrationOptions = Record<string, never>;
  * Prefer conventions + {@link cms} whenever possible.
  */
 export type CmsHarnessOptions = {
-	/**
-	 * Optional overlay module (project-relative or absolute).
-	 * Defaults to `src/cms.config.*` when present.
-	 */
 	config?: string;
-	/**
-	 * Vite-only components catalog. Defaults to `src/cms.components.*` when
-	 * present; omit/`false` → empty catalog.
-	 */
 	componentsCatalog?: string | false;
 	/**
 	 * Project module exporting `createHost(): CmsHost`.
