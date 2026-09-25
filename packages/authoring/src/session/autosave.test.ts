@@ -9,9 +9,9 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createCmsHost } from "@cms/core";
+import { nodeFsWriter } from "@cms/core/node";
 import { z } from "zod";
-import { createCmsHost } from "../../../core/src/protocol/create-cms-host.ts";
-import { nodeFsWriter } from "../../../core/src/writer/node-fs-writer.ts";
 import {
 	createFakeTimers,
 	sampleEntry,

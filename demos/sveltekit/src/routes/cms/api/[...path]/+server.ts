@@ -5,6 +5,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createCmsHttpFromConfig, DEFAULT_CMS_API_MOUNT } from "@cms/core/http";
+import { nodeFsWriter } from "@cms/core/node";
 import type { RequestHandler } from "@sveltejs/kit";
 import { dev } from "$app/environment";
 import { cmsConfig } from "$lib/cms";
@@ -17,6 +18,7 @@ const contentRoot = path.resolve(
 const { dispatch } = createCmsHttpFromConfig({
 	config: cmsConfig,
 	root: contentRoot,
+	writer: nodeFsWriter(),
 	isDev: dev,
 	mount: DEFAULT_CMS_API_MOUNT,
 });

@@ -1,7 +1,7 @@
 /**
  * Thin protocol client for shell UI → /cms/api transport.
  * Browser-safe: import from `@cms/core/fetch-client` (not package root —
- * root re-exports Node FS writers).
+ * host construction / write-back live elsewhere; Node FS at `@cms/core/node`).
  */
 import { DEFAULT_CMS_API_MOUNT } from "../http/dispatcher";
 import type { WrittenImageAssets } from "../writer/types";

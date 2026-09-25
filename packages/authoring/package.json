@@ -1,6 +1,6 @@
 {
 	"name": "@cms/authoring",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"private": true,
 	"type": "module",
 	"description": "Authoring UI \u2014 shell, form shell, and chrome (ADR-0008 layer 1)",
@@ -19,7 +19,6 @@
 		"svelte": "catalog:"
 	},
 	"devDependencies": {
-		"@astrojs/svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
 		"typescript": "catalog:"
@@ -28,6 +27,7 @@
 		"check": "svelte-check --tsconfig ./tsconfig.json && bun test ./src/form ./src/config ./src/session/draft-eligibility.test.ts ./src/session/authoring-props.test.ts",
 		"check:layers": "bun run ./scripts/check-layer-boundaries.ts",
 		"check:allowlist": "bun test ./src/session/authoring-deletion.test.ts ./src/session/authoring-assets.test.ts ./src/session/autosave.test.ts ./src/session/session.test.ts ./src/session/open-authoring-session.test.ts",
+		"pack:lib": "bun run ../../scripts/pack-lib.ts @cms/authoring",
 		"test:config": "bun test ./src/form/stock-registry.test.ts ./src/config/create-field-control.test.ts"
 	}
 }

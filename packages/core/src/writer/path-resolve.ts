@@ -1,20 +1,16 @@
 /**
  * Id ↔ entry relpath helpers (ticket 11).
- * P1 still resolves via pathMap in write-mode; these helpers are the P2 seam.
  */
-import path from "node:path";
+import * as pathe from "pathe";
+import { normalizeFs } from "./path-normalize";
 
 export type EntryExtension = "json";
 
 export const DEFAULT_ENTRY_EXTENSION: EntryExtension = "json";
 
-function normalizeFs(p: string): string {
-	return path.resolve(p).replace(/\\/g, "/");
-}
-
 /** Refuse absolute ids, `..`, empty segments, and backslashes. */
 export function assertSafeEntryId(id: string): void {
-	if (!id || id.includes("\\") || id.startsWith("/") || path.isAbsolute(id)) {
+	if (!id || id.includes("\\") || id.startsWith("/") || pathe.isAbsolute(id)) {
 		throw Object.assign(new Error(`Unsafe entry id: ${id}`), {
 			status: 400,
 			code: "UNSAFE_ID",
@@ -79,7 +75,7 @@ export async function resolveEntryPath(
 	const preferred = options.preferredExt ?? DEFAULT_ENTRY_EXTENSION;
 	const forCreate = options.forCreate ?? true;
 
-	const abs = normalizeFs(path.join(baseDir, `${id}.${preferred}`));
+	const abs = normalizeFs(pathe.join(baseDir, `${id}.${preferred}`));
 	const present = await exists(abs);
 
 	if (present) {

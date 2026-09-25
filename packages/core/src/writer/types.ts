@@ -78,7 +78,7 @@ export type CreateCmsHostConfig = {
 
 type CreateCmsHostShared = {
 	root: string;
-	writer?: Writer;
+	writer: Writer;
 	/**
 	 * Optional Content Layer id index keyed by collection name.
 	 * When absent, listEntries FS-scans the collection base.
@@ -122,7 +122,7 @@ export type CreateCmsHostOptions =
 	| CreateCmsHostFromCollections;
 
 /**
- * Full WriteMode construction — includes internal test seams.
+ * Full WriteMode construction from collection descriptors + FS scan.
  * Hosts use {@link CreateCmsHostOptions} via createCmsHost.
  */
 export type CreateWriteModeOptions = {
@@ -132,13 +132,4 @@ export type CreateWriteModeOptions = {
 	collections?: CollectionDescriptor[];
 	entryIndex?: Record<string, string[]>;
 	schemas?: Record<string, z.ZodType>;
-	/**
-	 * Internal test seam: (collection, id) → relative path overrides.
-	 * Not part of the public host construction face.
-	 */
-	pathMap?: Record<string, Record<string, string>>;
-	/**
-	 * @deprecated Prefer `collections` + FS scan. Internal test seam only.
-	 */
-	fakeCatalog?: Record<string, ContentEntry[]>;
 };

@@ -1,8 +1,7 @@
 /**
- * @cms/core — CMS protocol, FS write-back adapters, and schema→form projection.
- * Filesystem write-back sits behind createCmsHost (ADR-0005).
- * Schema-first exploration: stamped Zod + form-tree builders (field refs + layout).
- * CMS-first IR authoring face is stripped on this branch.
+ * @cms/core — CMS protocol, write-back adapters, and schema→form projection.
+ * Filesystem write-back sits behind createCmsHost (ADR-0005); pass an injected Writer.
+ * Node FS: `@cms/core/node`. Schema-first: stamped Zod + form-tree builders.
  */
 
 export type {
@@ -116,7 +115,6 @@ export {
 	imageFolderFromCanonical,
 } from "./writer/image-path";
 export { memoryWriter } from "./writer/memory-writer";
-export { nodeFsWriter } from "./writer/node-fs-writer";
 export type {
 	EntryExtension,
 	ResolvedEntry,

@@ -9,7 +9,8 @@
 import fs from "node:fs";
 import { collections } from "virtual:@cms/content-config";
 import { contentRoot } from "virtual:@cms/integration-options";
-import { type CmsHost, nodeFsWriter } from "@cms/core";
+import type { CmsHost } from "@cms/core";
+import { nodeFsWriter } from "@cms/core/node";
 import { assembleStampedCms } from "../stamped/assemble-stamped-cms";
 import type { StampedCollectionConfig } from "../stamped/build-fs-host-from-stamped";
 

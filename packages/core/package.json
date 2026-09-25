@@ -1,6 +1,6 @@
 {
 	"name": "@cms/core",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"private": true,
 	"type": "module",
 	"description": "CMS protocol + FS write-back adapters + schema\u2192form projection",
@@ -10,10 +10,12 @@
 		"./fetch-client": "./src/protocol/fetch-client.ts",
 		"./form-tree": "./src/form-tree/form-tree.ts",
 		"./http": "./src/http/index.ts",
+		"./node": "./src/node.ts",
 		"./protocol": "./src/protocol/protocol.ts",
 		"./semantic": "./src/semantic/index.ts"
 	},
 	"dependencies": {
+		"pathe": "^2.0.3",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
@@ -22,6 +24,7 @@
 	"scripts": {
 		"check": "tsc -p . && bunx tsc -p ./scripts/tsconfig.fixtures.json",
 		"check:allowlist": "bun test src",
+		"pack:lib": "bun run ../../scripts/pack-lib.ts @cms/core",
 		"test:semantic": "bun test ./src/semantic ./src/form-tree ./src/define-cms",
 		"test:http": "bun test ./src/http"
 	}

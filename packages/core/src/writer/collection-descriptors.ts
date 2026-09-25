@@ -2,8 +2,10 @@
  * Collection descriptors for the FS / protocol host, plus entry-id scanning.
  * Default hosts build descriptors from compiled IR (ADR-0019 / 0020).
  */
-import path from "node:path";
+
+import * as pathe from "pathe";
 import type { z } from "zod";
+import { normalizeFs } from "./path-normalize";
 import { idFromRelPath } from "./path-resolve";
 import type { Writer } from "./types";
 
@@ -26,10 +28,6 @@ export type CollectionDescriptor = {
 	loaderHint?: string;
 	hidden?: boolean;
 };
-
-function normalizeFs(p: string): string {
-	return path.resolve(p).replace(/\\/g, "/");
-}
 
 export async function scanEntryIds(
 	writer: Writer,
@@ -58,7 +56,7 @@ export async function scanEntryIds(
 				ids.add(id);
 				continue;
 			}
-			await walk(path.join(normalized, name), rel);
+			await walk(pathe.join(normalized, name), rel);
 		}
 	}
 

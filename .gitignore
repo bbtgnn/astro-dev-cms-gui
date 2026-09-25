@@ -6,7 +6,10 @@ node_modules/
 
 # build / cache
 dist/
+.pack/
+*.tgz
 .astro/
+.svelte-kit/
 .vite/
 .cache/
 

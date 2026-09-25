@@ -1,14 +1,15 @@
 /**
  * createWriteMode with allowlisted paths.
- * Prefer discovered collections; pathMap / fakeCatalog are internal test seams.
+ * Collection descriptors + FS scan (or optional entryIndex).
  * Guarded write-back: opaque revisions + async Zod input validation (ADR-0010, 0014).
  */
-import path from "node:path";
+import * as pathe from "pathe";
 import { z } from "zod";
 import { opaqueRevision } from "../protocol/revision";
 import type { CollectionDescriptor } from "./collection-descriptors";
 import { scanEntryIds } from "./collection-descriptors";
 import { parseEntryFile, serializeEntryFile } from "./entry-file";
+import { normalizeFs } from "./path-normalize";
 import {
 	applyPathTemplate,
 	assertSafeEntryId,
@@ -26,12 +27,8 @@ import type {
 	WrittenImageAssets,
 } from "./types";
 
-function normalizeFs(p: string): string {
-	return path.resolve(p).replace(/\\/g, "/");
-}
-
 function joinRoot(root: string, rel: string): string {
-	return normalizeFs(path.join(root, rel));
+	return normalizeFs(pathe.join(root, rel));
 }
 
 function isPathAllowed(
@@ -60,13 +57,13 @@ function revisionConflict(message = "Conflict"): never {
 	});
 }
 
-function entryFromRaw(
+async function entryFromRaw(
 	id: string,
 	collection: string,
 	raw: string,
-): ContentEntry {
+): Promise<ContentEntry> {
 	const data = parseEntryFile(raw);
-	return { id, collection, data, revision: opaqueRevision(raw) };
+	return { id, collection, data, revision: await opaqueRevision(raw) };
 }
 
 const passthrough = z.record(z.string(), z.unknown());
@@ -78,9 +75,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 		writer,
 		collections = [],
 		entryIndex = {},
-		pathMap = {},
 		schemas: schemaOverrides = {},
-		fakeCatalog = {},
 	} = options;
 
 	const byName = new Map<string, CollectionDescriptor>(
@@ -91,17 +86,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 		if (!schemas[c.name]) schemas[c.name] = c.schema;
 	}
 
-	const catalog: Record<string, ContentEntry[]> = structuredClone(fakeCatalog);
-	for (const list of Object.values(catalog)) {
-		for (const entry of list) {
-			if (!entry.revision) {
-				entry.revision = opaqueRevision(serializeEntryFile(entry.data));
-			}
-		}
-	}
-
 	const exists = writerExists((p) => writer.readText(p));
-	const useDiscovery = collections.length > 0;
 
 	function assertAllowed(absolutePath: string): void {
 		if (!isPathAllowed(absolutePath, root, allowPaths)) {
@@ -117,11 +102,6 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 		id: string,
 		forCreate: boolean,
 	): Promise<string> {
-		const mapped = pathMap[collection]?.[id];
-		if (mapped) {
-			return joinRoot(root, mapped);
-		}
-
 		const discovered = byName.get(collection);
 		if (discovered) {
 			assertSafeEntryId(id);
@@ -158,57 +138,32 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 
 	return {
 		async listCollections() {
-			if (useDiscovery) {
-				return collections
-					.filter((c) => !c.hidden && !c.config?.hidden)
-					.map((c) => ({
-						name: c.name,
-						label: c.label ?? c.config?.label,
-						loaderHint: c.loaderHint,
-					}));
-			}
-			const names = new Set([...Object.keys(catalog), ...Object.keys(pathMap)]);
-			return [...names].sort().map((name) => ({ name }));
+			return collections
+				.filter((c) => !c.hidden && !c.config?.hidden)
+				.map((c) => ({
+					name: c.name,
+					label: c.label ?? c.config?.label,
+					loaderHint: c.loaderHint,
+				}));
 		},
 
 		async listEntries(collection: string) {
-			if (useDiscovery) {
-				const discovered = byName.get(collection);
-				if (!discovered) return [];
-				const indexed = entryIndex[collection];
-				if (indexed) {
-					return [...indexed].sort().map((id) => ({ id }));
-				}
-				const baseAbs = joinRoot(
-					root,
-					discovered.config?.base ?? discovered.base,
-				);
-				const ids = await scanEntryIds(writer, baseAbs);
-				return ids.map((id) => ({ id }));
+			const discovered = byName.get(collection);
+			if (!discovered) return [];
+			const indexed = entryIndex[collection];
+			if (indexed) {
+				return [...indexed].sort().map((id) => ({ id }));
 			}
-
-			const fromCatalog = catalog[collection] ?? [];
-			const fromMap = Object.keys(pathMap[collection] ?? {});
-			const ids = new Set([...fromCatalog.map((e) => e.id), ...fromMap]);
-			return [...ids].sort().map((id) => ({ id }));
+			const baseAbs = joinRoot(
+				root,
+				discovered.config?.base ?? discovered.base,
+			);
+			const ids = await scanEntryIds(writer, baseAbs);
+			return ids.map((id) => ({ id }));
 		},
 
 		async getEntry(collection: string, id: string) {
-			if (!useDiscovery) {
-				const hit = (catalog[collection] ?? []).find((e) => e.id === id);
-				if (hit) {
-					return {
-						id: hit.id,
-						collection: hit.collection,
-						data: hit.data,
-						revision:
-							hit.revision || opaqueRevision(serializeEntryFile(hit.data)),
-					};
-				}
-				if (!pathMap[collection]?.[id]) return null;
-			} else if (!byName.has(collection) && !pathMap[collection]?.[id]) {
-				return null;
-			}
+			if (!byName.has(collection)) return null;
 
 			let absolutePath: string;
 			try {
@@ -222,7 +177,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			assertAllowed(absolutePath);
 			try {
 				const raw = await writer.readText(absolutePath);
-				return entryFromRaw(id, collection, raw);
+				return await entryFromRaw(id, collection, raw);
 			} catch {
 				return null;
 			}
@@ -263,7 +218,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 					code: "NOT_FOUND",
 				});
 			} else {
-				const current = opaqueRevision(currentRaw);
+				const current = await opaqueRevision(currentRaw);
 				if (current !== input.expectedRevision) {
 					revisionConflict();
 				}
@@ -276,22 +231,11 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 				id: input.id,
 				collection: input.collection,
 				data: input.data,
-				revision: opaqueRevision(serialized),
+				revision: await opaqueRevision(serialized),
 			};
 
 			// nodeFsWriter replaces atomically (temp + rename); memoryWriter is path-key.
 			await writer.writeText(absolutePath, serialized);
-
-			if (!useDiscovery) {
-				let list = catalog[input.collection];
-				if (!list) {
-					list = [];
-					catalog[input.collection] = list;
-				}
-				const idx = list.findIndex((e) => e.id === input.id);
-				if (idx >= 0) list[idx] = next;
-				else list.push(next);
-			}
 
 			return next;
 		},
@@ -300,11 +244,6 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			const absolutePath = await resolvePath(collection, id, false);
 			assertAllowed(absolutePath);
 			await writer.remove(absolutePath);
-			if (!useDiscovery) {
-				catalog[collection] = (catalog[collection] ?? []).filter(
-					(e) => e.id !== id,
-				);
-			}
 		},
 
 		async writeImageAssets(
@@ -319,7 +258,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			const discovered = byName.get(input.collection);
 			const baseRel =
 				discovered?.config?.base ?? discovered?.base ?? input.collection;
-			const folderRel = path.posix.join(baseRel, input.id, folderName);
+			const folderRel = pathe.join(baseRel, input.id, folderName);
 			const folderAbs = joinRoot(root, folderRel);
 			assertAllowed(folderAbs);
 
@@ -330,13 +269,13 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 				existing = [];
 			}
 			for (const name of existing) {
-				const abs = normalizeFs(path.join(folderAbs, name));
+				const abs = normalizeFs(pathe.join(folderAbs, name));
 				if (!abs.startsWith(`${folderAbs}/`)) continue;
 				assertAllowed(abs);
 				await writer.remove(abs);
 			}
 
-			const fileAbs = normalizeFs(path.join(folderAbs, fileName));
+			const fileAbs = normalizeFs(pathe.join(folderAbs, fileName));
 			if (!fileAbs.startsWith(`${folderAbs}/`)) {
 				throw Object.assign(new Error(`Unsafe asset path: ${fileName}`), {
 					status: 400,
@@ -346,15 +285,15 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			assertAllowed(fileAbs);
 			await writer.writeBytes(fileAbs, input.bytes);
 
-			const entryDir = path.dirname(entryPath);
-			const relForEntry = path.relative(entryDir, fileAbs).replace(/\\/g, "/");
+			const entryDir = pathe.dirname(entryPath);
+			const relForEntry = pathe.relative(entryDir, fileAbs).replace(/\\/g, "/");
 			const entryRelativePath = relForEntry.startsWith(".")
 				? relForEntry
 				: `./${relForEntry}`;
 
 			return {
 				path: entryRelativePath,
-				files: [path.relative(root, fileAbs).replace(/\\/g, "/")],
+				files: [pathe.relative(root, fileAbs).replace(/\\/g, "/")],
 			};
 		},
 
@@ -363,7 +302,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			if (
 				!cleaned ||
 				cleaned.includes("..") ||
-				path.isAbsolute(cleaned) ||
+				pathe.isAbsolute(cleaned) ||
 				cleaned.startsWith("/")
 			) {
 				throw Object.assign(new Error(`Unsafe asset path: ${relFromRoot}`), {
@@ -390,7 +329,7 @@ function sanitizeAssetFolderName(name: string): string {
 }
 
 function sanitizeAssetFileName(name: string): string {
-	const base = path.basename(name.replace(/\\/g, "/"));
+	const base = pathe.basename(name.replace(/\\/g, "/"));
 	const cleaned = base.replace(/[^a-zA-Z0-9._-]/g, "_");
 	if (
 		!cleaned ||

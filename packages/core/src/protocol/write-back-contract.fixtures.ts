@@ -74,8 +74,7 @@ export function expectNoFilesystemPaths(value: unknown): void {
 		encoded.includes("\\\\") ||
 		/"(?:\/|file:|[A-Za-z]:\\)/.test(encoded) ||
 		encoded.includes('"root"') ||
-		encoded.includes('"absolutePath"') ||
-		encoded.includes('"pathMap"');
+		encoded.includes('"absolutePath"');
 	expect(leaks).toBe(false);
 }
 

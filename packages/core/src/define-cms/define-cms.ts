@@ -181,7 +181,7 @@ function createCmsHelpers(): CmsHelpers {
  *     form: (f) => [f.field("name").label("Name")],
  *   }),
  * }));
- * createCmsHost({ root, config }); // or { root, collections, … }
+ * createCmsHost({ root, config, writer }); // or { root, collections, writer, … }
  * ```
  */
 export function defineCms<
