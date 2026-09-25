@@ -65,4 +65,5 @@ Checks: `bun run check && bun run check:allowlist && bun run lint`.
 - Domain glossary: [CONTEXT.md](CONTEXT.md)
 - Architecture index: [docs/spec.md](docs/spec.md)
 - ADRs: [docs/adr/](docs/adr/)
+- Agent behavior: [AGENTS.md](AGENTS.md)
 - Wayfinder map: [GitHub #1](https://github.com/bbtgnn/dev-cms/issues/1)
