@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 /**
  * `cms` CLI — schema-first overlay branch.
  *
@@ -7,7 +7,7 @@
  */
 
 import path from "node:path";
-import { syncCmsCollectionTypes } from "../src/codegen/sync-collection-types.ts";
+import { syncCmsCollectionTypes } from "./codegen/sync-collection-types";
 
 function printHelp(): void {
 	process.stdout.write(`Usage:

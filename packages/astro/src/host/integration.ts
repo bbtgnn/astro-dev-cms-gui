@@ -28,6 +28,7 @@ import {
 	createCmsMiddleware,
 	DEFAULT_CMS_API_MOUNT,
 } from "../http";
+import { colocatedUrl } from "../module-sibling";
 import {
 	CMS_COMPONENTS_CONVENTION,
 	CMS_CONFIG_CONVENTION,
@@ -116,7 +117,7 @@ function normalizeShellPath(shellPath: string): string {
 }
 
 function defaultHostEntry(): string {
-	return fileURLToPath(new URL("./default-host.ts", import.meta.url));
+	return fileURLToPath(colocatedUrl(import.meta.url, "./default-host.ts"));
 }
 
 function missingContentConfigMessage(projectRoot: string): string {
@@ -263,7 +264,7 @@ export function createCmsIntegration(
 				plugins.push(cmsHostVitePlugin({ entry: hostEntry }));
 				injectRoute({
 					pattern: `${mount}/[...path]`,
-					entrypoint: new URL("./protocol-route.ts", import.meta.url),
+					entrypoint: colocatedUrl(import.meta.url, "./protocol-route.ts"),
 					prerender: false,
 				});
 			}
@@ -271,7 +272,7 @@ export function createCmsIntegration(
 			if (resolvedShellPath != null) {
 				injectRoute({
 					pattern: resolvedShellPath,
-					entrypoint: new URL("./shell-page.astro", import.meta.url),
+					entrypoint: colocatedUrl(import.meta.url, "./shell-page.astro"),
 					prerender: false,
 				});
 			}
