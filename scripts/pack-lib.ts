@@ -2,7 +2,8 @@
  * Build a workspace package, then pack a publish face from a staging dir.
  *
  * Workspace `package.json` stays on `src/` + `catalog:` / `workspace:*`.
- * Staging gets a fresh publish `package.json` (dist exports + concrete versions).
+ * Staging gets a fresh publish `package.json` (dist exports + concrete versions)
+ * derived from the workspace `exports` map — one source of truth for subpaths.
  * Never mutates the live workspace face.
  *
  * Usage: bun run scripts/pack-lib.ts @cms/core | @cms/authoring
@@ -37,67 +38,28 @@ type PackageJson = {
 	[key: string]: unknown;
 };
 
+type PublishExport = {
+	types: string;
+	import: string;
+	svelte?: string;
+};
+
 type PackConfig = {
 	dir: string;
 	build: string[];
-	exportMap: () => PackageJson["exports"];
+	/** Add a `svelte` condition pointing at the same JS as `import` (authoring). */
+	svelteCondition?: boolean;
 };
 
-/** Publish export maps — single source for the packed face (not the workspace face). */
 const PACKAGES: Record<string, PackConfig> = {
 	"@cms/core": {
 		dir: "packages/core",
 		build: ["bunx", "tsdown"],
-		exportMap: () => ({
-			".": {
-				types: "./dist/index.d.ts",
-				import: "./dist/index.js",
-			},
-			"./define-cms": {
-				types: "./dist/define-cms/define-cms.d.ts",
-				import: "./dist/define-cms/define-cms.js",
-			},
-			"./fetch-client": {
-				types: "./dist/protocol/fetch-client.d.ts",
-				import: "./dist/protocol/fetch-client.js",
-			},
-			"./form-tree": {
-				types: "./dist/form-tree/form-tree.d.ts",
-				import: "./dist/form-tree/form-tree.js",
-			},
-			"./http": {
-				types: "./dist/http/index.d.ts",
-				import: "./dist/http/index.js",
-			},
-			"./node": {
-				types: "./dist/node.d.ts",
-				import: "./dist/node.js",
-			},
-			"./protocol": {
-				types: "./dist/protocol/protocol.d.ts",
-				import: "./dist/protocol/protocol.js",
-			},
-			"./semantic": {
-				types: "./dist/semantic/index.d.ts",
-				import: "./dist/semantic/index.js",
-			},
-		}),
 	},
 	"@cms/authoring": {
 		dir: "packages/authoring",
 		build: ["bunx", "svelte-package", "-i", "src", "-o", "dist"],
-		exportMap: () => ({
-			".": {
-				types: "./dist/index.d.ts",
-				svelte: "./dist/index.js",
-				import: "./dist/index.js",
-			},
-			"./config": {
-				types: "./dist/config/index.d.ts",
-				svelte: "./dist/config/index.js",
-				import: "./dist/config/index.js",
-			},
-		}),
+		svelteCondition: true,
 	},
 };
 
@@ -162,6 +124,54 @@ function rewriteDeps(
 	return out;
 }
 
+/** Workspace face: subpath → `./src/….ts`. */
+function workspaceSrcExports(
+	exportsField: unknown,
+	pkgLabel: string,
+): Record<string, string> {
+	if (
+		!exportsField ||
+		typeof exportsField !== "object" ||
+		Array.isArray(exportsField)
+	) {
+		throw new Error(`${pkgLabel}: exports must be a map of ./src/*.ts paths`);
+	}
+	const out: Record<string, string> = {};
+	for (const [key, value] of Object.entries(exportsField)) {
+		if (typeof value !== "string") {
+			throw new Error(
+				`${pkgLabel} export "${key}": expected string path, got ${typeof value}`,
+			);
+		}
+		if (!value.startsWith("./src/") || !value.endsWith(".ts")) {
+			throw new Error(
+				`${pkgLabel} export "${key}": expected ./src/*.ts, got ${value}`,
+			);
+		}
+		out[key] = value;
+	}
+	return out;
+}
+
+/** Publish face: rewrite `./src/foo.ts` → dist types/import (+ optional svelte). */
+function publishExportsFromSrc(
+	srcExports: Record<string, string>,
+	opts: { svelte?: boolean } = {},
+): Record<string, PublishExport> {
+	const out: Record<string, PublishExport> = {};
+	for (const [key, srcPath] of Object.entries(srcExports)) {
+		const rel = srcPath.slice("./src/".length, -".ts".length);
+		const base = `./dist/${rel}`;
+		const entry: PublishExport = {
+			types: `${base}.d.ts`,
+			import: `${base}.js`,
+		};
+		if (opts.svelte) entry.svelte = `${base}.js`;
+		out[key] = entry;
+	}
+	return out;
+}
+
 function pruneDist(distDir: string): void {
 	const stack: string[] = [distDir];
 	while (stack.length > 0) {
@@ -217,6 +227,11 @@ const pkgDir = path.join(root, cfg.dir);
 const pkgPath = path.join(pkgDir, "package.json");
 const stagingDir = path.join(pkgDir, STAGING);
 const catalog = catalogVersions();
+const workspacePkg = readJson(pkgPath);
+const publishExports = publishExportsFromSrc(
+	workspaceSrcExports(workspacePkg.exports, name),
+	{ svelte: cfg.svelteCondition },
+);
 
 run(cfg.build, pkgDir);
 pruneDist(path.join(pkgDir, "dist"));
@@ -227,11 +242,7 @@ cpSync(path.join(pkgDir, "dist"), path.join(stagingDir, "dist"), {
 	recursive: true,
 });
 
-const publishPkg = publishPackageJson(
-	readJson(pkgPath),
-	cfg.exportMap(),
-	catalog,
-);
+const publishPkg = publishPackageJson(workspacePkg, publishExports, catalog);
 writeFileSync(
 	path.join(stagingDir, "package.json"),
 	`${JSON.stringify(publishPkg, null, "\t")}\n`,
