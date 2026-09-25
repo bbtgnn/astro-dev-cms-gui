@@ -43,9 +43,7 @@ export {
 	cmsIntegrationOptionsVitePlugin,
 	DEFAULT_CONTENT_ROOT,
 	resolveConventionEntry,
-	resolveEditorConfigEntry,
 	resolveProjectEntry,
-	SCHEMA_PARTITION_CONVENTION,
 } from "./host/vite-config-plugin";
 export {
 	type AssembleStampedCmsOptions,

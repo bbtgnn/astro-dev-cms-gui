@@ -14,7 +14,7 @@
 		"../src/form-tree/form-tree.ts",
 		"../src/define-cms/define-cms.ts",
 		"../src/writer/collection-descriptors.ts",
-		"../src/protocol/create-cms-protocol.ts",
+		"../src/protocol/create-cms-host.ts",
 		"../src/writer/types.ts",
 		"../src/writer/write-mode.ts",
 		"../src/writer/node-fs-writer.ts",

@@ -222,7 +222,7 @@ export function defaultMessageForCmsErr(code: string): string {
  * Status→code fallback when an HTTP body omits `code`.
  * Derived from {@link httpStatusForCmsErr} so maps cannot drift from the tables.
  */
-export function legacyStatusMapForCodes<C extends string>(
+export function statusMapForCodes<C extends string>(
 	allowed: readonly C[],
 ): Partial<Record<number, { code: C; defaultMessage: string }>> {
 	const map: Partial<Record<number, { code: C; defaultMessage: string }>> = {};

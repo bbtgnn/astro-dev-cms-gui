@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { createCmsHost } from "../../../core/src/protocol/create-cms-protocol.ts";
+import { createCmsHost } from "../../../core/src/protocol/create-cms-host.ts";
 import { nodeFsWriter } from "../../../core/src/writer/node-fs-writer.ts";
 import {
 	createFakeTimers,

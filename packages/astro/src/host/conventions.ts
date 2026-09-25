@@ -11,12 +11,6 @@ export const CMS_CONFIG_CONVENTION = [
 	"src/cms.config.js",
 ] as const;
 
-/**
- * Primary cms.config path (first {@link CMS_CONFIG_CONVENTION} candidate).
- * Alias kept for Vite/testing imports; generation no longer uses this.
- */
-export const SCHEMA_PARTITION_CONVENTION = CMS_CONFIG_CONVENTION[0];
-
 export const CMS_COMPONENTS_CONVENTION = [
 	"src/cms.components.ts",
 	"src/cms.components.mjs",

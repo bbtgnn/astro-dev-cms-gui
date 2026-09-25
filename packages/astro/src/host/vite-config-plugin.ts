@@ -19,7 +19,6 @@ export {
 	CMS_CONFIG_CONVENTION,
 	CONTENT_CONFIG_CONVENTION,
 	DEFAULT_CONTENT_ROOT,
-	SCHEMA_PARTITION_CONVENTION,
 } from "./conventions";
 
 export const CMS_CONTENT_CONFIG_VIRTUAL_ID = "virtual:@cms/content-config";
@@ -78,9 +77,6 @@ export function resolveProjectEntry(
 ): string {
 	return path.isAbsolute(entry) ? entry : path.resolve(projectRoot, entry);
 }
-
-/** @deprecated Prefer {@link resolveProjectEntry}. */
-export const resolveEditorConfigEntry = resolveProjectEntry;
 
 export function resolveConventionEntry(
 	projectRoot: string,

@@ -58,9 +58,8 @@ export type {
 	CreateCmsHostFromConfig,
 	CreateCmsHostFromConfigOptions,
 	CreateCmsHostOptions,
-	CreateCmsProtocolOptions,
-} from "./protocol/create-cms-protocol";
-export { createCmsHost } from "./protocol/create-cms-protocol";
+} from "./protocol/create-cms-host";
+export { createCmsHost } from "./protocol/create-cms-host";
 export {
 	type CmsFetchClient,
 	CmsFetchError,
@@ -100,9 +99,9 @@ export {
 	GET_ENTRY_FAILURE_CODES,
 	httpStatusForCmsErr,
 	isAllowedCmsFailureCode,
-	legacyStatusMapForCodes,
 	resolveCmsCapabilities,
 	SAVE_ENTRY_FAILURE_CODES,
+	statusMapForCodes,
 	UPLOAD_IMAGE_FAILURE_CODES,
 } from "./protocol/protocol";
 export { opaqueRevision } from "./protocol/revision";

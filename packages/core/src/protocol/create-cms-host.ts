@@ -8,7 +8,6 @@ import { nodeFsWriter } from "../writer/node-fs-writer";
 import type {
 	CreateCmsHostFromCollections,
 	CreateCmsHostFromConfig,
-	CreateCmsHostOptions,
 	CreateWriteModeOptions,
 	ReadAssetResult,
 	UpsertEntryInput,
@@ -53,7 +52,7 @@ export type CreateCmsHostFromConfigOptions = CreateCmsHostFromConfig &
 export type CreateCmsHostFromCollectionsOptions = CreateCmsHostFromCollections &
 	AdaptProtocolOptions;
 
-export type CreateCmsProtocolOptions =
+type CreateCmsHostCallOptions =
 	| CreateCmsHostFromConfigOptions
 	| CreateCmsHostFromCollectionsOptions;
 
@@ -302,7 +301,7 @@ export type CmsHost = {
  *
  * Writer defaults to nodeFsWriter().
  */
-function createCmsHostImpl(options: CreateCmsProtocolOptions): CmsHost {
+function createCmsHostImpl(options: CreateCmsHostCallOptions): CmsHost {
 	const { capabilities } = options;
 	const writer = options.writer ?? nodeFsWriter();
 
@@ -341,7 +340,7 @@ function createCmsHostImpl(options: CreateCmsProtocolOptions): CmsHost {
 }
 
 function isConfigDoor(
-	options: CreateCmsProtocolOptions,
+	options: CreateCmsHostCallOptions,
 ): options is CreateCmsHostFromConfigOptions {
 	return "config" in options && options.config != null;
 }
@@ -350,6 +349,6 @@ export function createCmsHost(options: CreateCmsHostFromConfigOptions): CmsHost;
 export function createCmsHost(
 	options: CreateCmsHostFromCollectionsOptions,
 ): CmsHost;
-export function createCmsHost(options: CreateCmsProtocolOptions): CmsHost {
+export function createCmsHost(options: CreateCmsHostCallOptions): CmsHost {
 	return createCmsHostImpl(options);
 }

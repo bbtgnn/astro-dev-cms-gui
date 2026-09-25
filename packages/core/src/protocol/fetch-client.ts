@@ -25,8 +25,8 @@ import {
 	GET_ENTRY_FAILURE_CODES,
 	httpStatusForCmsErr,
 	isAllowedCmsFailureCode,
-	legacyStatusMapForCodes,
 	SAVE_ENTRY_FAILURE_CODES,
+	statusMapForCodes,
 	UPLOAD_IMAGE_FAILURE_CODES,
 } from "./protocol";
 
@@ -67,9 +67,9 @@ export {
 	GET_ENTRY_FAILURE_CODES,
 	httpStatusForCmsErr,
 	isAllowedCmsFailureCode,
-	legacyStatusMapForCodes,
 	resolveCmsCapabilities,
 	SAVE_ENTRY_FAILURE_CODES,
+	statusMapForCodes,
 	UPLOAD_IMAGE_FAILURE_CODES,
 } from "./protocol";
 
@@ -104,7 +104,7 @@ export function isCmsFetchError(err: unknown): err is CmsFetchError {
 
 type ErrorBody = { error?: string; code?: string; issues?: unknown };
 
-type LegacyStatusMap<C extends string> = Partial<
+type FailureStatusMap<C extends string> = Partial<
 	Record<number, { code: C; defaultMessage?: string }>
 >;
 
@@ -126,7 +126,7 @@ async function parseErrorBody(
 async function outcomeFromResponse<C extends string>(
 	res: Response,
 	allowedCodes: readonly C[],
-	legacyByStatus: LegacyStatusMap<C>,
+	byStatus: FailureStatusMap<C>,
 	options?: { includeIssues?: boolean },
 ): Promise<CmsErr<C>> {
 	const bodyText = await res.text();
@@ -149,16 +149,16 @@ async function outcomeFromResponse<C extends string>(
 		};
 	}
 
-	const legacy = legacyByStatus[res.status];
-	if (legacy) {
+	const mapped = byStatus[res.status];
+	if (mapped) {
 		return {
 			ok: false,
-			code: legacy.code,
+			code: mapped.code,
 			message:
 				parsed?.error ??
-				legacy.defaultMessage ??
-				defaultMessageForCmsErr(legacy.code),
-			...(legacy.code === "validation_failed" && parsed?.issues !== undefined
+				mapped.defaultMessage ??
+				defaultMessageForCmsErr(mapped.code),
+			...(mapped.code === "validation_failed" && parsed?.issues !== undefined
 				? { issues: parsed.issues }
 				: {}),
 		};
@@ -240,7 +240,7 @@ export function createFetchClient(
 			return outcomeFromResponse(
 				res,
 				GET_ENTRY_FAILURE_CODES,
-				legacyStatusMapForCodes(GET_ENTRY_FAILURE_CODES),
+				statusMapForCodes(GET_ENTRY_FAILURE_CODES),
 			);
 		},
 
@@ -263,7 +263,7 @@ export function createFetchClient(
 			return outcomeFromResponse(
 				res,
 				SAVE_ENTRY_FAILURE_CODES,
-				legacyStatusMapForCodes(SAVE_ENTRY_FAILURE_CODES),
+				statusMapForCodes(SAVE_ENTRY_FAILURE_CODES),
 				{ includeIssues: true },
 			);
 		},
@@ -282,7 +282,7 @@ export function createFetchClient(
 			return outcomeFromResponse(
 				res,
 				DELETE_ENTRY_FAILURE_CODES,
-				legacyStatusMapForCodes(DELETE_ENTRY_FAILURE_CODES),
+				statusMapForCodes(DELETE_ENTRY_FAILURE_CODES),
 			);
 		},
 
@@ -307,7 +307,7 @@ export function createFetchClient(
 			return outcomeFromResponse(
 				res,
 				UPLOAD_IMAGE_FAILURE_CODES,
-				legacyStatusMapForCodes(UPLOAD_IMAGE_FAILURE_CODES),
+				statusMapForCodes(UPLOAD_IMAGE_FAILURE_CODES),
 				{ includeIssues: true },
 			);
 		},

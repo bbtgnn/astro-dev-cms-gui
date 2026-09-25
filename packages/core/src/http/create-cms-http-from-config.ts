@@ -1,4 +1,4 @@
-import { type CmsHost, createCmsHost } from "../protocol/create-cms-protocol";
+import { type CmsHost, createCmsHost } from "../protocol/create-cms-host";
 import type { CreateCmsHostConfig, Writer } from "../writer/types";
 import {
 	type CmsDispatcherOptions,

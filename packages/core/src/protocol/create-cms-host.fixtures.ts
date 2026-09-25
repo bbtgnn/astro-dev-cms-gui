@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { defineCms } from "../define-cms/define-cms";
 import type { CollectionDescriptor } from "../writer/collection-descriptors";
-import { createCmsHost } from "./create-cms-protocol";
+import { createCmsHost } from "./create-cms-host";
 
 const config = defineCms((cms) => ({
 	posts: cms.collection({

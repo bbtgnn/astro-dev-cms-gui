@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { createWriteMode } from "../writer/write-mode";
-import { adaptWriteModeToProtocol, createCmsHost } from "./create-cms-protocol";
+import { adaptWriteModeToProtocol, createCmsHost } from "./create-cms-host";
 import {
 	type BackendFixture,
 	createFixture,

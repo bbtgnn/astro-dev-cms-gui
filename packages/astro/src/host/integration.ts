@@ -61,18 +61,8 @@ export type CmsHarnessOptions = {
 	host?: string | false;
 	contentRoot?: string;
 	shellPath?: string | false;
-	/**
-	 * @deprecated No-op. Product `cms()` never generates `content.config`.
-	 * Generation was removed (ticket 08); option kept only so old harness calls
-	 * do not break typecheck.
-	 */
-	generate?: boolean;
 	mount?: string;
 	allowInProd?: boolean;
-	/**
-	 * @deprecated Ignored. Product mode requires `content.config`, not cms.config.
-	 */
-	requireConfig?: boolean;
 	/**
 	 * Product mode: hard-fail in setup when `src/content.config.*` is missing.
 	 * {@link cms} sets this; harness defaults to false.
@@ -172,9 +162,7 @@ export function createCmsIntegration(
 	// Optimistic shellPath before setup resolves convention files (tests / docs).
 	if (shellPathOption !== false) {
 		integration.shellPath =
-			shellPathOption != null
-				? normalizeShellPath(shellPathOption)
-				: "/cms";
+			shellPathOption != null ? normalizeShellPath(shellPathOption) : "/cms";
 	}
 
 	integration.hooks = {
@@ -201,9 +189,6 @@ export function createCmsIntegration(
 				options.config != null
 					? resolveProjectEntry(options.config, root)
 					: resolveConventionEntry(root, CMS_CONFIG_CONVENTION);
-
-			// `generate` is intentionally unused (removed; option ignored).
-			void options.generate;
 
 			const componentsEntry =
 				options.componentsCatalog === false
@@ -311,11 +296,7 @@ export function cms(): CmsIntegration {
 
 /**
  * Escapes for fixtures and non-convention layouts.
- * Prefer {@link cms} for real hosts.
- *
- * Notes:
- * - `generate` is a no-op (generation removed).
- * - `requireConfig` is ignored; overlay cms.config is always optional.
+ * Prefer {@link cms} for real hosts. Overlay cms.config is always optional.
  */
 export function cmsHarness(options: CmsHarnessOptions = {}): CmsIntegration {
 	return createCmsIntegration({ ...options, requireContentConfig: false });

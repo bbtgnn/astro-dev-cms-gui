@@ -1,12 +1,11 @@
 /**
  * Product cms() happy path after schema-first flip (ticket 05).
  *
- * Seam: astro:config:setup — content-proxy boot, no generate, optional cms.config,
+ * Seam: astro:config:setup — content-proxy boot, optional cms.config,
  * shell/host when content.config resolves.
  */
 import { afterEach, describe, expect, test } from "bun:test";
 import {
-	existsSync,
 	mkdirSync,
 	mkdtempSync,
 	readFileSync,
@@ -216,26 +215,6 @@ describe("cms() schema-first setup", () => {
 });
 
 describe("cmsHarness escapes", () => {
-	test("generate option is a no-op (never writes content.config)", async () => {
-		const root = tempProject();
-		writeFileSync(
-			join(root, "src/cms.config.ts"),
-			`export const forms = {};\nexport default { forms };\n`,
-			"utf8",
-		);
-
-		const integration = cmsHarness({
-			shellPath: false,
-			host: false,
-			generate: true as unknown as false,
-		});
-		const hook = integration.hooks?.["astro:config:setup"];
-		if (hook == null) throw new Error("expected setup hook");
-
-		await hook(mockSetupParams(root).params);
-		expect(existsSync(join(root, "src/content.config.ts"))).toBe(false);
-	});
-
 	test("skips shell when content.config is missing (no requireContentConfig)", async () => {
 		const root = tempProject();
 

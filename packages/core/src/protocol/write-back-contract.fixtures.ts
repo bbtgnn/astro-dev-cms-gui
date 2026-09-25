@@ -12,7 +12,7 @@ import { memoryWriter } from "../writer/memory-writer";
 import { nodeFsWriter } from "../writer/node-fs-writer";
 import type { WriteMode, Writer } from "../writer/types";
 import { createWriteMode } from "../writer/write-mode";
-import { createCmsHost } from "./create-cms-protocol";
+import { createCmsHost } from "./create-cms-host";
 import type { CmsProtocol } from "./protocol";
 
 export type WriterBackend = "memory" | "filesystem";

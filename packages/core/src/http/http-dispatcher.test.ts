@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { z } from "zod";
 import { defineCms } from "../define-cms/define-cms";
-import { createCmsHost } from "../protocol/create-cms-protocol";
+import { createCmsHost } from "../protocol/create-cms-host";
 import { memoryWriter } from "../writer/memory-writer";
 import {
 	createCmsDispatcher,

@@ -2,7 +2,6 @@ import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import {
 	CMS_COMPONENTS_VIRTUAL_ID,
-	CMS_CONFIG_CONVENTION,
 	CMS_CONFIG_VIRTUAL_ID,
 	CMS_HOST_VIRTUAL_ID,
 	CMS_INTEGRATION_OPTIONS_VIRTUAL_ID,
@@ -13,7 +12,6 @@ import {
 	cmsIntegrationOptionsVitePlugin,
 	DEFAULT_CONTENT_ROOT,
 	resolveProjectEntry,
-	SCHEMA_PARTITION_CONVENTION,
 } from "../testing";
 import { cms } from "./integration";
 
@@ -27,13 +25,6 @@ describe("resolveProjectEntry", () => {
 		expect(resolveProjectEntry("./src/cms/host.ts", "/project")).toBe(
 			path.resolve("/project/src/cms/host.ts"),
 		);
-	});
-});
-
-describe("schema partition convention", () => {
-	test("primary path matches first cms.config candidate", () => {
-		expect(SCHEMA_PARTITION_CONVENTION).toBe(CMS_CONFIG_CONVENTION[0]);
-		expect(typeof SCHEMA_PARTITION_CONVENTION).toBe("string");
 	});
 });
 

@@ -6,7 +6,7 @@
  * `collections`, `capabilities`, `assets/…`, `images`, `ok`
  * (no nested `/api` segment; that lived under the old `/_cms` prefix).
  */
-import type { CmsHost } from "../protocol/create-cms-protocol";
+import type { CmsHost } from "../protocol/create-cms-host";
 import type { CmsProtocol } from "../protocol/protocol";
 import { httpStatusForCmsErr } from "../protocol/protocol";
 import type { ReadAssetResult } from "../writer/types";
