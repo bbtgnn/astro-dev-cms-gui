@@ -412,7 +412,8 @@ function setJsonSchemaAtPath(
 
 	let cursor: JsonSchemaNode = root;
 	for (let i = 0; i < segments.length - 1; i++) {
-		const key = segments[i]!;
+		const key = segments[i];
+		if (key === undefined) return;
 		const props = asObject(cursor.properties);
 		if (!props) return;
 		const child = asObject(props[key]);
@@ -420,7 +421,8 @@ function setJsonSchemaAtPath(
 		cursor = child;
 	}
 
-	const leafKey = segments[segments.length - 1]!;
+	const leafKey = segments[segments.length - 1];
+	if (leafKey === undefined) return;
 	const props = asObject(cursor.properties);
 	if (!props) return;
 	props[leafKey] = leaf;
