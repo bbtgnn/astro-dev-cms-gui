@@ -1,32 +1,28 @@
 /**
- * Pack @cms/core, @cms/authoring, @cms/astro and install their .tgz into a
- * scratch Astro consumer (no workspace Vite hacks). Day-to-day demos stay
- * workspace:* — this is publish-face validation only.
+ * Verify publish-face tarballs in a scratch Astro consumer (no workspace Vite
+ * hacks). Day-to-day demos stay workspace:* — this is publish-face validation.
  *
- * Usage: bun run smoke:publish-face
+ * Import: `verifyPublishFace(tarballPaths)` — absolute `.tgz` paths in
+ * packLib inventory order (core → authoring → astro).
+ * CLI: bun run smoke:publish-face → packAll() then verify.
  */
 import { spawnSync } from "node:child_process";
 import {
 	cpSync,
 	mkdirSync,
 	mkdtempSync,
-	readdirSync,
 	readFileSync,
 	rmSync,
 	writeFileSync,
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { packAll } from "./pack-lib.ts";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 
-const PACK_SCRIPTS = ["pack:core", "pack:authoring", "pack:astro"] as const;
-
-const PACKAGES = {
-	"@cms/core": "packages/core",
-	"@cms/authoring": "packages/authoring",
-	"@cms/astro": "packages/astro",
-} as const;
+const PKG_ORDER = ["@cms/core", "@cms/authoring", "@cms/astro"] as const;
+type CmsPackage = (typeof PKG_ORDER)[number];
 
 type PackageJson = {
 	workspaces?: { catalog?: Record<string, string> };
@@ -63,74 +59,31 @@ function catalogRange(catalog: Record<string, string>, name: string): string {
 	return range;
 }
 
-/** `@cms/core` → tarball prefix `cms-core-`. */
-function tarballPrefix(pkgName: string): string {
-	return `${pkgName.replace(/^@/, "").replace("/", "-")}-`;
-}
-
-function findTarball(pkgDir: string, pkgName: string): string | null {
-	const abs = path.join(root, pkgDir);
-	let entries: string[];
-	try {
-		entries = readdirSync(abs);
-	} catch {
-		return null;
+function namedTarballs(tarballPaths: string[]): Record<CmsPackage, string> {
+	if (tarballPaths.length !== PKG_ORDER.length) {
+		throw new Error(
+			`Expected ${PKG_ORDER.length} tarball paths (${PKG_ORDER.join(", ")}), got ${tarballPaths.length}`,
+		);
 	}
-	const prefix = tarballPrefix(pkgName);
-	const matches = entries
-		.filter((e) => e.startsWith(prefix) && e.endsWith(".tgz"))
-		.sort();
-	const last = matches.at(-1);
-	return last ? path.join(abs, last) : null;
+	const out = {} as Record<CmsPackage, string>;
+	for (let i = 0; i < PKG_ORDER.length; i++) {
+		const name = PKG_ORDER[i];
+		const file = tarballPaths[i];
+		if (!name || !file) {
+			throw new Error(`Missing tarball path for ${PKG_ORDER[i] ?? i}`);
+		}
+		out[name] = file;
+	}
+	return out;
 }
 
-function resolveTarballs(): Record<keyof typeof PACKAGES, string | null> {
-	return {
-		"@cms/core": findTarball(PACKAGES["@cms/core"], "@cms/core"),
-		"@cms/authoring": findTarball(PACKAGES["@cms/authoring"], "@cms/authoring"),
-		"@cms/astro": findTarball(PACKAGES["@cms/astro"], "@cms/astro"),
-	};
-}
-
-function assertTarballs(
-	tarballs: Record<keyof typeof PACKAGES, string | null>,
-): asserts tarballs is Record<keyof typeof PACKAGES, string> {
-	const missing = (
-		Object.entries(tarballs) as [keyof typeof PACKAGES, string | null][]
-	)
-		.filter(([, p]) => !p)
-		.map(([name]) => name);
-	if (missing.length === 0) return;
-	const hints = missing
-		.map((name) => {
-			const dir = PACKAGES[name];
-			return `  ${name}: expected ${dir}/${tarballPrefix(name)}*.tgz`;
-		})
-		.join("\n");
-	throw new Error(
-		`Missing publish-face tarball(s):\n${hints}\n` +
-			`Ensure bun run pack:core / pack:authoring / pack:astro succeed.`,
-	);
-}
-
-function sleepSeconds(seconds: number): void {
-	spawnSync("sleep", [String(seconds)], { stdio: "ignore" });
-}
-
-function scaffold(
-	appDir: string,
-	tarballs: Record<keyof typeof PACKAGES, string>,
-): void {
+function scaffold(appDir: string, tarballs: Record<CmsPackage, string>): void {
 	const catalog = catalogVersions();
 	const tgzDir = path.join(appDir, "tarballs");
 	mkdirSync(tgzDir, { recursive: true });
 
-	const localTgz: Record<keyof typeof PACKAGES, string> = {
-		"@cms/core": "",
-		"@cms/authoring": "",
-		"@cms/astro": "",
-	};
-	for (const name of Object.keys(PACKAGES) as (keyof typeof PACKAGES)[]) {
+	const localTgz = {} as Record<CmsPackage, string>;
+	for (const name of PKG_ORDER) {
 		const src = tarballs[name];
 		const dest = path.join(tgzDir, path.basename(src));
 		cpSync(src, dest);
@@ -250,39 +203,19 @@ export default defineConfig({
 	);
 }
 
-function packAll(): void {
-	for (const script of PACK_SCRIPTS) {
-		step(`Running bun run ${script}`);
-		run(["bun", "run", script], root);
-	}
-}
+/**
+ * Scaffold a scratch Astro consumer from publish-face tarballs, install, and
+ * run `astro check`. Scratch under `.smoke-publish-face/` is removed on
+ * success and kept on failure.
+ *
+ * @param tarballPaths Absolute `.tgz` paths in packLib inventory order
+ *   (`@cms/core`, `@cms/authoring`, `@cms/astro`).
+ */
+export function verifyPublishFace(tarballPaths: string[]): void {
+	const tarballs = namedTarballs(tarballPaths);
 
-function main(): void {
-	step("Packing @cms/core → @cms/authoring → @cms/astro");
-	try {
-		packAll();
-	} catch (err) {
-		const tarballs = resolveTarballs();
-		if (!tarballs["@cms/astro"]) {
-			console.error(
-				"\npack:astro failed or is not wired yet. " +
-					"Expected root script `pack:astro` and packages/astro/cms-astro-*.tgz.",
-			);
-		}
-		throw err;
-	}
-
-	let tarballs = resolveTarballs();
-	if (!tarballs["@cms/astro"]) {
-		step("Astro tarball missing; waiting 5s and retrying pack:astro once");
-		sleepSeconds(5);
-		run(["bun", "run", "pack:astro"], root);
-		tarballs = resolveTarballs();
-	}
-	assertTarballs(tarballs);
-
-	for (const [name, file] of Object.entries(tarballs)) {
-		console.log(`  ${name}: ${path.relative(root, file)}`);
+	for (const name of PKG_ORDER) {
+		console.log(`  ${name}: ${path.relative(root, tarballs[name])}`);
 	}
 
 	const smokeRoot = path.join(root, ".smoke-publish-face");
@@ -314,9 +247,18 @@ function main(): void {
 	}
 }
 
-try {
-	main();
-} catch (err) {
-	console.error(err instanceof Error ? err.message : err);
-	process.exit(1);
+function main(): void {
+	step("Packing @cms/core → @cms/authoring → @cms/astro");
+	const tarballPaths = packAll();
+	step("Verifying publish face in scratch consumer");
+	verifyPublishFace(tarballPaths);
+}
+
+if (import.meta.main) {
+	try {
+		main();
+	} catch (err) {
+		console.error(err instanceof Error ? err.message : err);
+		process.exit(1);
+	}
 }
