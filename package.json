@@ -31,13 +31,17 @@
 		"dev:kit": "bun run --filter @cms/sveltekit-demo dev",
 		"build": "bun run --filter @cms/astro-demo-simple build && bun run --filter @cms/astro-demo build",
 		"check": "bun run --filter @cms/core check && bun run --filter @cms/authoring check && bun run --filter @cms/astro check && bun run --filter @cms/astro-demo-simple check && bun run --filter @cms/astro-demo check",
-		"check:allowlist": "bun run --filter @cms/core check:allowlist && bun run --filter @cms/authoring check:layers && bun run --filter @cms/authoring check:allowlist",
+		"check:allowlist": "bun run --filter @cms/core check:boundary && bun run --filter @cms/core check:allowlist && bun run --filter @cms/authoring check:layers && bun run --filter @cms/authoring check:allowlist",
 		"lint": "biome check .",
-		"format": "biome check --write ."
+		"format": "biome check --write .",
+		"pack:core": "bun run scripts/pack-lib.ts @cms/core",
+		"pack:authoring": "bun run scripts/pack-lib.ts @cms/authoring"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.2.0",
+		"@sveltejs/package": "^2.5.8",
 		"@types/node": "^24.3.0",
+		"tsdown": "^0.23.0",
 		"typescript": "catalog:"
 	}
 }

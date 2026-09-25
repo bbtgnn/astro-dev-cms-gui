@@ -78,7 +78,7 @@ export type CreateCmsHostConfig = {
 
 type CreateCmsHostShared = {
 	root: string;
-	writer?: Writer;
+	writer: Writer;
 	/**
 	 * Optional Content Layer id index keyed by collection name.
 	 * When absent, listEntries FS-scans the collection base.

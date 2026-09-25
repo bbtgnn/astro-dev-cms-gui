@@ -2,9 +2,9 @@
  * Filesystem / memory write-back behind the CMS protocol seam (ADR-0005).
  * WriteMode stays private implementation; hosts construct via createCmsHost
  * (protocol + host-only readAsset).
+ * Inject a Writer (`memoryWriter`, or `nodeFsWriter` from `@cms/core/node`).
  */
 
-import { nodeFsWriter } from "../writer/node-fs-writer";
 import type {
 	CreateCmsHostFromCollections,
 	CreateCmsHostFromConfig,
@@ -296,14 +296,13 @@ export type CmsHost = {
  * Prefer this when the dispatcher needs GET …/assets/*.
  *
  * Two doors (mutually exclusive — overloads keep autocomplete on one shape):
- * - `{ root, config }` — portable {@link defineCms} result
- * - `{ root, collections, … }` — explicit descriptors (Astro stamped adapter)
+ * - `{ root, config, writer }` — portable {@link defineCms} result
+ * - `{ root, collections, writer, … }` — explicit descriptors (Astro stamped adapter)
  *
- * Writer defaults to nodeFsWriter().
+ * Pass `nodeFsWriter()` from `@cms/core/node` on Node hosts, or `memoryWriter()` / a custom Writer.
  */
 function createCmsHostImpl(options: CreateCmsHostCallOptions): CmsHost {
-	const { capabilities } = options;
-	const writer = options.writer ?? nodeFsWriter();
+	const { capabilities, writer } = options;
 
 	let collections: CreateWriteModeOptions["collections"];
 	let schemas: CreateWriteModeOptions["schemas"];

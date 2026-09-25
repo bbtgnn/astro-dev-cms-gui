@@ -9,10 +9,10 @@ import {
 export type CreateCmsHttpFromConfigOptions = {
 	readonly config: CreateCmsHostConfig;
 	readonly root: string;
+	readonly writer: Writer;
 	readonly isDev: boolean;
 	readonly allowInProd?: boolean;
 	readonly mount?: string;
-	readonly writer?: Writer;
 };
 
 export type CreateCmsHttpFromConfigResult = {
@@ -35,7 +35,7 @@ export function createCmsHttpFromConfig(
 	const host = createCmsHost({
 		root,
 		config,
-		...(writer !== undefined ? { writer } : {}),
+		writer,
 	});
 
 	const dispatcherOptions: CmsDispatcherOptions = {

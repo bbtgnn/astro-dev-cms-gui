@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { defineCms } from "../define-cms/define-cms";
 import type { CollectionDescriptor } from "../writer/collection-descriptors";
+import { memoryWriter } from "../writer/memory-writer";
 import { createCmsHost } from "./create-cms-host";
 
 const config = defineCms((cms) => ({
@@ -21,18 +22,22 @@ const descriptor: CollectionDescriptor = {
 	config: { base: "posts" },
 };
 
-void createCmsHost({ root: "/tmp", config });
+const writer = memoryWriter();
+
+void createCmsHost({ root: "/tmp", config, writer });
 
 void createCmsHost({
 	root: "/tmp",
 	collections: [descriptor],
 	schemas: { posts: descriptor.schema },
+	writer,
 });
 
 void createCmsHost({
 	root: "/tmp",
 	collections: [descriptor],
 	allowPaths: ["posts"],
+	writer,
 });
 
 // @ts-expect-error config and collections are mutually exclusive
@@ -40,6 +45,7 @@ void createCmsHost({
 	root: "/tmp",
 	config,
 	collections: [descriptor],
+	writer,
 });
 
 // @ts-expect-error config door rejects allowPaths
@@ -47,6 +53,7 @@ void createCmsHost({
 	root: "/tmp",
 	config,
 	allowPaths: ["posts"],
+	writer,
 });
 
 // @ts-expect-error collections door rejects config
@@ -54,9 +61,17 @@ void createCmsHost({
 	root: "/tmp",
 	collections: [descriptor],
 	config,
+	writer,
 });
 
 // @ts-expect-error neither door — collections required without config
 void createCmsHost({
 	root: "/tmp",
+	writer,
+});
+
+// @ts-expect-error writer is required
+void createCmsHost({
+	root: "/tmp",
+	config,
 });

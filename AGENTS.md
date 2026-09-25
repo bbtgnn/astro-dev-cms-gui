@@ -31,6 +31,7 @@ How agents behave in this repo: what to open, how to edit, where work goes.
 - Implementable behavior → a small GitHub issue with acceptance criteria, tests, dependencies, and `ready-for-agent` only when complete.
 - Navigation and system summary → `docs/spec.md` and map issue #1.
 - Session state not captured elsewhere → temporary handoff only; link to durable artifacts rather than duplicating them.
+- **Resolve** — close a task issue only after its landing PR merges (`Fixes #<n>` on the PR, or close after merge). See [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md).
 
 ## Titles
 

@@ -6,7 +6,10 @@ node_modules/
 
 # build / cache
 dist/
+*.tgz
+package.json.pack-backup*
 .astro/
+.svelte-kit/
 .vite/
 .cache/
 

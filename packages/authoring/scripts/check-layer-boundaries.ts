@@ -28,10 +28,9 @@ const FORBIDDEN: Array<{ id: string; pattern: RegExp }> = [
 	/** Host package — not for browser authoring UI. */
 	{ id: "host-astro", pattern: /^@cms\/astro(?:\/|$)/ },
 	/**
-	 * `@cms/core` root re-exports Node FS writers; browser code must use
-	 * `@cms/core/fetch-client`, `@cms/core/protocol`, or `@cms/core/semantic`
-	 * (schema→form types/projection; no Svelte). Authoring config contracts live in
-	 * `@cms/authoring/config` and may import semantic only.
+	 * `@cms/core` root is for hosts; browser authoring must use
+	 * `@cms/core/fetch-client`, `@cms/core/protocol`, or `@cms/core/semantic`.
+	 * Node FS writer lives at `@cms/core/node`.
 	 */
 	{ id: "core-root", pattern: /^@cms\/core$/ },
 ];
