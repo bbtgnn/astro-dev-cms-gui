@@ -45,10 +45,16 @@ async function listSourceFiles(dir: string): Promise<string[]> {
 	for (const entry of entries) {
 		const full = path.join(dir, entry.name);
 		if (entry.isDirectory()) {
+			if (entry.name === "testing") continue;
 			out.push(...(await listSourceFiles(full)));
 			continue;
 		}
-		if (/\.(ts|js|svelte)$/.test(entry.name) && !entry.name.endsWith(".d.ts")) {
+		if (
+			/\.(ts|js|svelte)$/.test(entry.name) &&
+			!entry.name.endsWith(".d.ts") &&
+			!entry.name.endsWith(".test.ts") &&
+			!entry.name.endsWith(".fixtures.ts")
+		) {
 			out.push(full);
 		}
 	}

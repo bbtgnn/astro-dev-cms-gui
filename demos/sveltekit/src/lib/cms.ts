@@ -44,9 +44,10 @@ export const cmsConfig = defineCms((cms) => ({
 						f.field("title").label("Post title"),
 						f.field("draft").label("Draft"),
 						f.field("body").label("Body"),
-						f.field("seo").label("SEO").fields((sf) => [
-							sf("description").label("Meta description"),
-						]),
+						f
+							.field("seo")
+							.label("SEO")
+							.fields((sf) => [sf("description").label("Meta description")]),
 					],
 				},
 				{

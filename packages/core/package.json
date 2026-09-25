@@ -21,8 +21,8 @@
 	},
 	"scripts": {
 		"check": "tsc -p . && bunx tsc -p ./scripts/tsconfig.fixtures.json",
-		"check:allowlist": "bun test ./scripts/write-back-contract.test.ts ./scripts/schema-form-projection.test.ts ./scripts/persisted-input-rewrite.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts ./scripts/http-dispatcher.test.ts",
-		"test:semantic": "bun test ./scripts/schema-form-projection.test.ts ./scripts/persisted-input-rewrite.test.ts ./scripts/form-tree.test.ts ./scripts/define-cms.test.ts",
-		"test:http": "bun test ./scripts/http-dispatcher.test.ts"
+		"check:allowlist": "bun test src",
+		"test:semantic": "bun test ./src/semantic ./src/form-tree.test.ts ./src/define-cms.test.ts",
+		"test:http": "bun test ./src/http"
 	}
 }

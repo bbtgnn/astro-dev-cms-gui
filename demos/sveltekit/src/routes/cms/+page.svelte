@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { AuthoringApp, authoringPropsFromDefineCms } from "@cms/authoring";
-	import catalog from "$lib/cms-components";
 	import { cmsConfig } from "$lib/cms";
+	import catalog from "$lib/cms-components";
 
 	const authoring = authoringPropsFromDefineCms(cmsConfig, catalog);
 </script>

@@ -8,9 +8,9 @@
 		"types": ["node"]
 	},
 	"include": [
-		"./form-tree.fixtures.ts",
-		"./define-cms.fixtures.ts",
-		"./create-cms-host.fixtures.ts",
+		"../src/form-tree.fixtures.ts",
+		"../src/define-cms.fixtures.ts",
+		"../src/create-cms-host.fixtures.ts",
 		"../src/form-tree.ts",
 		"../src/define-cms.ts",
 		"../src/collection-descriptors.ts",

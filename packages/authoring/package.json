@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "Authoring UI — shell, form shell, and chrome (ADR-0008 layer 1)",
+	"description": "Authoring UI \u2014 shell, form shell, and chrome (ADR-0008 layer 1)",
 	"exports": {
 		".": "./src/index.ts",
 		"./config": "./src/config/index.ts"
@@ -25,9 +25,9 @@
 		"typescript": "catalog:"
 	},
 	"scripts": {
-		"check": "svelte-check --tsconfig ./tsconfig.json && bun test ./scripts/ajv-schema.test.ts ./scripts/draft-eligibility.test.ts ./scripts/editor-collections-from-schemas.test.ts ./scripts/stock-registry.test.ts ./scripts/create-field-control.test.ts ./scripts/wrap-field-editor.test.ts ./scripts/authoring-props.test.ts",
+		"check": "svelte-check --tsconfig ./tsconfig.json && bun test ./src/form ./src/config ./src/draft-eligibility.test.ts ./src/authoring-props.test.ts",
 		"check:layers": "bun run ./scripts/check-layer-boundaries.ts",
-		"check:allowlist": "bun test ./scripts/authoring-deletion.test.ts ./scripts/authoring-assets.test.ts ./scripts/authoring-autosave.test.ts ./scripts/authoring-session.test.ts ./scripts/open-authoring-session.test.ts",
-		"test:config": "bun test ./scripts/stock-registry.test.ts ./scripts/create-field-control.test.ts"
+		"check:allowlist": "bun test ./src/authoring-deletion.test.ts ./src/authoring-assets.test.ts ./src/autosave.test.ts ./src/session.test.ts ./src/open-authoring-session.test.ts",
+		"test:config": "bun test ./src/form/stock-registry.test.ts ./src/config/create-field-control.test.ts"
 	}
 }

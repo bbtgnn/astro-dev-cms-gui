@@ -66,7 +66,6 @@ export type {
 	CreateCmsHostOptions,
 } from "./types";
 
-
 /** WriteMode throw codes that surface as protocol `conflict`. */
 const CONFLICT_IMPL_CODES = new Set(["REVISION_CONFLICT"]);
 
@@ -330,9 +329,9 @@ function createCmsHostImpl(options: CreateCmsProtocolOptions): CmsHost {
 	} else {
 		collections = options.collections;
 		schemas = options.schemas;
-		allowPaths =
-			options.allowPaths ??
-			[...new Set(options.collections.map((d) => d.base))];
+		allowPaths = options.allowPaths ?? [
+			...new Set(options.collections.map((d) => d.base)),
+		];
 	}
 
 	const wmOptions: CreateWriteModeOptions = {
@@ -358,9 +357,7 @@ function isConfigDoor(
 	return "config" in options && options.config != null;
 }
 
-export function createCmsHost(
-	options: CreateCmsHostFromConfigOptions,
-): CmsHost;
+export function createCmsHost(options: CreateCmsHostFromConfigOptions): CmsHost;
 export function createCmsHost(
 	options: CreateCmsHostFromCollectionsOptions,
 ): CmsHost;
