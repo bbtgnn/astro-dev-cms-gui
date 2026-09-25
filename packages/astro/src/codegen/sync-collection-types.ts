@@ -6,16 +6,16 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { z } from "zod";
-import {
-	collectionsFromContentConfigExport,
-	materializeSchema,
-	type StampedCollectionConfig,
-} from "../build-fs-host-from-stamped";
 import { proxyAssets } from "../content-proxy/assets";
 import {
 	CONTENT_CONFIG_CONVENTION,
 	resolveConventionEntry,
-} from "../vite-config-plugin";
+} from "../host/vite-config-plugin";
+import {
+	collectionsFromContentConfigExport,
+	materializeSchema,
+	type StampedCollectionConfig,
+} from "../stamped/build-fs-host-from-stamped";
 import {
 	CMS_COLLECTION_TYPES_FILENAME,
 	printCollectionTypesFile,

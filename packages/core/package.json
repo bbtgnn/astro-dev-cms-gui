@@ -3,14 +3,14 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "CMS protocol + FS write-back adapters + schema→form projection",
+	"description": "CMS protocol + FS write-back adapters + schema\u2192form projection",
 	"exports": {
 		".": "./src/index.ts",
-		"./define-cms": "./src/define-cms.ts",
-		"./fetch-client": "./src/fetch-client.ts",
-		"./form-tree": "./src/form-tree.ts",
+		"./define-cms": "./src/define-cms/define-cms.ts",
+		"./fetch-client": "./src/protocol/fetch-client.ts",
+		"./form-tree": "./src/form-tree/form-tree.ts",
 		"./http": "./src/http/index.ts",
-		"./protocol": "./src/protocol.ts",
+		"./protocol": "./src/protocol/protocol.ts",
 		"./semantic": "./src/semantic/index.ts"
 	},
 	"dependencies": {
@@ -22,7 +22,7 @@
 	"scripts": {
 		"check": "tsc -p . && bunx tsc -p ./scripts/tsconfig.fixtures.json",
 		"check:allowlist": "bun test src",
-		"test:semantic": "bun test ./src/semantic ./src/form-tree.test.ts ./src/define-cms.test.ts",
+		"test:semantic": "bun test ./src/semantic ./src/form-tree ./src/define-cms",
 		"test:http": "bun test ./src/http"
 	}
 }

@@ -3,11 +3,11 @@
  */
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import { defineAstroCms } from "../config.ts";
 import {
 	stampImageSchema,
 	stampRelationSchema,
 } from "../content-proxy/stamp-helpers";
+import { defineAstroCms } from "../host/config.ts";
 import { printCollectionTypesFile } from "./emit-collection-types";
 import { printZodInputType } from "./zod-input-type";
 

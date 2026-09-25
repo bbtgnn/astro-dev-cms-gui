@@ -13,7 +13,11 @@
  */
 
 import { z } from "zod";
-import type { FormTree, FormTreeFieldChrome, FormTreeNode } from "../form-tree";
+import type {
+	FormTree,
+	FormTreeFieldChrome,
+	FormTreeNode,
+} from "../form-tree/form-tree";
 import type { ContentFieldStampMeta } from "./content-field-stamp";
 import { readContentFieldStamp, unwrapZod } from "./content-field-stamp";
 import type {

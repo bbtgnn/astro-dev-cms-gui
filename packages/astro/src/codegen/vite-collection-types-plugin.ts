@@ -4,8 +4,8 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { collectionsFromContentConfigExport } from "../build-fs-host-from-stamped";
-import type { CmsVitePlugin } from "../vite-config-plugin";
+import type { CmsVitePlugin } from "../host/vite-config-plugin";
+import { collectionsFromContentConfigExport } from "../stamped/build-fs-host-from-stamped";
 import {
 	CMS_COLLECTION_TYPES_FILENAME,
 	printCollectionTypesFile,

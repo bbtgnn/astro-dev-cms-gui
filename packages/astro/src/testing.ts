@@ -9,21 +9,6 @@
  */
 
 export {
-	type AssembleStampedCmsOptions,
-	type AssembleStampedCmsResult,
-	assembleStampedCms,
-} from "./assemble-stamped-cms";
-export {
-	type BuildFsHostFromStampedOptions,
-	type BuildFsHostFromStampedResult,
-	buildFsHostFromStampedCollections,
-	type CollectionLocationOverride,
-	collectionsFromContentConfigExport,
-	type MaterializedStampedCollection,
-	materializeSchema,
-	type StampedCollectionConfig,
-} from "./build-fs-host-from-stamped";
-export {
 	CMS_COLLECTION_TYPES_FILENAME,
 	printCollectionTypesFile,
 } from "./codegen/emit-collection-types";
@@ -35,7 +20,7 @@ export {
 	type CmsIntegration,
 	cmsHarness,
 	createCmsIntegration,
-} from "./integration";
+} from "./host/integration";
 export {
 	CMS_COMPONENTS_CONVENTION,
 	CMS_COMPONENTS_VIRTUAL_ID,
@@ -61,4 +46,19 @@ export {
 	resolveEditorConfigEntry,
 	resolveProjectEntry,
 	SCHEMA_PARTITION_CONVENTION,
-} from "./vite-config-plugin";
+} from "./host/vite-config-plugin";
+export {
+	type AssembleStampedCmsOptions,
+	type AssembleStampedCmsResult,
+	assembleStampedCms,
+} from "./stamped/assemble-stamped-cms";
+export {
+	type BuildFsHostFromStampedOptions,
+	type BuildFsHostFromStampedResult,
+	buildFsHostFromStampedCollections,
+	type CollectionLocationOverride,
+	collectionsFromContentConfigExport,
+	type MaterializedStampedCollection,
+	materializeSchema,
+	type StampedCollectionConfig,
+} from "./stamped/build-fs-host-from-stamped";

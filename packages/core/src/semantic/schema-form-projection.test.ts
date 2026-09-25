@@ -5,7 +5,7 @@
  */
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import { createFormTreeHelpers } from "../form-tree";
+import { createFormTreeHelpers } from "../form-tree/form-tree";
 import { CONTENT_FIELD_STAMP } from "./content-field-stamp";
 import {
 	projectSchemaFormModel,

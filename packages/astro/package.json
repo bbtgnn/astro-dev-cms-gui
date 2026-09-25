@@ -9,14 +9,14 @@
 	},
 	"exports": {
 		".": "./src/index.ts",
-		"./config": "./src/config.ts",
+		"./config": "./src/host/config.ts",
 		"./collection-types": "./src/collection-types.ts",
 		"./content-proxy": "./src/content-proxy/index.ts",
 		"./testing": "./src/testing.ts",
-		"./middleware-entry": "./src/middleware-entry.ts",
-		"./protocol-route": "./src/protocol-route.ts",
-		"./shell-page.astro": "./src/shell-page.astro",
-		"./CmsMount.svelte": "./src/CmsMount.svelte"
+		"./middleware-entry": "./src/host/middleware-entry.ts",
+		"./protocol-route": "./src/host/protocol-route.ts",
+		"./shell-page.astro": "./src/host/shell-page.astro",
+		"./CmsMount.svelte": "./src/host/CmsMount.svelte"
 	},
 	"dependencies": {
 		"@cms/authoring": "workspace:*",
@@ -37,8 +37,8 @@
 	"scripts": {
 		"check": "tsc -p . && svelte-check --tsconfig ./tsconfig.json && bun test src",
 		"test:content-proxy": "bun test ./src/content-proxy/content-proxy.test.ts",
-		"test:stamped-host": "bun test ./src/stamped-host.test.ts",
-		"test:happy-path": "bun test ./src/cms-happy-path.test.ts",
+		"test:stamped-host": "bun test ./src/stamped/stamped-host.test.ts",
+		"test:happy-path": "bun test ./src/host/cms-happy-path.test.ts",
 		"test:codegen": "bun test ./src/codegen/codegen-input-types.test.ts"
 	}
 }

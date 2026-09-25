@@ -4,9 +4,9 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { z } from "zod";
-import { createCmsHost } from "../create-cms-protocol";
-import { defineCms } from "../define-cms";
-import { memoryWriter } from "../memory-writer";
+import { defineCms } from "../define-cms/define-cms";
+import { createCmsHost } from "../protocol/create-cms-protocol";
+import { memoryWriter } from "../writer/memory-writer";
 import {
 	createCmsDispatcher,
 	createCmsHttpFromConfig,
