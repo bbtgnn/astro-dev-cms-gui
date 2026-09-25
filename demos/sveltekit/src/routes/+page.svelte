@@ -1,7 +1,3 @@
-<script lang="ts">
-	// Home — link into the authoring shell.
-</script>
-
 <main>
 	<h1>@cms/sveltekit-demo</h1>
 	<p>

@@ -7,7 +7,6 @@
 import type { SemanticKind } from "@cms/core/semantic";
 import type { Component, ComponentProps } from "svelte";
 
-/** Semantic kinds that participate in field / aggregate editor contracts. */
 export type FieldKind = SemanticKind;
 
 /**
@@ -35,7 +34,6 @@ export type FieldControl<Input, Kind extends FieldKind> = {
 	readonly [fieldKindBrand]: (kind: Kind) => Kind;
 };
 
-/** Build a branded field control for the form shell / SJSF bridge. */
 export function createFieldControl<Input, Kind extends FieldKind>(args: {
 	readonly getValue: () => Input;
 	readonly setValue: (value: Input) => void;
@@ -59,7 +57,6 @@ export function createFieldControl<Input, Kind extends FieldKind>(args: {
 	};
 }
 
-/** Props the form shell always supplies to a field / aggregate editor. */
 export type FieldEditorProps<Input, Kind extends FieldKind> = {
 	field: FieldControl<Input, Kind>;
 	label: string;
@@ -96,7 +93,6 @@ export const SHELL_OWNED_KEYS = [
 	"children",
 ] as const satisfies readonly ShellOwnedKey[];
 
-/** Editor-specific props: component props minus shell-owned keys. */
 export type EditorExtraProps<C extends AnySvelteComponent> = Omit<
 	ComponentProps<C>,
 	ShellOwnedKey
@@ -141,16 +137,13 @@ export type ShellCompatibleWrapper<C extends AnySvelteComponent> =
 		? C
 		: never;
 
-/** Optional tab / chrome icon — no required props. */
 export type FieldIcon = Component<Record<string, never> | { class?: string }>;
 
 /**
- * Catalog of live Svelte editors / wrappers / icons (Vite-only module).
- * Keys are authored in `cms.config.ts`; values resolve in the host graph.
+ * Vite-only module. Keys in `cms.config.ts`; values resolve in the host graph.
  */
 export type ComponentsCatalog = Record<string, AnySvelteComponent>;
 
-/** Default when the host uses only stock editors (no custom catalog). */
 export type EmptyComponents = Record<never, AnySvelteComponent>;
 
 /**
@@ -171,7 +164,6 @@ export type CompatibleKey<
 		: never;
 }[keyof Components & string];
 
-/** Catalog keys usable as aggregate `wrapper` (chrome only). */
 export type CompatibleWrapperKey<Components extends ComponentsCatalog> = {
 	[K in keyof Components &
 		string]: Components[K] extends ShellCompatibleWrapper<Components[K]>
@@ -179,7 +171,6 @@ export type CompatibleWrapperKey<Components extends ComponentsCatalog> = {
 		: never;
 }[keyof Components & string];
 
-/** Catalog keys usable as tab / chrome `icon`. */
 export type CompatibleIconKey<Components extends ComponentsCatalog> = {
 	[K in keyof Components & string]: Components[K] extends FieldIcon ? K : never;
 }[keyof Components & string];

@@ -4,7 +4,7 @@
  */
 
 import type { AnySvelteComponent } from "../config/contracts";
-import SjsfFieldEditorBridge from "./SjsfFieldEditorBridge.svelte";
+import SjsfFieldEditorBridge from "./sjsf-field-editor-bridge.svelte";
 
 export type WrapFieldEditorOptions = {
 	readonly editorProps?: Record<string, unknown>;
@@ -33,10 +33,6 @@ export function injectEditorIntoWidgetProps(
 	return next;
 }
 
-/**
- * Return an SJSF-compatible widget component that adapts WidgetCommonProps →
- * FieldEditorProps and renders `editor`.
- */
 export function wrapFieldEditorForSjsf(
 	editor: AnySvelteComponent,
 	options?: WrapFieldEditorOptions,

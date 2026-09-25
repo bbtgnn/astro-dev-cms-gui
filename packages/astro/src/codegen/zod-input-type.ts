@@ -1,5 +1,4 @@
 /**
- * Walk materialized Zod (CMS Input) → TypeScript type source + field kinds.
  * Stamped image/ref → CmsImage / CmsReference<"collection">.
  */
 
@@ -18,14 +17,12 @@ export type PrintedFieldKind =
 	| { readonly kind: "scalar" };
 
 export type PrintedTypeTree = {
-	/** TypeScript type expression (no trailing `;`). */
 	readonly typeSource: string;
 	readonly fieldKind: PrintedFieldKind;
-	/** Nested kinds for object fields (codegen CmsFieldKinds). */
 	readonly fields?: Readonly<Record<string, PrintedTypeTree>>;
 };
 
-/** Input optionality: `.optional()` or `.default()` (defaulted keys are optional on Input). */
+/** Defaulted keys are optional on Zod Input (not only `.optional()`). */
 function isInputOptional(schema: unknown): boolean {
 	const { optional, defaultValue } = unwrapZod(schema);
 	return optional || defaultValue !== undefined;
@@ -109,7 +106,6 @@ function printInner(schema: unknown): PrintedTypeTree {
 	return { typeSource: "unknown", fieldKind: { kind: "scalar" } };
 }
 
-/** Print CMS Input type for a materialized Zod schema. */
 export function printZodInputType(schema: unknown): PrintedTypeTree {
 	const optional = isInputOptional(schema);
 	const { nullable } = unwrapZod(schema);
@@ -132,7 +128,6 @@ export type CollectionTypePrint = {
 	readonly data: PrintedTypeTree;
 };
 
-/** Print kinds map entries for one collection's object fields. */
 export function printFieldKindsObject(
 	fields: Readonly<Record<string, PrintedTypeTree>> | undefined,
 	indent: string,

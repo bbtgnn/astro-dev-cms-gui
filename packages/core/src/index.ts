@@ -6,23 +6,6 @@
  */
 
 export type {
-	CollectionConfig,
-	CollectionDescriptor,
-} from "./collection-descriptors";
-export { scanEntryIds } from "./collection-descriptors";
-export type {
-	AdaptProtocolOptions,
-	CmsHost,
-	CreateCmsHostConfig,
-	CreateCmsHostFromCollections,
-	CreateCmsHostFromCollectionsOptions,
-	CreateCmsHostFromConfig,
-	CreateCmsHostFromConfigOptions,
-	CreateCmsHostOptions,
-	CreateCmsProtocolOptions,
-} from "./create-cms-protocol";
-export { createCmsHost } from "./create-cms-protocol";
-export type {
 	CmsCollectionBuilt,
 	CmsCollectionOptions,
 	CmsCollectionType,
@@ -33,15 +16,8 @@ export type {
 	CollectionLocation,
 	DefineCmsResult,
 	FormBuilderFor,
-} from "./define-cms";
-export { defineCms } from "./define-cms";
-export { parseEntryFile, serializeEntryFile } from "./entry-file";
-export {
-	type CmsFetchClient,
-	CmsFetchError,
-	createFetchClient,
-	isCmsFetchError,
-} from "./fetch-client";
+} from "./define-cms/define-cms";
+export { defineCms } from "./define-cms/define-cms";
 export type {
 	FieldFn,
 	FieldRefBuilder,
@@ -57,11 +33,11 @@ export type {
 	FormTreeTabsNode,
 	ObjectInputOf,
 	ScopedFormTreeHelpers,
-} from "./form-tree";
+} from "./form-tree/form-tree";
 export {
 	createFormTreeHelpers,
 	createScopedFormTreeHelpers,
-} from "./form-tree";
+} from "./form-tree/form-tree";
 export type {
 	CmsDispatcherOptions,
 	CreateCmsHttpFromConfigOptions,
@@ -73,23 +49,23 @@ export {
 	createCmsHttpFromConfig,
 	DEFAULT_CMS_API_MOUNT,
 } from "./http";
-export { contentAssetPath, imageFolderFromCanonical } from "./image-path";
-export { memoryWriter } from "./memory-writer";
-export { nodeFsWriter } from "./node-fs-writer";
 export type {
-	EntryExtension,
-	ResolvedEntry,
-	ResolveEntryOptions,
-} from "./path-resolve";
+	AdaptProtocolOptions,
+	CmsHost,
+	CreateCmsHostConfig,
+	CreateCmsHostFromCollections,
+	CreateCmsHostFromCollectionsOptions,
+	CreateCmsHostFromConfig,
+	CreateCmsHostFromConfigOptions,
+	CreateCmsHostOptions,
+} from "./protocol/create-cms-host";
+export { createCmsHost } from "./protocol/create-cms-host";
 export {
-	applyPathTemplate,
-	assertSafeEntryId,
-	DEFAULT_ENTRY_EXTENSION,
-	entryRelPath,
-	idFromRelPath,
-	resolveEntryPath,
-	writerExists,
-} from "./path-resolve";
+	type CmsFetchClient,
+	CmsFetchError,
+	createFetchClient,
+	isCmsFetchError,
+} from "./protocol/fetch-client";
 export type {
 	CmsAssetsCapability,
 	CmsCapabilities,
@@ -111,7 +87,7 @@ export type {
 	UploadImageFailureCode,
 	UploadImageInput,
 	UploadImageResult,
-} from "./protocol";
+} from "./protocol/protocol";
 export {
 	CMS_ERR_DEFAULT_MESSAGE,
 	cmsErr,
@@ -123,12 +99,38 @@ export {
 	GET_ENTRY_FAILURE_CODES,
 	httpStatusForCmsErr,
 	isAllowedCmsFailureCode,
-	legacyStatusMapForCodes,
 	resolveCmsCapabilities,
 	SAVE_ENTRY_FAILURE_CODES,
+	statusMapForCodes,
 	UPLOAD_IMAGE_FAILURE_CODES,
-} from "./protocol";
-export { opaqueRevision } from "./revision";
+} from "./protocol/protocol";
+export { opaqueRevision } from "./protocol/revision";
+export type {
+	CollectionConfig,
+	CollectionDescriptor,
+} from "./writer/collection-descriptors";
+export { scanEntryIds } from "./writer/collection-descriptors";
+export { parseEntryFile, serializeEntryFile } from "./writer/entry-file";
+export {
+	contentAssetPath,
+	imageFolderFromCanonical,
+} from "./writer/image-path";
+export { memoryWriter } from "./writer/memory-writer";
+export { nodeFsWriter } from "./writer/node-fs-writer";
+export type {
+	EntryExtension,
+	ResolvedEntry,
+	ResolveEntryOptions,
+} from "./writer/path-resolve";
+export {
+	applyPathTemplate,
+	assertSafeEntryId,
+	DEFAULT_ENTRY_EXTENSION,
+	entryRelPath,
+	idFromRelPath,
+	resolveEntryPath,
+	writerExists,
+} from "./writer/path-resolve";
 export type {
 	CollectionSummary,
 	ContentEntry,
@@ -137,4 +139,4 @@ export type {
 	WriteImageAssetsInput,
 	Writer,
 	WrittenImageAssets,
-} from "./types";
+} from "./writer/types";

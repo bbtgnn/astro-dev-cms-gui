@@ -13,7 +13,11 @@
  */
 
 import { z } from "zod";
-import type { FormTree, FormTreeFieldChrome, FormTreeNode } from "../form-tree";
+import type {
+	FormTree,
+	FormTreeFieldChrome,
+	FormTreeNode,
+} from "../form-tree/form-tree";
 import type { ContentFieldStampMeta } from "./content-field-stamp";
 import { readContentFieldStamp, unwrapZod } from "./content-field-stamp";
 import type {
@@ -34,7 +38,6 @@ export {
 
 export type ProjectSchemaFormOptions = {
 	readonly collectionId?: string;
-	/** Optional form tree — layout + field-ref chrome. */
 	readonly form?: FormTree;
 };
 
@@ -114,9 +117,7 @@ function kindFromJson(
 
 type WalkState = {
 	fields: Record<string, FormFieldDescriptor>;
-	/** Default schema-derived layout node per durable path (for form-tree placement). */
 	defaultLayoutByPath: Record<string, FormLayoutNode>;
-	/** Ordered direct child keys for object paths (`""` = collection root). */
 	childKeysByPath: Record<string, string[]>;
 };
 
@@ -411,7 +412,8 @@ function setJsonSchemaAtPath(
 
 	let cursor: JsonSchemaNode = root;
 	for (let i = 0; i < segments.length - 1; i++) {
-		const key = segments[i]!;
+		const key = segments[i];
+		if (key === undefined) return;
 		const props = asObject(cursor.properties);
 		if (!props) return;
 		const child = asObject(props[key]);
@@ -419,7 +421,8 @@ function setJsonSchemaAtPath(
 		cursor = child;
 	}
 
-	const leafKey = segments[segments.length - 1]!;
+	const leafKey = segments[segments.length - 1];
+	if (leafKey === undefined) return;
 	const props = asObject(cursor.properties);
 	if (!props) return;
 	props[leafKey] = leaf;
@@ -437,7 +440,6 @@ function applySemanticKindJsonSchemaRewrite(
 }
 
 /**
- * Project one collection Zod object schema into a serializable form model.
  * Thin internal form IR — not a user-authored algebra.
  * Optional {@link ProjectSchemaFormOptions.form} lowers a form tree into layout
  * and merges field-ref chrome onto descriptors.
@@ -467,8 +469,6 @@ export function projectSchemaFormModel(
 	for (const key of Object.keys(props)) {
 		const childJson = asObject(props[key]);
 		if (!childJson) continue;
-		// Use raw property JSON before rewrite for walk? We already rewrote —
-		// stamps are recovered from Zod, kinds from rewritten + stamp.
 		const rawProps = asObject(rawJson.properties) ?? {};
 		const rawChild = asObject(rawProps[key]) ?? childJson;
 		rootKeys.push(key);
@@ -476,7 +476,7 @@ export function projectSchemaFormModel(
 			projectProperty(
 				key,
 				shape[key],
-				// Prefer raw for kind detection (cms meta), then fields use rewritten schema.
+				// Raw JSON for stamp/kind detection; rewritten schema for fields.
 				rawChild,
 				"",
 				required.has(key),
@@ -485,9 +485,6 @@ export function projectSchemaFormModel(
 		);
 	}
 	state.childKeysByPath[""] = rootKeys;
-
-	// Fix field descriptors that used raw json for constraints but ensure
-	// image/ref kinds win from stamps (already handled via stamp in kindFromJson).
 
 	const layout: FormLayoutNode =
 		options?.form !== undefined
@@ -512,9 +509,6 @@ export function projectSchemaFormModel(
 	};
 }
 
-/**
- * Project a map of collection schemas to form models.
- */
 export function projectSchemaFormModels(
 	collections: Readonly<Record<string, z.ZodType>>,
 	options?: ProjectSchemaFormModelsOptions,

@@ -6,20 +6,15 @@
  * `collections`, `capabilities`, `assets/…`, `images`, `ok`
  * (no nested `/api` segment; that lived under the old `/_cms` prefix).
  */
-import type { CmsHost } from "../create-cms-protocol";
-import type { CmsProtocol } from "../protocol";
-import { httpStatusForCmsErr } from "../protocol";
-import type { ReadAssetResult } from "../types";
+import type { CmsHost } from "../protocol/create-cms-host";
+import type { CmsProtocol } from "../protocol/protocol";
+import { httpStatusForCmsErr } from "../protocol/protocol";
+import type { ReadAssetResult } from "../writer/types";
 import { cmsDevOnlyGuard } from "./dev-guard";
 
-/** Default protocol HTTP mount (shell stays at `/cms`). */
 export const DEFAULT_CMS_API_MOUNT = "/cms/api";
 
 export type CmsDispatcherOptions = {
-	/**
-	 * Prefer passing the whole host — protocol + readAsset are taken from it.
-	 * Or pass `protocol` (+ optional `readAsset`) without `host`.
-	 */
 	host?: CmsHost;
 	protocol?: CmsProtocol;
 	/**
@@ -28,10 +23,8 @@ export type CmsDispatcherOptions = {
 	 * Ignored when `host` is set (uses `host.readAsset`).
 	 */
 	readAsset?: (relFromRoot: string) => Promise<ReadAssetResult>;
-	/** import.meta.env.DEV / Kit `dev` / equivalent */
 	isDev: boolean;
 	allowInProd?: boolean;
-	/** Mount prefix without trailing slash, default {@link DEFAULT_CMS_API_MOUNT} */
 	mount?: string;
 };
 
@@ -50,7 +43,6 @@ function errorResponse(err: unknown): Response {
 	);
 }
 
-/** Translate a typed protocol failure into HTTP without inventing domain codes. */
 function protocolErrResponse(result: {
 	ok: false;
 	code: string;
@@ -67,10 +59,6 @@ function protocolErrResponse(result: {
 	);
 }
 
-/**
- * Handle a request whose pathname is under the CMS API mount.
- * `pathSegments` is the rest after the mount (e.g. `collections/posts/hello`).
- */
 export function createCmsDispatcher(options: CmsDispatcherOptions) {
 	const mount =
 		(options.mount ?? DEFAULT_CMS_API_MOUNT).replace(/\/+$/, "") ||
@@ -95,24 +83,21 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 		const method = request.method.toUpperCase();
 
 		try {
-			// Heartbeat
 			if (path === "" || path === "ok") {
 				return Response.json({ ok: true, mount });
 			}
 
-			// GET /capabilities
 			if (path === "capabilities" && method === "GET") {
 				const result = await protocol.getCapabilities();
 				return Response.json(result.value);
 			}
 
-			// GET /collections
 			if (path === "collections" && method === "GET") {
 				const result = await protocol.listCollections();
 				return Response.json(result.value);
 			}
 
-			// GET /assets/<rel-from-content-root> — host readAsset, not protocol
+			// Host readAsset — not on CmsProtocol.
 			if (path.startsWith("assets/") && method === "GET") {
 				if (!readAsset) {
 					return Response.json(
@@ -135,7 +120,6 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				});
 			}
 
-			// POST /images — multipart: file, collection, id, name?
 			if (path === "images" && method === "POST") {
 				const form = await request.formData();
 				const file = form.get("file");
@@ -171,7 +155,6 @@ export function createCmsDispatcher(options: CmsDispatcherOptions) {
 				return Response.json(result.value);
 			}
 
-			// /collections/:collection[/:id]
 			const collMatch = /^collections\/([^/]+)(?:\/([^/]+))?$/.exec(path);
 			if (collMatch) {
 				const rawCollection = collMatch[1];

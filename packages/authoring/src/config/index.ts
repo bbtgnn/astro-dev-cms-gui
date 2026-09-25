@@ -1,8 +1,3 @@
-/**
- * Authoring config facade — Svelte field / catalog contracts.
- * Import from `@cms/authoring/config`.
- */
-
 export type {
 	AggregateWrapperProps,
 	AnySvelteComponent,

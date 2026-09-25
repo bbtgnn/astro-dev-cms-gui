@@ -40,7 +40,7 @@ type StampedSchema = {
 	};
 };
 
-/** Attach a content-field stamp on the Symbol slot (mutates schema object). */
+/** Mutates the schema object (Symbol stamp slot). */
 export function attachContentFieldStamp<T>(
 	schema: T,
 	stamp: ContentFieldStamp,
@@ -99,9 +99,7 @@ export function readContentFieldStamp(
  * Does not treat `.default()` as optional — callers that need Input optionality
  * (codegen) should OR in `defaultValue !== undefined`.
  */
-export function unwrapZod(
-	schema: unknown,
-): {
+export function unwrapZod(schema: unknown): {
 	inner: unknown;
 	optional: boolean;
 	nullable: boolean;

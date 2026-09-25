@@ -4,8 +4,8 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { collectionsFromContentConfigExport } from "../build-fs-host-from-stamped";
-import type { CmsVitePlugin } from "../vite-config-plugin";
+import type { CmsVitePlugin } from "../host/vite-config-plugin";
+import { collectionsFromContentConfigExport } from "../stamped/build-fs-host-from-stamped";
 import {
 	CMS_COLLECTION_TYPES_FILENAME,
 	printCollectionTypesFile,
@@ -13,7 +13,6 @@ import {
 
 export type CmsCollectionTypesVitePluginOptions = {
 	projectRoot: string;
-	/** Absolute path to content.config. */
 	contentConfigEntry: string;
 };
 
@@ -22,10 +21,6 @@ type ViteDevServer = {
 	watcher: { on: (event: string, cb: (file: string) => void) => void };
 };
 
-/**
- * Emits `src/cms.types.d.ts` after server listen / content.config change.
- * Types-only — does not affect runtime host.
- */
 export function cmsCollectionTypesVitePlugin(
 	options: CmsCollectionTypesVitePluginOptions,
 ): CmsVitePlugin & {

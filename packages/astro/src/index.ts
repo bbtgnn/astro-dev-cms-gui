@@ -6,6 +6,11 @@
  */
 
 export {
+	type CmsIntegration,
+	type CmsIntegrationOptions,
+	cms,
+} from "./host/integration";
+export {
 	type CmsDispatcherOptions,
 	type CmsMiddlewareContext,
 	type CmsMiddlewareHandler,
@@ -15,8 +20,3 @@ export {
 	createCmsMiddleware,
 	DEFAULT_CMS_API_MOUNT,
 } from "./http";
-export {
-	type CmsIntegration,
-	type CmsIntegrationOptions,
-	cms,
-} from "./integration";

@@ -1,7 +1,3 @@
-/**
- * Emit `src/cms.types.d.ts` augmenting `@cms/astro/collection-types`.
- */
-
 import type { z } from "zod";
 import {
 	type CollectionTypePrint,
@@ -50,10 +46,8 @@ export {};
 `;
 }
 
-/** Normalize printer object output to a single indented block. */
 function formatObjectBody(typeSource: string): string {
 	if (typeSource.startsWith("{")) {
-		// printInner uses one tab inside; re-indent for interface body
 		return typeSource
 			.split("\n")
 			.map((line, i) => {

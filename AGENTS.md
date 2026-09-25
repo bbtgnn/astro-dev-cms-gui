@@ -1,35 +1,30 @@
-# Dev CMS — agent notes
+# Dev CMS — agents
 
-**Host-agnostic authoring shell** for file-backed content collections, delivered
-mainly as a **dev-mode route** inside the host app. Optional overlay (form tree +
-direct Svelte components) compiles through the host Vite graph; the host speaks a
-serializable CMS protocol. Filesystem is the first write-back path, not the
-product identity. Astro is the first host; not a hosted git CMS control plane.
+How agents behave in this repo: what to open, how to edit, where work goes.
 
-## Before exploring
+## Reach
 
-- **Domain language** — always: [CONTEXT.md](CONTEXT.md). Prefer glossary terms; avoid listed synonyms.
-- **Architecture index** — navigate decisions and open threads from [docs/spec.md](docs/spec.md). The index is not an implementation spec.
+- **Language** — always: [CONTEXT.md](CONTEXT.md). Prefer glossary terms; avoid listed synonyms.
+- **Explore** — general code navigation (structure, symbols, callers, impact, package shape): [codebase-memory](https://github.com/DeusData/codebase-memory-mcp) first; follow the installed `codebase-memory` skill.
+- **Decisions / threads** — [docs/spec.md](docs/spec.md) (architecture index, not an implementation spec), [`docs/adr/`](docs/adr/), map [#1](https://github.com/bbtgnn/dev-cms/issues/1) (`wayfinder:map`).
 - **Authority** — accepted ADRs first, then the current issue and resolved Answer, then the architecture index. Temporary handoffs are never authoritative. Supersede an ADR explicitly; do not override one inside an implementation issue.
-- **Map / open threads** — GitHub [#1](https://github.com/bbtgnn/dev-cms/issues/1) (`wayfinder:map`). Decisions: [`docs/adr/`](docs/adr/).
 
-## Locked invariants
+## When coding
 
-- **Layers:** Authoring UI ↔ CMS protocol ↔ host/adapters (ADR-0008). UI must not import Astro/Node/FS/Sharp/Git.
-- **Protocol:** entry identities + serializable `data` (Zod input); no client filesystem paths (ADR-0005).
-- **FS adapter (v1):** JSON round-trip, id/path rules; default host builds collection descriptors from stamped `content.config` (+ optional form trees) (ADR-0004, 0017, 0007, 0024, 0025).
-- **Schema / overlay:** user-authored `content.config` is validation + location authority; optional `defineAstroCms` form tree + Vite components catalog. No generate of `content.config`; no Zod FieldUi dual path (ADR-0025, 0024; supersedes ADR-0019 / 0020 / 0003).
-- **Schemas:** editor, authoritative validation, and Astro are projections of one persisted-input model (stamped schema authority); never write transformed Astro output (ADR-0010, 0025).
-- **Form shell:** SJSF stays internal; recursive layouts, tabs, groups, and blocks remain in one form without changing persisted shape (ADR-0011).
-- **Blocks / preview:** block schemas stay separate from production renderers; the real Astro page is the default preview (ADR-0012, 0013). Revive blocks/i18n as stamp/form-tree kinds ([#29](https://github.com/bbtgnn/dev-cms/issues/29)), not Zod FieldUi.
-- **Local draft:** valid changes write atomically to the working tree with revision guards; invalid browser state does not replace canonical content (ADR-0014).
-- **Packages:** `@cms/authoring` ↔ `@cms/core` ↔ `@cms/astro` (+ `demos/` reference hosts) — ADR-0018. UI must not import the `@cms/core` root or `@cms/astro`.
-- **Install surface:** convention-first `cms()` — required `src/content.config.ts`, optional overlay / components, content under `src/content/` (ADR-0016, 0025).
-- **Reference host:** `demos/astro-simple` (`@cms/astro-demo-simple`, default `bun run dev` → `:4321`), `demos/astro-overlay` (`@cms/astro-demo`, `bun run dev:overlay` → `:4322`), and `demos/sveltekit` (`@cms/sveltekit-demo`, `bun run dev:kit` → `:4323`, no `@cms/astro`); shell `/cms`, API `/cms/api`. Libraries stay under `packages/`.
-- **Product name:** **Dev CMS** (`dev-cms` slug); npm packages stay `@cms/*` (ADR-0026).
-- **Checks:** `bun run check && bun run check:allowlist && bun run lint`.
+- **Imports** — authoring UI must not import Astro, Node, FS, Sharp, or Git; UI must not import the `@cms/core` root or `@cms/astro` (ADR-0008, ADR-0018). Enforced by `check:layers`.
+- **Svelte files** — kebab-case (`authoring-app.svelte`); SvelteKit route files (`+page.svelte`) unchanged.
+- **Comments** — only for _why_ (a non-obvious constraint, tradeoff, or invariant the code cannot say).
 
-## Where work belongs
+## When documenting
+
+- **CONTEXT** — glossary only (“what it is” + `_Avoid_`). No implementation, anti-goals, or history sections.
+- **AGENTS** — behavior only (Reach / When coding / Place work / Skills). No product fences, architecture invariants, roadmaps, gap inventories, or feature requirements.
+- **ADRs** — durable choice + rationale. Change via a new ADR that explicitly supersedes; do not quietly rewrite the decision into an issue, AGENTS, or the architecture index.
+- **Architecture index** — product direction, system shape, live ADR links, map pointer. No authority ladder, thread lists, or ADR blurbs.
+- **`docs/agents/` adapters** — repo facts skills do not know (`gh`, labels). Delete if the file would only restate Reach or Place work.
+- **One meaning, one place** — edit the authority; prefer a pointer over a restatement.
+
+## Place work
 
 - Durable architectural choice and rationale → `docs/adr/`.
 - Unresolved design question → GitHub issue with `wayfinder:grilling`; keep `Answer` unset until resolved.
@@ -37,24 +32,7 @@ product identity. Astro is the first host; not a hosted git CMS control plane.
 - Navigation and system summary → `docs/spec.md` and map issue #1.
 - Session state not captured elsewhere → temporary handoff only; link to durable artifacts rather than duplicating them.
 
-Do not put roadmaps, gap inventories, or feature requirements in agent instructions.
+## Skills
 
-## Out of scope (v1)
-
-Hosted git-auth CMS products, always-on CMS server as the default, desktop packaging,
-MD/MDX body serialization (JSON `data` only in the FS adapter for now). Remote *protocol*
-backends are allowed later; they are not the v1 deliverable.
-
-## Agent skills
-
-### Issue tracker
-
-Issues live in GitHub Issues for `bbtgnn/dev-cms` (via `gh`). See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Defaults: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
+- **Issues / map / claim** — GitHub via `gh`: [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md).
+- **Labels / triage** — role → label map: [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md).

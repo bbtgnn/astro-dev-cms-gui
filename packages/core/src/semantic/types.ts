@@ -10,7 +10,6 @@ export type OpaqueBinding = unknown;
 /** Editor-specific props bag — opaque at the form-model boundary; no Svelte ComponentProps. */
 export type OpaqueProps = Readonly<Record<string, unknown>>;
 
-/** Stock editor kind encoded on form-field descriptors. */
 export type SemanticKind =
 	| "string"
 	| "number"
@@ -23,7 +22,6 @@ export type SemanticKind =
 	| "image"
 	| "reference";
 
-/** v1 closed string constraints. */
 export type StringConstraint =
 	| { readonly method: "min"; readonly value: number }
 	| { readonly method: "max"; readonly value: number }
@@ -33,7 +31,6 @@ export type StringConstraint =
 			readonly flags: string;
 	  };
 
-/** v1 closed number constraints. */
 export type NumberConstraint =
 	| { readonly method: "min"; readonly value: number }
 	| { readonly method: "max"; readonly value: number }

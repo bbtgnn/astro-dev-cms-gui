@@ -66,7 +66,6 @@ function uiNodeForField(
 }
 
 /**
- * Walk layout for durable field paths and nest uiSchema under object keys.
  * Presentation-only nodes (header/separator/tabs chrome) do not add properties.
  */
 function lowerLayout(
@@ -150,7 +149,6 @@ export type LoweredSjsfSchemas = {
 };
 
 /**
- * Lower a collection form model to Ajv-safe JSON Schema + sjsf uiSchema.
  * Stock editors apply by semantic kind; field `component` overrides win.
  */
 export function lowerFormModelToSjsf(

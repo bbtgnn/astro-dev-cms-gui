@@ -1,0 +1,24 @@
+---
+/**
+ * Injected via @cms/astro cms() — not a project src/pages file.
+ * Form models are projected on the Astro SSR graph (stamped content.config +
+ * optional overlay); protocol transport stays on mount (/cms/api).
+ */
+
+import { getPreviewUrl, loadShellFormModels } from "../stamped/shell-form-models";
+import CmsMount from "./cms-mount.svelte";
+
+const formModels = loadShellFormModels();
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>CMS shell</title>
+	</head>
+	<body>
+		<!-- client:only — sjsf templates break under Astro/Vite SSR -->
+		<CmsMount client:only="svelte" formModels={formModels} {getPreviewUrl} />
+	</body>
+</html>

@@ -2,10 +2,11 @@
 
 Status: navigation document
 
-This document is the compact entry point for Dev CMS architecture. It is not an
-ADR, backlog, open-thread answer, or implementation spec. Durable decisions live
-in ADRs; unresolved product questions and implementation work live in GitHub
-Issues.
+Compact entry point for architecture. Not an ADR, backlog, open-thread answer,
+or implementation spec. Durable decisions live in [ADRs](adr/); unresolved
+product questions and implementation work live in GitHub Issues (map
+[#1](https://github.com/bbtgnn/dev-cms/issues/1)). Authority order is in
+[AGENTS.md](../AGENTS.md).
 
 ## Product direction
 
@@ -34,23 +35,11 @@ The job is a local-first **authoring shell**, not a production CMS identity.
   acceptance scenes (compose an entry, nested blocks, tidy sections). Payload
   is the config foil, not the UX bar.
 
-Delivery and architecture (unchanged):
-
-- main delivery is a **dev-mode route** inside a consumer Astro project;
-- project content remains the source of truth;
-- the shell UI is a client-side Svelte application;
-- SJSF powers schema-driven forms;
-- optional overlay and direct Svelte components compile through the host Vite
-  graph;
-- the shell UI exchanges serializable persisted input through a CMS protocol;
-- Astro is the first host and the filesystem is the first write-back
-  implementation;
-- integration is intended for local development (dev-only by default);
-- the real Astro page is the default preview;
-- Git remains outside the CMS protocol.
-
-The portable claim is a backend-agnostic authoring UI with host-compiled editor
-configuration.
+**Delivery (locked in ADRs):** local-first authoring shell as a **dev-mode
+route**; project content is the source of truth; client-side Svelte shell UI
+over a serializable CMS protocol; Astro + filesystem first; real Astro page as
+default preview; Git outside the protocol. Portable claim: backend-agnostic
+authoring UI with host-compiled editor configuration.
 
 **Anti-goals (product identity):**
 
@@ -59,19 +48,6 @@ configuration.
 - a CSS visual builder / repo-mapped cascade editor as the product;
 - hosted git CMS or an always-on production CMS server as the identity;
 - guaranteeing good UX for every custom widget a consumer ships.
-
-## Source hierarchy
-
-When sources disagree, use this order:
-
-1. Accepted [ADRs](adr/).
-2. The current GitHub issue and its resolved Answer.
-3. This architecture index.
-4. Agent instructions and temporary handoffs.
-
-Changing an accepted decision requires a new ADR that explicitly supersedes
-the old one. Implementation issues must link to the decisions they realize
-rather than copying those decisions into a second source of truth.
 
 ## System shape
 
@@ -101,118 +77,49 @@ virtual:@cms/config              Authoring UI (shell + form + SJSF)
 Host / write-back (descriptors from stamped collections)
 ```
 
-The conceptual modules are:
-
-- stamps, schema→form projection, and form trees;
-- CMS protocol, outcomes, and client;
-- Svelte/SJSF form shell;
-- reusable authoring application;
-- Astro dev integration + content-proxy (no generate);
-- filesystem write-back implementation;
-- portable `defineCms` for non-Astro hosts.
-
-These are responsibilities realized by `@cms/authoring`, `@cms/core`, and
-`@cms/astro` ([ADR-0018](adr/0018-three-packages-for-adr-0008-layers.md)).
+Responsibilities map to `@cms/authoring`, `@cms/core`, and `@cms/astro`
+([ADR-0018](adr/0018-three-packages-for-adr-0008-layers.md)).
 
 ## Durable decisions
 
+Thematic index only — open the ADR for rationale. Superseded ADRs stay in
+`docs/adr/` for history; do not treat them as live.
+
 ### Product and module boundaries
 
-- [ADR-0008](adr/0008-backend-agnostic-ui-fs-first-adapter.md) — backend-agnostic
-  authoring UI; filesystem first.
-- [ADR-0018](adr/0018-three-packages-for-adr-0008-layers.md) — three packages for
-  those layers (`authoring`, `core`, `astro` + `demos/` hosts).
-- [ADR-0026](adr/0026-product-name-dev-cms.md) — product name **Dev CMS**; npm
-  packages stay `@cms/*`.
-- [ADR-0009](adr/0009-conceptual-layers-before-package-extraction.md) —
-  superseded by ADR-0018 (historical “stabilize before extract” guidance).
-- [ADR-0016](adr/0016-astro-convention-install-surface.md) — convention-first
-  Astro install (`cms()`, required `content.config`, optional overlay).
+- [ADR-0008](adr/0008-backend-agnostic-ui-fs-first-adapter.md)
+- [ADR-0018](adr/0018-three-packages-for-adr-0008-layers.md)
+- [ADR-0026](adr/0026-product-name-dev-cms.md)
+- [ADR-0016](adr/0016-astro-convention-install-surface.md)
 
 ### Fields and schema projections
 
-- [ADR-0025](adr/0025-schema-first-content-config-optional-overlay.md) —
-  schema-first `content.config`; optional overlay; no generate. Supersedes
-  ADR-0019 / 0020 / 0022.
-- [ADR-0024](adr/0024-content-field-stamps-live-in-core.md) — content-field
-  stamps live in `@cms/core`; Astro content-proxy adapts native helpers.
-- [ADR-0023](adr/0023-semantic-projection-peers-stay.md) — no extra semantic
-  “project everything” facade; depth stays on host/authoring mounts.
-- [ADR-0019](adr/0019-cms-first-semantic-schema.md) /
-  [ADR-0020](adr/0020-ir-form-model-only-editor-configuration.md) /
-  [ADR-0022](adr/0022-triple-compile-editor-configuration-intentional.md) —
-  superseded by ADR-0025 (CMS-first generate / IR form-only history).
-- [ADR-0003](adr/0003-field-ui-on-zod-meta.md) — superseded by ADR-0019
-  (still historical vs FieldUi-on-Zod).
-- [ADR-0004](adr/0004-live-content-config-discovery.md) — default host uses
-  stamped collections; browser never loads `content.config` (amended by
-  ADR-0025).
-- [ADR-0010](adr/0010-persisted-input-with-environment-schema-projections.md) —
-  editor, authoritative validator, and Astro are projections of one
-  persisted-input model (stamped schema authority under ADR-0025).
+- [ADR-0025](adr/0025-schema-first-content-config-optional-overlay.md)
+- [ADR-0024](adr/0024-content-field-stamps-live-in-core.md)
+- [ADR-0023](adr/0023-semantic-projection-peers-stay.md)
+- [ADR-0004](adr/0004-live-content-config-discovery.md)
+- [ADR-0010](adr/0010-persisted-input-with-environment-schema-projections.md)
 
 ### Form shell, blocks, and preview
 
-- [ADR-0011](adr/0011-sjsf-internal-one-form-recursive-layout.md) — SJSF stays
-  internal; tabs, groups, and blocks share one form and a recursive layout.
-- [ADR-0012](adr/0012-block-schema-and-production-renderers-stay-separate.md) —
-  block schemas and production renderer bindings remain separate.
-- [ADR-0013](adr/0013-real-astro-page-is-the-default-preview.md) — persisted
-  content on the real Astro route is the default preview.
+- [ADR-0011](adr/0011-sjsf-internal-one-form-recursive-layout.md)
+- [ADR-0012](adr/0012-block-schema-and-production-renderers-stay-separate.md)
+- [ADR-0013](adr/0013-real-astro-page-is-the-default-preview.md)
 
 ### CMS protocol and filesystem write-back
 
-- [ADR-0005](adr/0005-write-back-contract.md) — the CMS protocol is the
-  write-back seam; Astro transport is the protocol HTTP mount.
-- [ADR-0017](adr/0017-json-only-entry-serialization-v1.md) — JSON-only
-  serialization in the v1 filesystem implementation (supersedes ADR-0006).
-- [ADR-0007](adr/0007-entry-id-path-conventions.md) — filesystem entry IDs,
-  paths, discovery fallback, and allowlisting.
-- [ADR-0014](adr/0014-working-tree-is-the-local-draft.md) — valid changes write
-  to the working tree with atomic, revision-guarded write-back.
-- [ADR-0021](adr/0021-draft-eligibility-stays-on-session-open.md) — default
-  draft-write eligibility is wired at session open, not on EditorCollectionInput.
-- [ADR-0015](adr/0015-store-original-assets-astro-optimizes.md) — authoring stores
-  original assets; Astro optimizes images at render (no Sharp upload pipeline).
-
-ADR-0001 and ADR-0002 are retained as superseded history.
+- [ADR-0005](adr/0005-write-back-contract.md)
+- [ADR-0017](adr/0017-json-only-entry-serialization-v1.md)
+- [ADR-0007](adr/0007-entry-id-path-conventions.md)
+- [ADR-0014](adr/0014-working-tree-is-the-local-draft.md)
+- [ADR-0021](adr/0021-draft-eligibility-stays-on-session-open.md)
+- [ADR-0015](adr/0015-store-original-assets-astro-optimizes.md)
 
 ## Open threads
 
-The [wayfinder map](https://github.com/bbtgnn/dev-cms/issues/1) owns
-ordering and deferred fog.
-
-Active design questions:
-
-- [#2 — end-user form UI composition](https://github.com/bbtgnn/dev-cms/issues/2)
-- [#7 — custom field and SJSF binding contract](https://github.com/bbtgnn/dev-cms/issues/7)
-- [#8 — recursive form layout contract](https://github.com/bbtgnn/dev-cms/issues/8)
-- [#9 — preview surface and unsaved draft transport](https://github.com/bbtgnn/dev-cms/issues/9)
-- [#10 — invalid browser-state recovery](https://github.com/bbtgnn/dev-cms/issues/10)
-- [#31 — entry list sort, filter, search, and pagination](https://github.com/bbtgnn/dev-cms/issues/31)
-
-Closed (keep linked):
-
-- [#6 — semantic schema and projection contract](https://github.com/bbtgnn/dev-cms/issues/6)
-  → ADR-0019 / 0020 (historical) → [ADR-0025](adr/0025-schema-first-content-config-optional-overlay.md)
-
-Other deferred product questions:
-
-- [#3 — shell commands seam](https://github.com/bbtgnn/dev-cms/issues/3)
-- [#4 — schema builder UI](https://github.com/bbtgnn/dev-cms/issues/4)
-
-An open thread records a question, not an implementation contract. Its Answer
-is unset until the decision is explicitly resolved.
-
-## Implementation planning
-
-[#5 — Extract backend-agnostic authoring UI behind CMS protocol](https://github.com/bbtgnn/dev-cms/issues/5)
-captures the cross-cutting migration spec. It remains intact for later ticket
-splitting.
-
-Implementation tickets should be small, reviewable slices with external
-behavior, acceptance criteria, tests, dependencies, and explicit out-of-scope
-work. Migration phases and open gaps belong there, not in this index.
+Ordering and deferred fog: [wayfinder map #1](https://github.com/bbtgnn/dev-cms/issues/1).
+An open thread records a question, not an implementation contract; its Answer
+stays unset until resolved.
 
 ## Technical references
 
