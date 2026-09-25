@@ -2,12 +2,12 @@
  * Authoring UI — shell, form shell, and chrome (ADR-0008 / ADR-0018).
  */
 
-export { default as PlaceholderChrome } from "./components/PlaceholderChrome.svelte";
-export { default as CmsForm } from "./form/CmsForm.svelte";
+export { default as PlaceholderChrome } from "./components/placeholder-chrome.svelte";
+export { default as CmsForm } from "./form/cms-form.svelte";
 export type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,
-} from "./form/ImageField.svelte";
+} from "./form/image-field.svelte";
 export { resolveCatalogBinding } from "./form/stock-registry";
 export type {
 	AuthoringAppProps,
@@ -28,8 +28,8 @@ export type {
 	AuthoringSessionMode,
 	AuthoringSessionSnapshot,
 } from "./session/session";
-export { default as AuthoringApp } from "./shell/AuthoringApp.svelte";
-export { default as EntryEditor } from "./shell/EntryEditor.svelte";
+export { default as AuthoringApp } from "./shell/authoring-app.svelte";
+export { default as EntryEditor } from "./shell/entry-editor.svelte";
 export type {
 	AuthoringClient,
 	EditorCollectionInput,

@@ -17,7 +17,7 @@ import { theme } from "./cms-theme";
 import type {
 	CmsAssetsFieldContext,
 	CmsEntryContext,
-} from "./ImageField.svelte";
+} from "./image-field.svelte";
 import type { UiSchemaNode } from "./ui-schema";
 
 let {

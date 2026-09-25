@@ -16,7 +16,7 @@
 		"./middleware-entry": "./src/host/middleware-entry.ts",
 		"./protocol-route": "./src/host/protocol-route.ts",
 		"./shell-page.astro": "./src/host/shell-page.astro",
-		"./CmsMount.svelte": "./src/host/CmsMount.svelte"
+		"./cms-mount.svelte": "./src/host/cms-mount.svelte"
 	},
 	"dependencies": {
 		"@cms/authoring": "workspace:*",

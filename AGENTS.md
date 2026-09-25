@@ -29,6 +29,7 @@ product identity. Astro is the first host; not a hosted git CMS control plane.
 - **Reference host:** `demos/astro-simple` (`@cms/astro-demo-simple`, default `bun run dev` → `:4321`), `demos/astro-overlay` (`@cms/astro-demo`, `bun run dev:overlay` → `:4322`), and `demos/sveltekit` (`@cms/sveltekit-demo`, `bun run dev:kit` → `:4323`, no `@cms/astro`); shell `/cms`, API `/cms/api`. Libraries stay under `packages/`.
 - **Product name:** **Dev CMS** (`dev-cms` slug); npm packages stay `@cms/*` (ADR-0026).
 - **Checks:** `bun run check && bun run check:allowlist && bun run lint`.
+- **Svelte files:** kebab-case (`authoring-app.svelte`); SvelteKit route files (`+page.svelte`) unchanged.
 
 ## Where work belongs
 

@@ -19,7 +19,7 @@ import type {
 	EditorCollections,
 	GetPreviewUrl,
 } from "../types";
-import EntryEditor from "./EntryEditor.svelte";
+import EntryEditor from "./entry-editor.svelte";
 
 let {
 	client,
