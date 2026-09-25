@@ -1,15 +1,19 @@
 /**
- * Build + rewrite a workspace package for `bun pm pack` / registry publish.
- * Rewrites `catalog:` and `workspace:*` to concrete versions; points exports at `dist/`.
- * Restores the original package.json after packing (rewritten face is never committed).
+ * Build a workspace package, then pack a publish face from a staging dir.
+ *
+ * Workspace `package.json` stays on `src/` + `catalog:` / `workspace:*`.
+ * Staging gets a fresh publish `package.json` (dist exports + concrete versions).
+ * Never mutates the live workspace face.
  *
  * Usage: bun run scripts/pack-lib.ts @cms/core | @cms/authoring
  */
 import { spawnSync } from "node:child_process";
 import {
-	copyFileSync,
+	cpSync,
+	mkdirSync,
 	readdirSync,
 	readFileSync,
+	renameSync,
 	rmSync,
 	statSync,
 	writeFileSync,
@@ -18,6 +22,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
+const STAGING = ".pack";
 
 type PackageJson = {
 	name?: string;
@@ -38,6 +43,7 @@ type PackConfig = {
 	exportMap: () => PackageJson["exports"];
 };
 
+/** Publish export maps — single source for the packed face (not the workspace face). */
 const PACKAGES: Record<string, PackConfig> = {
 	"@cms/core": {
 		dir: "packages/core",
@@ -182,6 +188,22 @@ function pruneDist(distDir: string): void {
 	}
 }
 
+function publishPackageJson(
+	workspacePkg: PackageJson,
+	exportMap: PackageJson["exports"],
+	catalog: Record<string, string>,
+): PackageJson {
+	const pkg: PackageJson = { ...workspacePkg };
+	pkg.private = false;
+	pkg.files = ["dist"];
+	pkg.exports = exportMap;
+	pkg.dependencies = rewriteDeps(pkg.dependencies, catalog);
+	pkg.peerDependencies = rewriteDeps(pkg.peerDependencies, catalog);
+	delete pkg.devDependencies;
+	delete pkg.scripts;
+	return pkg;
+}
+
 const name = process.argv[2];
 const cfg = name ? PACKAGES[name] : undefined;
 if (!cfg) {
@@ -193,30 +215,38 @@ if (!cfg) {
 
 const pkgDir = path.join(root, cfg.dir);
 const pkgPath = path.join(pkgDir, "package.json");
-const backupPath = path.join(pkgDir, "package.json.pack-backup");
+const stagingDir = path.join(pkgDir, STAGING);
 const catalog = catalogVersions();
 
 run(cfg.build, pkgDir);
 pruneDist(path.join(pkgDir, "dist"));
 
-const original = readFileSync(pkgPath, "utf8");
-copyFileSync(pkgPath, backupPath);
+rmSync(stagingDir, { recursive: true, force: true });
+mkdirSync(stagingDir, { recursive: true });
+cpSync(path.join(pkgDir, "dist"), path.join(stagingDir, "dist"), {
+	recursive: true,
+});
+
+const publishPkg = publishPackageJson(
+	readJson(pkgPath),
+	cfg.exportMap(),
+	catalog,
+);
+writeFileSync(
+	path.join(stagingDir, "package.json"),
+	`${JSON.stringify(publishPkg, null, "\t")}\n`,
+);
 
 try {
-	const pkg = readJson(pkgPath);
-	pkg.private = false;
-	pkg.files = ["dist"];
-	pkg.exports = cfg.exportMap();
-	pkg.dependencies = rewriteDeps(pkg.dependencies, catalog);
-	pkg.peerDependencies = rewriteDeps(pkg.peerDependencies, catalog);
-	delete pkg.devDependencies;
-	delete pkg.scripts;
-
-	writeFileSync(pkgPath, `${JSON.stringify(pkg, null, "\t")}\n`);
-	run(["bun", "pm", "pack"], pkgDir);
+	run(["bun", "pm", "pack"], stagingDir);
+	for (const entry of readdirSync(stagingDir)) {
+		if (!entry.endsWith(".tgz")) continue;
+		renameSync(path.join(stagingDir, entry), path.join(pkgDir, entry));
+	}
 } finally {
-	writeFileSync(pkgPath, original);
-	rmSync(backupPath, { force: true });
+	rmSync(stagingDir, { recursive: true, force: true });
 }
 
-console.log(`Packed ${name} (package.json restored).`);
+console.log(
+	`Packed ${name} (staging dir cleaned; workspace package.json untouched).`,
+);

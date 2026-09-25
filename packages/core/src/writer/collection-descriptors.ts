@@ -3,7 +3,7 @@
  * Default hosts build descriptors from compiled IR (ADR-0019 / 0020).
  */
 
-import { join, resolve } from "pathe";
+import * as pathe from "pathe";
 import type { z } from "zod";
 import { idFromRelPath } from "./path-resolve";
 import type { Writer } from "./types";
@@ -29,7 +29,7 @@ export type CollectionDescriptor = {
 };
 
 function normalizeFs(p: string): string {
-	return resolve(p).replace(/\\/g, "/");
+	return pathe.resolve(p).replace(/\\/g, "/");
 }
 
 export async function scanEntryIds(
@@ -59,7 +59,7 @@ export async function scanEntryIds(
 				ids.add(id);
 				continue;
 			}
-			await walk(join(normalized, name), rel);
+			await walk(pathe.join(normalized, name), rel);
 		}
 	}
 

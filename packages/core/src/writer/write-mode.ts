@@ -3,7 +3,7 @@
  * Prefer discovered collections; pathMap / fakeCatalog are internal test seams.
  * Guarded write-back: opaque revisions + async Zod input validation (ADR-0010, 0014).
  */
-import { basename, dirname, isAbsolute, join, relative, resolve } from "pathe";
+import * as pathe from "pathe";
 import { z } from "zod";
 import { opaqueRevision } from "../protocol/revision";
 import type { CollectionDescriptor } from "./collection-descriptors";
@@ -27,11 +27,11 @@ import type {
 } from "./types";
 
 function normalizeFs(p: string): string {
-	return resolve(p).replace(/\\/g, "/");
+	return pathe.resolve(p).replace(/\\/g, "/");
 }
 
 function joinRoot(root: string, rel: string): string {
-	return normalizeFs(join(root, rel));
+	return normalizeFs(pathe.join(root, rel));
 }
 
 function isPathAllowed(
@@ -314,7 +314,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			const discovered = byName.get(input.collection);
 			const baseRel =
 				discovered?.config?.base ?? discovered?.base ?? input.collection;
-			const folderRel = join(baseRel, input.id, folderName);
+			const folderRel = pathe.join(baseRel, input.id, folderName);
 			const folderAbs = joinRoot(root, folderRel);
 			assertAllowed(folderAbs);
 
@@ -325,13 +325,13 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 				existing = [];
 			}
 			for (const name of existing) {
-				const abs = normalizeFs(join(folderAbs, name));
+				const abs = normalizeFs(pathe.join(folderAbs, name));
 				if (!abs.startsWith(`${folderAbs}/`)) continue;
 				assertAllowed(abs);
 				await writer.remove(abs);
 			}
 
-			const fileAbs = normalizeFs(join(folderAbs, fileName));
+			const fileAbs = normalizeFs(pathe.join(folderAbs, fileName));
 			if (!fileAbs.startsWith(`${folderAbs}/`)) {
 				throw Object.assign(new Error(`Unsafe asset path: ${fileName}`), {
 					status: 400,
@@ -341,15 +341,15 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			assertAllowed(fileAbs);
 			await writer.writeBytes(fileAbs, input.bytes);
 
-			const entryDir = dirname(entryPath);
-			const relForEntry = relative(entryDir, fileAbs).replace(/\\/g, "/");
+			const entryDir = pathe.dirname(entryPath);
+			const relForEntry = pathe.relative(entryDir, fileAbs).replace(/\\/g, "/");
 			const entryRelativePath = relForEntry.startsWith(".")
 				? relForEntry
 				: `./${relForEntry}`;
 
 			return {
 				path: entryRelativePath,
-				files: [relative(root, fileAbs).replace(/\\/g, "/")],
+				files: [pathe.relative(root, fileAbs).replace(/\\/g, "/")],
 			};
 		},
 
@@ -358,7 +358,7 @@ export function createWriteMode(options: CreateWriteModeOptions): WriteMode {
 			if (
 				!cleaned ||
 				cleaned.includes("..") ||
-				isAbsolute(cleaned) ||
+				pathe.isAbsolute(cleaned) ||
 				cleaned.startsWith("/")
 			) {
 				throw Object.assign(new Error(`Unsafe asset path: ${relFromRoot}`), {
@@ -385,7 +385,7 @@ function sanitizeAssetFolderName(name: string): string {
 }
 
 function sanitizeAssetFileName(name: string): string {
-	const base = basename(name.replace(/\\/g, "/"));
+	const base = pathe.basename(name.replace(/\\/g, "/"));
 	const cleaned = base.replace(/[^a-zA-Z0-9._-]/g, "_");
 	if (
 		!cleaned ||

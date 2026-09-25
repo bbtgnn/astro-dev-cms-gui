@@ -88,7 +88,7 @@
     },
     "packages/authoring": {
       "name": "@cms/authoring",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@cms/core": "workspace:*",
         "@sjsf/ajv8-validator": "catalog:",
@@ -97,7 +97,6 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@astrojs/svelte": "catalog:",
         "svelte": "catalog:",
         "svelte-check": "catalog:",
         "typescript": "catalog:",
@@ -108,7 +107,7 @@
     },
     "packages/core": {
       "name": "@cms/core",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "pathe": "^2.0.3",
         "zod": "catalog:",

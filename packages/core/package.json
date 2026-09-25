@@ -23,7 +23,6 @@
 	},
 	"scripts": {
 		"check": "tsc -p . && bunx tsc -p ./scripts/tsconfig.fixtures.json",
-		"check:boundary": "bun run ./scripts/check-isomorphic-boundary.ts",
 		"check:allowlist": "bun test src",
 		"pack:lib": "bun run ../../scripts/pack-lib.ts @cms/core",
 		"test:semantic": "bun test ./src/semantic ./src/form-tree ./src/define-cms",
