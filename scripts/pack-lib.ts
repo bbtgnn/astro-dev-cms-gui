@@ -25,30 +25,14 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+	assertPublishFace,
+	createPublishFace,
+	type PackageJson,
+} from "./publish-face-contract.ts";
 
 const root = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const STAGING = ".pack";
-
-type PackageJson = {
-	name?: string;
-	version?: string;
-	private?: boolean;
-	exports?: unknown;
-	files?: string[];
-	bin?: string | Record<string, string>;
-	dependencies?: Record<string, string>;
-	devDependencies?: Record<string, string>;
-	peerDependencies?: Record<string, string>;
-	scripts?: unknown;
-	[key: string]: unknown;
-};
-
-type PublishExport = {
-	types?: string;
-	import: string;
-	svelte?: string;
-	default?: string;
-};
 
 type PackConfig = {
 	dir: string;
@@ -121,127 +105,6 @@ function workspaceVersion(depName: string): string {
 	return pkg.version;
 }
 
-function rewriteDeps(
-	deps: Record<string, string> | undefined,
-	catalog: Record<string, string>,
-): Record<string, string> | undefined {
-	if (!deps) return undefined;
-	const out: Record<string, string> = {};
-	for (const [depName, spec] of Object.entries(deps)) {
-		if (spec === "workspace:*") {
-			out[depName] = workspaceVersion(depName);
-			continue;
-		}
-		if (spec.startsWith("workspace:")) {
-			const target = spec.slice("workspace:".length);
-			out[depName] = workspaceVersion(target);
-			continue;
-		}
-		if (spec === "catalog:" || spec.startsWith("catalog:")) {
-			const key = spec === "catalog:" ? depName : spec.slice("catalog:".length);
-			const range = catalog[key];
-			if (!range) throw new Error(`No catalog entry for ${key}`);
-			out[depName] = range;
-			continue;
-		}
-		out[depName] = spec;
-	}
-	return out;
-}
-
-/** Workspace face: subpath → `./src/…` (.ts / .astro / .svelte). */
-function workspaceSrcExports(
-	exportsField: unknown,
-	pkgLabel: string,
-): Record<string, string> {
-	if (
-		!exportsField ||
-		typeof exportsField !== "object" ||
-		Array.isArray(exportsField)
-	) {
-		throw new Error(
-			`${pkgLabel}: exports must be a map of ./src/* string paths`,
-		);
-	}
-	const out: Record<string, string> = {};
-	for (const [key, value] of Object.entries(exportsField)) {
-		if (typeof value !== "string") {
-			throw new Error(
-				`${pkgLabel} export "${key}": expected string path, got ${typeof value}`,
-			);
-		}
-		if (!value.startsWith("./src/")) {
-			throw new Error(
-				`${pkgLabel} export "${key}": expected ./src/*, got ${value}`,
-			);
-		}
-		if (
-			!value.endsWith(".ts") &&
-			!value.endsWith(".astro") &&
-			!value.endsWith(".svelte")
-		) {
-			throw new Error(
-				`${pkgLabel} export "${key}": expected ./src/*.{ts,astro,svelte}, got ${value}`,
-			);
-		}
-		out[key] = value;
-	}
-	return out;
-}
-
-/** Publish face: rewrite `./src/foo.*` → dist conditions by extension. */
-function publishExportsFromSrc(
-	srcExports: Record<string, string>,
-	opts: { svelte?: boolean } = {},
-): Record<string, PublishExport> {
-	const out: Record<string, PublishExport> = {};
-	for (const [key, srcPath] of Object.entries(srcExports)) {
-		if (srcPath.endsWith(".astro")) {
-			const distPath = `./dist/${srcPath.slice("./src/".length)}`;
-			out[key] = { import: distPath, default: distPath };
-			continue;
-		}
-		if (srcPath.endsWith(".svelte")) {
-			const distPath = `./dist/${srcPath.slice("./src/".length)}`;
-			out[key] = {
-				svelte: distPath,
-				import: distPath,
-				default: distPath,
-			};
-			continue;
-		}
-		const rel = srcPath.slice("./src/".length, -".ts".length);
-		const base = `./dist/${rel}`;
-		const entry: PublishExport = {
-			types: `${base}.d.ts`,
-			import: `${base}.js`,
-		};
-		if (opts.svelte) entry.svelte = `${base}.js`;
-		out[key] = entry;
-	}
-	return out;
-}
-
-/** Workspace `./src/foo.ts` → publish `./dist/foo.js` (e.g. `cms` bin). */
-function rewriteBinPath(binPath: string): string {
-	if (binPath.startsWith("./src/") && binPath.endsWith(".ts")) {
-		return `./dist/${binPath.slice("./src/".length, -".ts".length)}.js`;
-	}
-	throw new Error(
-		`publish bin must be ./src/*.ts (got ${binPath}); point package.json bin at src`,
-	);
-}
-
-function rewriteBin(bin: PackageJson["bin"]): PackageJson["bin"] | undefined {
-	if (bin == null) return undefined;
-	if (typeof bin === "string") return rewriteBinPath(bin);
-	const out: Record<string, string> = {};
-	for (const [name, binPath] of Object.entries(bin)) {
-		out[name] = rewriteBinPath(binPath);
-	}
-	return out;
-}
-
 /**
  * Owned publish filter (post-emit): drop colocated test/fixture artifacts from
  * `dist` so the tarball never ships them. Harmless when the build already
@@ -274,24 +137,6 @@ function filterPublishDist(distDir: string): void {
 	}
 }
 
-function publishPackageJson(
-	workspacePkg: PackageJson,
-	exportMap: PackageJson["exports"],
-	catalog: Record<string, string>,
-): PackageJson {
-	const pkg: PackageJson = { ...workspacePkg };
-	pkg.private = false;
-	pkg.files = ["dist"];
-	pkg.exports = exportMap;
-	pkg.dependencies = rewriteDeps(pkg.dependencies, catalog);
-	pkg.peerDependencies = rewriteDeps(pkg.peerDependencies, catalog);
-	const bin = rewriteBin(workspacePkg.bin);
-	if (bin != null) pkg.bin = bin;
-	delete pkg.devDependencies;
-	delete pkg.scripts;
-	return pkg;
-}
-
 /** Pack one named workspace package; return its absolute `.tgz` path. */
 export function packLib(name: PublishPackageName): PackedTarball {
 	const cfg = PACKAGES[name];
@@ -306,11 +151,6 @@ export function packLib(name: PublishPackageName): PackedTarball {
 	const stagingDir = path.join(pkgDir, STAGING);
 	const catalog = catalogVersions();
 	const workspacePkg = readJson(pkgPath);
-	const publishExports = publishExportsFromSrc(
-		workspaceSrcExports(workspacePkg.exports, name),
-		{ svelte: cfg.svelteCondition },
-	);
-
 	run(cfg.build, pkgDir);
 	filterPublishDist(path.join(pkgDir, "dist"));
 
@@ -320,7 +160,13 @@ export function packLib(name: PublishPackageName): PackedTarball {
 		recursive: true,
 	});
 
-	const publishPkg = publishPackageJson(workspacePkg, publishExports, catalog);
+	const publishPkg = createPublishFace(workspacePkg, {
+		packageName: name,
+		catalog,
+		workspaceVersion,
+		svelteCondition: cfg.svelteCondition,
+	});
+	assertPublishFace(path.join(pkgDir, "dist"), publishPkg);
 	writeFileSync(
 		path.join(stagingDir, "package.json"),
 		`${JSON.stringify(publishPkg, null, "\t")}\n`,
