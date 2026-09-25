@@ -4,7 +4,6 @@
  */
 import { createHash } from "node:crypto";
 
-/** Stable opaque token for a canonical JSON (or equivalent) document body. */
 export function opaqueRevision(raw: string): string {
 	return createHash("sha256").update(raw, "utf8").digest("hex");
 }

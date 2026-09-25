@@ -73,7 +73,6 @@ export {
 	UPLOAD_IMAGE_FAILURE_CODES,
 } from "./protocol";
 
-/** Thrown when the CMS JSON API returns a non-OK status outside typed outcomes. */
 export class CmsFetchError extends Error {
 	readonly status: number;
 	readonly code?: string;
@@ -169,10 +168,6 @@ async function outcomeFromResponse<C extends string>(
 }
 
 export type CmsFetchClient = Omit<CmsProtocol, "uploadImage"> & {
-	/**
-	 * Multipart image upload over the HTTP transport.
-	 * Browser FormData shape; server protocol uses bytes.
-	 */
 	uploadImage(input: {
 		file: Blob;
 		collection: string;
@@ -182,10 +177,6 @@ export type CmsFetchClient = Omit<CmsProtocol, "uploadImage"> & {
 	}): Promise<UploadImageResult>;
 };
 
-/**
- * Browser protocol client — same read/write surface as CmsProtocol, over HTTP.
- * Typed read/save/delete failures are outcomes; other transport failures throw CmsFetchError.
- */
 export function createFetchClient(
 	base = DEFAULT_CMS_API_MOUNT,
 ): CmsFetchClient {

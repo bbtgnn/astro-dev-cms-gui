@@ -63,7 +63,6 @@ export type BuildFsHostFromStampedOptions = {
 	>;
 	contentRoot: string;
 	writer: Writer;
-	/** True when `absPath` exists and is a regular file. */
 	fileExists: (absPath: string) => boolean;
 	/**
 	 * Explicit location escape for unstamped / custom loaders.
@@ -74,14 +73,9 @@ export type BuildFsHostFromStampedOptions = {
 
 export type BuildFsHostFromStampedResult = {
 	host: CmsHost;
-	/**
-	 * Materialized stamped collection schemas for form projection
-	 * (`projectSchemaFormModels` → `authoringPropsFromFormModels`).
-	 */
 	stampedSchemas: Readonly<Record<string, z.ZodType>>;
 };
 
-/** Map IR/Astro glob `base` onto write-mode folder relative to `contentRoot`. */
 function writeBaseFromGlob(
 	loaderBase: string | undefined,
 	collectionId: string,
@@ -117,7 +111,6 @@ function materializeSchema(
 	return schema as z.ZodType;
 }
 
-/** Materialize Astro function schemas with stamped Input `image()` (CMS path/id). */
 export { materializeSchema };
 
 function resolveCollectionLocation(
@@ -152,10 +145,6 @@ function resolveCollectionLocation(
 	};
 }
 
-/**
- * Normalize a content.config `collections` export (already loaded with shims /
- * Vite boot) into materialized `{ loader, schema }` entries.
- */
 export function collectionsFromContentConfigExport(mod: {
 	collections?: Readonly<Record<string, StampedCollectionConfig>>;
 }): Record<string, MaterializedStampedCollection> {
@@ -173,10 +162,6 @@ export function collectionsFromContentConfigExport(mod: {
 	return out;
 }
 
-/**
- * Assemble package-default CmsHost from stamped collections (no Vite, no node:fs).
- * Exported from `@cms/astro/testing` for demos and ticket 05 wiring.
- */
 export function buildFsHostFromStampedCollections(
 	options: BuildFsHostFromStampedOptions,
 ): BuildFsHostFromStampedResult {
@@ -217,7 +202,7 @@ export function buildFsHostFromStampedCollections(
 				try {
 					if (fileExists(abs)) return true;
 				} catch {
-					// continue
+					// Missing path under this allowPath — try the next.
 				}
 			}
 			return false;

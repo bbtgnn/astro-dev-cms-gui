@@ -1,5 +1,6 @@
 /**
  * Load content.config under content-proxy and emit CMS Input collection types.
+ * Uses sync shims — no Astro virtual `astro:content`.
  */
 
 import fs from "node:fs";
@@ -23,9 +24,7 @@ import {
 
 export type SyncCollectionTypesOptions = {
 	projectRoot: string;
-	/** Absolute path to content.config; default convention resolve. */
 	contentConfigEntry?: string;
-	/** Absolute output path; default `<projectRoot>/src/cms.types.d.ts`. */
 	outFile?: string;
 };
 
@@ -38,9 +37,6 @@ const syncContentShim = fileURLToPath(
 	new URL("../content-proxy/shims/astro-content-sync.ts", import.meta.url),
 );
 
-/**
- * Vite SSR-load content.config with sync shims (no Astro virtual `astro:content`).
- */
 export async function syncCmsCollectionTypes(
 	options: SyncCollectionTypesOptions,
 ): Promise<SyncCollectionTypesResult> {
@@ -95,7 +91,6 @@ export async function syncCmsCollectionTypes(
 	};
 }
 
-/** Materialize a single Astro collection config schema (for defineAstroCms). */
 export function materializeCollectionSchemas(
 	collections: Readonly<Record<string, StampedCollectionConfig>>,
 ): Record<string, z.ZodType> {

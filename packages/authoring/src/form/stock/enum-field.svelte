@@ -1,4 +1,3 @@
-<!-- Stock enum editor — FieldEditorProps + options from the shell bridge. -->
 <script lang="ts">
 	import type { FieldEditorProps } from "../../config/contracts";
 

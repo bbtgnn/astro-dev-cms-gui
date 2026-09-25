@@ -1,4 +1,3 @@
-<!-- Stub discriminated-union editor — FieldEditorProps. -->
 <script lang="ts">
 	import type { FieldEditorProps } from "../../config/contracts";
 

@@ -33,10 +33,6 @@ export function injectEditorIntoWidgetProps(
 	return next;
 }
 
-/**
- * Return an SJSF-compatible widget component that adapts WidgetCommonProps →
- * FieldEditorProps and renders `editor`.
- */
 export function wrapFieldEditorForSjsf(
 	editor: AnySvelteComponent,
 	options?: WrapFieldEditorOptions,

@@ -1,4 +1,3 @@
-<!-- Placeholder chrome for @cms/authoring -->
 <script lang="ts">
 let { label = "@cms/authoring" }: { label?: string } = $props();
 </script>

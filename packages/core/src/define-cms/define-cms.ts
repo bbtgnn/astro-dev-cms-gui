@@ -21,19 +21,15 @@ import type {
 	CollectionDescriptor,
 } from "../writer/collection-descriptors";
 
-/** Persisted image path (Input). Brand enables kind-aware form chrome. */
 export type CmsImage = string & { readonly __cmsKind: "image" };
 
-/** Persisted file path / id (Input). */
 export type CmsFile = string & { readonly __cmsKind: "file" };
 
-/** Persisted entry id for a content reference (Input). */
 export type CmsReference<C extends string = string> = string & {
 	readonly __cmsKind: "reference";
 	readonly __cmsCollection: C;
 };
 
-/** Editor mode for a collection (default `"collection"`). */
 export type CmsCollectionType = "collection" | "singleton";
 
 /**
@@ -45,7 +41,6 @@ export type CollectionLocation = {
 	readonly pathTemplate?: string;
 };
 
-/** Collection-scoped form builder typed to Input keys of `Data`. */
 export type FormBuilderFor<Data> = (f: ScopedFormTreeHelpers<Data>) => FormTree;
 
 export type CmsCollectionOptions<Schema extends z.ZodType> = {
@@ -56,7 +51,6 @@ export type CmsCollectionOptions<Schema extends z.ZodType> = {
 	readonly type?: CmsCollectionType;
 };
 
-/** One built collection from {@link CmsHelpers.collection}. */
 export type CmsCollectionBuilt<Schema extends z.ZodType = z.ZodType> = {
 	readonly schema: Schema;
 	readonly location: CollectionLocation;
@@ -91,20 +85,12 @@ function toDescriptor(
 	};
 }
 
-/** Helpers passed to the {@link defineCms} factory. */
 export type CmsHelpers = {
-	/**
-	 * Declare one collection: validation schema + write-back location +
-	 * optional form tree / preview / type.
-	 */
 	collection: <Schema extends z.ZodType>(
 		opts: CmsCollectionOptions<Schema>,
 	) => CmsCollectionBuilt<Schema>;
-	/** Stamped image leaf — Input is a branded path string. */
 	image: () => z.ZodType<CmsImage, CmsImage>;
-	/** Stamped file leaf — Input is a branded path string (v1 kinds stamp). */
 	file: () => z.ZodType<CmsFile, CmsFile>;
-	/** Stamped reference leaf targeting another collection name. */
 	reference: <C extends string>(
 		collection: C,
 	) => z.ZodType<CmsReference<C>, CmsReference<C>>;
@@ -116,19 +102,15 @@ export type DefineCmsResult<
 		CmsCollectionBuilt
 	>,
 > = {
-	/** Per-collection built defs (schema, location, resolved form, …). */
 	readonly collections: {
 		readonly [K in keyof Collections]: Collections[K] & {
 			readonly name: K & string;
 		};
 	};
-	/** Ready for `createCmsHost({ collections: … })`. */
 	readonly descriptors: CollectionDescriptor[];
-	/** Authoritative Zod schemas keyed by collection name. */
 	readonly schemas: {
 		readonly [K in keyof Collections]: Collections[K]["schema"];
 	};
-	/** Resolved form trees (when provided). */
 	readonly forms: {
 		readonly [K in keyof Collections]?: FormTree;
 	};

@@ -1,4 +1,3 @@
-<!-- Stock string editor — FieldEditorProps public contract. -->
 <script lang="ts">
 	import type { FieldEditorProps } from "../../config/contracts";
 

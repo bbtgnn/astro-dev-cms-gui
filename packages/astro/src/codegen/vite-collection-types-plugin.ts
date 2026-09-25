@@ -13,7 +13,6 @@ import {
 
 export type CmsCollectionTypesVitePluginOptions = {
 	projectRoot: string;
-	/** Absolute path to content.config. */
 	contentConfigEntry: string;
 };
 
@@ -22,10 +21,6 @@ type ViteDevServer = {
 	watcher: { on: (event: string, cb: (file: string) => void) => void };
 };
 
-/**
- * Emits `src/cms.types.d.ts` after server listen / content.config change.
- * Types-only — does not affect runtime host.
- */
 export function cmsCollectionTypesVitePlugin(
 	options: CmsCollectionTypesVitePluginOptions,
 ): CmsVitePlugin & {

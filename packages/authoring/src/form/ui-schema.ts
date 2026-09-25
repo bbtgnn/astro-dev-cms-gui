@@ -4,7 +4,6 @@
  * do not strip again in CmsForm or draft-eligibility.
  */
 
-/** Minimal sjsf uiSchema node (serializable options + optional component override). */
 export type UiSchemaNode = {
 	"ui:options"?: {
 		title?: string;

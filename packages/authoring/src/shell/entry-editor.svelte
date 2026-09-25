@@ -24,7 +24,6 @@ let {
 	/** Parent-owned session — EntryEditor does not dispose it. */
 	session: AuthoringSession;
 	collection: string;
-	/** Lowered IR form model (JSON Schema + uiSchema) from host editor configuration. */
 	schema?: EditorCollectionInput | null;
 	onSaved?: (entry: ContentEntry) => void;
 	onDeleted?: () => void;

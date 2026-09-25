@@ -1,6 +1,3 @@
-/**
- * In-memory writer for tests without disk.
- */
 import type { Writer } from "./types";
 
 type StoreValue = string | Uint8Array;

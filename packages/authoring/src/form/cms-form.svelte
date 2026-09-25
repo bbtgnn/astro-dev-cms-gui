@@ -1,4 +1,3 @@
-<!-- @cms/authoring — sjsf wrap over IR-lowered JSON Schema + uiSchema -->
 <script lang="ts">
 import { createFormValidator } from "@sjsf/ajv8-validator";
 import {
@@ -33,11 +32,9 @@ let {
 }: {
 	/** Ajv-safe JSON Schema from IR form-model lowering (ADR-0019). */
 	schema?: Record<string, unknown> | null;
-	/** sjsf uiSchema from IR lowering / stock editors. */
 	uiSchema?: UiSchemaNode;
 	value?: Record<string, unknown>;
 	title?: string;
-	/** Entry context for image upload (and similar). */
 	collection?: string;
 	entryId?: string;
 	/** Capability-aware image upload seam (omit / null → upload disabled). */

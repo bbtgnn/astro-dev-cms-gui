@@ -43,7 +43,6 @@ import {
 	resolveProjectEntry,
 } from "./vite-config-plugin";
 
-/** Product install — no options. See {@link cmsHarness} for escapes. */
 export type CmsIntegrationOptions = Record<string, never>;
 
 /**
@@ -68,12 +67,7 @@ export type CmsHarnessOptions = {
 	 * - `false` → skip protocol route / host virtual
 	 */
 	host?: string | false;
-	/** Write-back root. Defaults to `src/content`. */
 	contentRoot?: string;
-	/**
-	 * Shell page pattern. Defaults to `/cms` when content.config resolves;
-	 * `false` skips.
-	 */
 	shellPath?: string | false;
 	/**
 	 * @deprecated No-op. Product `cms()` never generates `content.config`.
@@ -81,7 +75,6 @@ export type CmsHarnessOptions = {
 	 * do not break typecheck.
 	 */
 	generate?: boolean;
-	/** Protocol HTTP mount prefix (default `/cms/api`). */
 	mount?: string;
 	allowInProd?: boolean;
 	/**
@@ -95,7 +88,6 @@ export type CmsHarnessOptions = {
 	requireContentConfig?: boolean;
 } & Partial<Pick<CmsDispatcherOptions, "protocol" | "isDev" | "readAsset">>;
 
-/** Minimal Astro `astro:config:setup` hook params we use. */
 type AstroConfigSetupParams = {
 	config: { root: string | URL };
 	updateConfig: (config: {
@@ -117,9 +109,7 @@ type AstroConfigSetupParams = {
 
 export type CmsIntegration = {
 	name: "@cms/astro";
-	/** Mount prefix without trailing slash (default `/cms/api`). */
 	mount: string;
-	/** Shell page pattern when injectRoute runs; omitted when skipped. */
 	shellPath?: string;
 	/**
 	 * Pass to `defineMiddleware(...)` when harness uses `host: false` and
@@ -158,10 +148,6 @@ function missingContentConfigMessage(projectRoot: string): string {
 	].join("\n");
 }
 
-/**
- * Shared install wiring. Product callers use {@link cms}; tests use
- * {@link cmsHarness}.
- */
 export function createCmsIntegration(
 	options: CmsHarnessOptions = {},
 ): CmsIntegration {
@@ -192,12 +178,11 @@ export function createCmsIntegration(
 	}
 
 	// Optimistic shellPath before setup resolves convention files (tests / docs).
-	if (shellPathOption === false) {
-		// leave unset
-	} else if (shellPathOption != null) {
-		integration.shellPath = normalizeShellPath(shellPathOption);
-	} else {
-		integration.shellPath = "/cms";
+	if (shellPathOption !== false) {
+		integration.shellPath =
+			shellPathOption != null
+				? normalizeShellPath(shellPathOption)
+				: "/cms";
 	}
 
 	integration.hooks = {
@@ -328,11 +313,6 @@ export function createCmsIntegration(
 	return integration;
 }
 
-/**
- * Convention-first install — zero options.
- * Requires `src/content.config.ts` (hard-fail in `astro:config:setup` if missing).
- * Optional `src/cms.config.ts` overlay / `src/cms.components.ts`.
- */
 export function cms(): CmsIntegration {
 	return createCmsIntegration({ requireContentConfig: true });
 }

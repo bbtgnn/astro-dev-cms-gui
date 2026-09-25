@@ -8,13 +8,10 @@
 
 import type { FormTree, ScopedFormTreeHelpers } from "@cms/core/form-tree";
 
-/** Editor mode for a collection (default `"collection"`). */
 export type CmsCollectionType = "collection" | "singleton";
 
-/** Persisted image path (Input). Brand enables kind-aware chrome helpers. */
 export type CmsImage = string & { readonly __cmsKind: "image" };
 
-/** Persisted entry id for a content reference (Input). */
 export type CmsReference<C extends string = string> = string & {
 	readonly __cmsKind: "reference";
 	readonly __cmsCollection: C;
@@ -29,24 +26,17 @@ export interface CmsCollections {}
 
 export type CmsCollectionName = keyof CmsCollections;
 
-/** Field kind map (optional codegen companion for UI conditionals). */
 // biome-ignore lint/suspicious/noEmptyInterface: augmentation target for cms.types.d.ts
 export interface CmsFieldKinds {}
 
-/** Collection-scoped form builder: helpers typed to Input keys of `Data`. */
 export type FormBuilderFor<Data> = (f: ScopedFormTreeHelpers<Data>) => FormTree;
 
 export type CmsCollectionOptionsFor<Data> = {
 	readonly previewUrl?: (id: string) => string | null;
 	readonly type?: CmsCollectionType;
-	/**
-	 * Presentation form tree (layout + field refs), or a callback that builds
-	 * one with helpers scoped to this collection’s Input keys.
-	 */
 	readonly form?: FormTree | FormBuilderFor<Data>;
 };
 
-/** Options when generated {@link CmsCollections} is available. */
 export type DefineCmsOptionsFromGenerated = {
 	readonly [K in CmsCollectionName]?: CmsCollections[K] extends infer Data
 		? CmsCollectionOptionsFor<Data>

@@ -1,6 +1,3 @@
-/**
- * Shared DTOs for write-back.
- */
 import type { z } from "zod";
 import type { CollectionDescriptor } from "./collection-descriptors";
 
@@ -25,7 +22,6 @@ export type UpsertEntryInput = {
 	expectedRevision: string | null;
 };
 
-/** Low-level read/write within allowlisted roots (injected into write mode). */
 export type Writer = {
 	readText(path: string): Promise<string>;
 	writeText(path: string, contents: string): Promise<void>;
@@ -39,14 +35,12 @@ export type Writer = {
 export type WrittenImageAssets = {
 	/** Path relative to the entry JSON file (Astro `image()` input), e.g. `./hello/cover/photo.jpg`. */
 	path: string;
-	/** Paths written, relative to content root. */
 	files: string[];
 };
 
 export type WriteImageAssetsInput = {
 	collection: string;
 	id: string;
-	/** Folder name under the entry id dir (default `cover`). */
 	name?: string;
 	/** Sanitized basename is applied by write-mode. */
 	filename: string;
@@ -75,7 +69,6 @@ export type WriteMode = {
 	 * Clears prior files in that folder, then returns the entry-relative path.
 	 */
 	writeImageAssets(input: WriteImageAssetsInput): Promise<WrittenImageAssets>;
-	/** Read an allowlisted file under the content root (dev asset serving). */
 	readAsset(relFromRoot: string): Promise<ReadAssetResult>;
 };
 
@@ -86,7 +79,6 @@ export type CreateCmsHostConfig = {
 
 type CreateCmsHostShared = {
 	root: string;
-	/** Defaults to {@link nodeFsWriter} when omitted. */
 	writer?: Writer;
 	/**
 	 * Optional Content Layer id index keyed by collection name.

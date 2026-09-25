@@ -56,9 +56,6 @@ export type {
 } from "../collection-types";
 export { createFormTreeHelpers, createScopedFormTreeHelpers };
 
-/**
- * Per-collection presentation options (loose `form` when codegen absent).
- */
 export type CmsCollectionOptions = {
 	readonly previewUrl?: (id: string) => string | null;
 	readonly type?: CmsCollectionType;

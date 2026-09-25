@@ -30,6 +30,7 @@ product identity. Astro is the first host; not a hosted git CMS control plane.
 - **Product name:** **Dev CMS** (`dev-cms` slug); npm packages stay `@cms/*` (ADR-0026).
 - **Checks:** `bun run check && bun run check:allowlist && bun run lint`.
 - **Svelte files:** kebab-case (`authoring-app.svelte`); SvelteKit route files (`+page.svelte`) unchanged.
+- **Comments:** Prefer explicit code. A comment is an exception — keep it only for _why_ (a non-obvious constraint, tradeoff, or invariant the code cannot say).
 
 ## Where work belongs
 

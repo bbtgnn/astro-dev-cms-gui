@@ -29,7 +29,6 @@ export function assertSafeEntryId(id: string): void {
 	}
 }
 
-/** `id` → relative path under a collection base (`docs/intro` → `docs/intro.json`). */
 export function entryRelPath(
 	id: string,
 	ext: EntryExtension = DEFAULT_ENTRY_EXTENSION,
@@ -38,7 +37,6 @@ export function entryRelPath(
 	return `${id}.${ext}`;
 }
 
-/** Strip `.json`; returns null if not an entry path. */
 export function idFromRelPath(relPath: string): string | null {
 	const normalized = relPath.replace(/\\/g, "/");
 	if (normalized.endsWith(".json")) return normalized.slice(0, -".json".length);
@@ -61,25 +59,16 @@ export function applyPathTemplate(
 }
 
 export type ResolveEntryOptions = {
-	/** Extension on create when missing. Default `json`. */
 	preferredExt?: EntryExtension;
-	/**
-	 * When true (default), return the create path if the file does not exist.
-	 * When false, return null if missing.
-	 */
 	forCreate?: boolean;
 };
 
 export type ResolvedEntry = {
 	absolutePath: string;
 	ext: EntryExtension;
-	/** True when the entry file did not exist yet. */
 	created: boolean;
 };
 
-/**
- * Resolve `(baseDir, id)` to an absolute JSON entry path.
- */
 export async function resolveEntryPath(
 	exists: (absolutePath: string) => Promise<boolean>,
 	baseDir: string,
@@ -105,7 +94,6 @@ export async function resolveEntryPath(
 	};
 }
 
-/** Writer-backed exists probe (ENOENT → false). */
 export function writerExists(
 	readText: (path: string) => Promise<string>,
 ): (absolutePath: string) => Promise<boolean> {

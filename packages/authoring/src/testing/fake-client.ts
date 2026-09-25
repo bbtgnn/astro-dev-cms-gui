@@ -18,7 +18,6 @@ import {
 import type { AuthoringClient } from "../types";
 
 export type FakeClientOptions = {
-	/** Defaults to `resolveCmsCapabilities({ deleteEntry: true })`. */
 	capabilities?: CmsCapabilities;
 	entries: ContentEntry[];
 	/** When set, next matching upsert returns conflict and leaves store unchanged. */

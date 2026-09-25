@@ -1,4 +1,3 @@
-<!-- Stub literal editor — FieldEditorProps. -->
 <script lang="ts">
 	import type { FieldEditorProps } from "../../config/contracts";
 

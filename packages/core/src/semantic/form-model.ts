@@ -6,11 +6,6 @@
 
 import type { OpaqueBinding, OpaqueProps, SemanticKind } from "./types";
 
-// ---------------------------------------------------------------------------
-// Field descriptors (durable)
-// ---------------------------------------------------------------------------
-
-/** Client-facing constraint summary for scalars. */
 export type FormConstraintSummary =
 	| { readonly method: "min"; readonly value: number }
 	| { readonly method: "max"; readonly value: number }
@@ -22,7 +17,6 @@ export type FormConstraintSummary =
 	  };
 
 export type FormFieldDescriptor = {
-	/** Path-local durable id (e.g. `title`, `seo.description`). */
 	readonly path: string;
 	readonly id: string;
 	readonly label?: string;
@@ -33,7 +27,6 @@ export type FormFieldDescriptor = {
 	readonly constraints?: readonly FormConstraintSummary[];
 	readonly enumValues?: readonly [string, ...string[]];
 	readonly literalValue?: string | number | boolean;
-	/** Target collection for `reference` kinds. */
 	readonly referenceCollection?: string;
 	/** Opaque editor override token (host resolves via Vite). */
 	readonly component?: OpaqueBinding;
@@ -41,10 +34,6 @@ export type FormFieldDescriptor = {
 	readonly wrapper?: OpaqueBinding;
 	readonly props?: OpaqueProps;
 };
-
-// ---------------------------------------------------------------------------
-// Layout AST (presentation + durable leaf refs)
-// ---------------------------------------------------------------------------
 
 export type FormLayoutFieldRef = {
 	readonly kind: "field";
@@ -62,7 +51,6 @@ export type FormLayoutObject = {
 export type FormLayoutArray = {
 	readonly kind: "array";
 	readonly path: string;
-	/** Item layout when the element schema is an object; otherwise omitted. */
 	readonly item?: FormLayoutNode;
 	readonly component?: OpaqueBinding;
 	readonly wrapper?: OpaqueBinding;
@@ -145,7 +133,6 @@ export type CollectionFormModel = {
 	readonly collectionId: string;
 	/** Presentation + durable refs — never invents persisted keys. */
 	readonly layout: FormLayoutNode;
-	/** Durable field descriptors keyed by path. */
 	readonly fields: Readonly<Record<string, FormFieldDescriptor>>;
 	/**
 	 * Portable JSON Schema for client structural validation (persisted input).

@@ -28,10 +28,6 @@ export type OpenAuthoringSessionOptions = {
 	timers?: AutosaveTimers;
 };
 
-/**
- * Open a guarded authoring session when an editor schema is available.
- * Returns `null` when `schema` is missing (fail closed — no write-back path).
- */
 export function openAuthoringSession(
 	options: OpenAuthoringSessionOptions,
 ): AuthoringSession | null {

@@ -13,10 +13,8 @@ import type {
 	SemanticKind,
 } from "@cms/core/semantic";
 
-/** Default stock editor identity for a semantic kind. */
 export type StockEditorEntry = {
 	readonly kind: SemanticKind;
-	/** Foundational sjsf widget key when applicable. */
 	readonly sjsfWidget?: string;
 	/**
 	 * Theme / registry component key (e.g. `imageField`), or a stub marker.
@@ -30,7 +28,6 @@ export type StockEditorRegistry = Readonly<
 	Record<SemanticKind, StockEditorEntry>
 >;
 
-/** Built-in stock map: semantic kind → default editor. */
 export const stockEditorRegistry: StockEditorRegistry = {
 	string: { kind: "string", sjsfWidget: "textWidget" },
 	number: { kind: "number", sjsfWidget: "numberWidget" },
@@ -70,16 +67,8 @@ export function getStockEditor(
 	return registry[kind];
 }
 
-/**
- * Resolve a live binding token through the host Vite graph.
- * Default identity — hosts pass a map/lookup from opaque IR tokens.
- */
 export type LiveBindingResolver = (token: OpaqueBinding) => unknown;
 
-/**
- * Look up string catalog keys in a Vite components map; pass other tokens
- * through unchanged (unknown / non-string tokens).
- */
 export function resolveCatalogBinding(
 	catalog: Readonly<Record<string, unknown>>,
 ): LiveBindingResolver {
@@ -103,10 +92,6 @@ export type ResolvedFieldEditor =
 			readonly props?: FormFieldDescriptor["props"];
 	  };
 
-/**
- * Choose the editor for a field descriptor.
- * Opaque `component` on the IR/form model wins over stock-by-kind.
- */
 export function resolveFieldEditor(
 	field: FormFieldDescriptor,
 	options?: {

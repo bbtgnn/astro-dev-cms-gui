@@ -18,26 +18,19 @@ import type {
 } from "../types";
 
 export type AuthoringPropsOptions = {
-	/** Injected protocol client (tests / custom transport). Default: fetch client. */
 	readonly client?: AuthoringClient;
-	/** Mount base when creating the default fetch client. */
 	readonly apiBase?: string;
 	readonly getPreviewUrl?: GetPreviewUrl;
 };
 
-/** Alias kept for Kit / older call sites. */
 export type AuthoringPropsFromDefineCmsOptions = AuthoringPropsOptions;
 
-/** Props shape accepted by {@link AuthoringApp}. */
 export type AuthoringAppProps = {
 	readonly client: AuthoringClient;
 	readonly collections: EditorCollections;
 	readonly getPreviewUrl: GetPreviewUrl;
 };
 
-/**
- * Deep browser assemble: form models + catalog → AuthoringApp props.
- */
 export function authoringPropsFromFormModels(
 	formModels: FormModelsByCollection,
 	catalog: Readonly<Record<string, unknown>>,
@@ -57,10 +50,6 @@ export function authoringPropsFromFormModels(
 	};
 }
 
-/**
- * Portable defineCms sugar: project schemas (+ form trees) → form models →
- * {@link authoringPropsFromFormModels}.
- */
 export function authoringPropsFromDefineCms(
 	config: Pick<DefineCmsResult, "schemas" | "forms" | "getPreviewUrl">,
 	catalog: Readonly<Record<string, unknown>>,

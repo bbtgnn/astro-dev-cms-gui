@@ -26,13 +26,11 @@ export type CmsErr<C extends string = string> = {
 	ok: false;
 	code: C;
 	message: string;
-	/** Present for authoritative validation failures. */
 	issues?: unknown;
 };
 
 export type CmsResult<T, C extends string = string> = CmsOk<T> | CmsErr<C>;
 
-/** Read-side failure codes. */
 export type GetEntryFailureCode = "not_found" | "forbidden" | "conflict";
 
 export type GetEntryResult = CmsResult<ContentEntry, GetEntryFailureCode>;
@@ -55,9 +53,7 @@ export type SaveEntryResult = CmsResult<ContentEntry, SaveEntryFailureCode>;
  * Limits are advisory for the authoring UI — no transport details.
  */
 export type CmsAssetsCapability = {
-	/** Whether image upload + write-back is available on this implementation. */
 	uploadImage: boolean;
-	/** Max source upload size in bytes. */
 	maxUploadBytes: number;
 };
 
@@ -66,13 +62,10 @@ export type CmsAssetsCapability = {
  * No implementation or transport details.
  */
 export type CmsCapabilities = {
-	/** Whether content-entry deletion is available on this implementation. */
 	deleteEntry: boolean;
-	/** Asset upload support and relevant limits. */
 	assets: CmsAssetsCapability;
 };
 
-/** Partial override for {@link resolveCmsCapabilities}. */
 export type CmsCapabilitiesInput = {
 	deleteEntry?: boolean;
 	assets?: Partial<CmsAssetsCapability>;
@@ -80,7 +73,6 @@ export type CmsCapabilitiesInput = {
 
 export type GetCapabilitiesResult = CmsOk<CmsCapabilities>;
 
-/** Delete failure codes, including capability negotiation. */
 export type DeleteEntryFailureCode =
 	| "not_found"
 	| "forbidden"
@@ -93,14 +85,12 @@ export type DeleteEntryResult = CmsResult<null, DeleteEntryFailureCode>;
 export type UploadImageInput = {
 	collection: string;
 	id: string;
-	/** Folder name under the entry id dir (default `cover`). */
 	name?: string;
 	bytes: Uint8Array;
 	/** Original filename; sanitized basename is written under the field folder. */
 	filename?: string;
 };
 
-/** Upload failure codes, including capability negotiation. */
 export type UploadImageFailureCode =
 	| "forbidden"
 	| "conflict"
@@ -112,10 +102,6 @@ export type UploadImageResult = CmsResult<
 	UploadImageFailureCode
 >;
 
-/**
- * Principal external seam for the authoring shell.
- * Read and guarded-save ops return typed outcomes.
- */
 export type CmsProtocol = {
 	getCapabilities(): Promise<GetCapabilitiesResult>;
 	listCollections(): Promise<ListCollectionsResult>;
@@ -123,10 +109,6 @@ export type CmsProtocol = {
 	getEntry(collection: string, id: string): Promise<GetEntryResult>;
 	upsertEntry(input: UpsertEntryInput): Promise<SaveEntryResult>;
 	deleteEntry(collection: string, id: string): Promise<DeleteEntryResult>;
-	/**
-	 * Store original upload bytes beside the entry and return the entry-relative path.
-	 * Implementations without asset support return `unsupported_capability`.
-	 */
 	uploadImage(input: UploadImageInput): Promise<UploadImageResult>;
 };
 
@@ -147,13 +129,11 @@ export function cmsErr<C extends string>(
 	};
 }
 
-/** Default asset limits advertised by the filesystem / memory adapter. */
 export const DEFAULT_CMS_ASSETS_CAPABILITY: CmsAssetsCapability = {
 	uploadImage: true,
 	maxUploadBytes: 10 * 1024 * 1024,
 };
 
-/** Default capabilities when an implementation does not override. */
 export const DEFAULT_CMS_CAPABILITIES: CmsCapabilities = {
 	deleteEntry: true,
 	assets: { ...DEFAULT_CMS_ASSETS_CAPABILITY },
@@ -175,7 +155,6 @@ export function resolveCmsCapabilities(
 	};
 }
 
-/** Default human messages for protocol failure codes (transports may override). */
 export const CMS_ERR_DEFAULT_MESSAGE: Record<string, string> = {
 	not_found: "Not found",
 	forbidden: "Forbidden",
@@ -184,7 +163,6 @@ export const CMS_ERR_DEFAULT_MESSAGE: Record<string, string> = {
 	unsupported_capability: "Capability is not supported",
 };
 
-/** Op-scoped failure vocabularies — single source for adapters and HTTP clients. */
 export const GET_ENTRY_FAILURE_CODES = [
 	"not_found",
 	"forbidden",
@@ -212,7 +190,6 @@ export const UPLOAD_IMAGE_FAILURE_CODES = [
 	"unsupported_capability",
 ] as const satisfies readonly UploadImageFailureCode[];
 
-/** Map protocol failure codes to HTTP status for thin transports. */
 export function httpStatusForCmsErr(code: string): number {
 	switch (code) {
 		case "not_found":

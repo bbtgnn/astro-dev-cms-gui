@@ -56,20 +56,15 @@ const defaultTimers: AutosaveTimers = {
 };
 
 export type AutosaveController = {
-	/** Form changed — validates, updates status, schedules coalesced write. */
 	handleChange: (data: Record<string, unknown>) => void;
 	/** Flush immediately (explicit Save). Skips if client-invalid / empty queue. */
 	flushNow: () => void;
 	/** Cancel timers; in-flight responses become stale. */
 	dispose: () => void;
-	/** Test / debug: whether a write is in flight. */
 	isInFlight: () => boolean;
 };
 
-/**
- * Create an autosave controller.
- * Call `handleChange` only for author edits (not the initial form bind).
- */
+/** Call `handleChange` only for author edits (not the initial form bind). */
 export function createAutosaveController(
 	options: AutosaveControllerOptions,
 ): AutosaveController {

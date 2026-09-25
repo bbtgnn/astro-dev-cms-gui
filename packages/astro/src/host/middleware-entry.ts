@@ -6,7 +6,6 @@
  * Host construction: `createHost` from `virtual:@cms/host`.
  */
 
-// Virtuals are provided by Vite plugins from createCmsIntegration.
 import { createHost } from "virtual:@cms/host";
 import { allowInProd, mount } from "virtual:@cms/integration-options";
 import { createCmsMiddleware } from "../http";

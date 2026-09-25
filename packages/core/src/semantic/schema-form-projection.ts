@@ -38,7 +38,6 @@ export {
 
 export type ProjectSchemaFormOptions = {
 	readonly collectionId?: string;
-	/** Optional form tree — layout + field-ref chrome. */
 	readonly form?: FormTree;
 };
 
@@ -118,9 +117,7 @@ function kindFromJson(
 
 type WalkState = {
 	fields: Record<string, FormFieldDescriptor>;
-	/** Default schema-derived layout node per durable path (for form-tree placement). */
 	defaultLayoutByPath: Record<string, FormLayoutNode>;
-	/** Ordered direct child keys for object paths (`""` = collection root). */
 	childKeysByPath: Record<string, string[]>;
 };
 
@@ -489,9 +486,6 @@ export function projectSchemaFormModel(
 		);
 	}
 	state.childKeysByPath[""] = rootKeys;
-
-	// Fix field descriptors that used raw json for constraints but ensure
-	// image/ref kinds win from stamps (already handled via stamp in kindFromJson).
 
 	const layout: FormLayoutNode =
 		options?.form !== undefined

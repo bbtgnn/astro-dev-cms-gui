@@ -12,11 +12,6 @@ import type { Schema } from "@sjsf/form";
 
 export type DraftEligibility = (data: Record<string, unknown>) => boolean;
 
-/**
- * Build a structural draft-write gate from an Ajv-safe JSON Schema
- * (`EditorCollectionInput.schema`). Host authoritative Zod remains separate
- * (async / env checks).
- */
 export function createDraftEligibility(
 	jsonSchema: Record<string, unknown>,
 ): DraftEligibility {

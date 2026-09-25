@@ -39,35 +39,24 @@ export const CMS_INTEGRATION_OPTIONS_VIRTUAL_ID =
 const CMS_INTEGRATION_OPTIONS_RESOLVED_ID = `\0${CMS_INTEGRATION_OPTIONS_VIRTUAL_ID}`;
 
 export type CmsContentConfigVitePluginOptions = {
-	/** Absolute path to the user-authored Astro content.config module. */
 	entry: string;
 };
 
 export type CmsConfigVitePluginOptions = {
-	/**
-	 * Absolute path to the optional overlay module (`cms.config.ts`).
-	 * Omit for a stub (empty forms, null preview).
-	 */
 	entry?: string;
 };
 
 export type CmsComponentsVitePluginOptions = {
-	/**
-	 * Absolute path to the Vite-only components catalog, or omit for an empty
-	 * default export (stock editors only).
-	 */
 	entry?: string;
 };
 
 export type CmsHostVitePluginOptions = {
-	/** Absolute path to the module that exports `createHost`. */
 	entry: string;
 };
 
 export type CmsIntegrationOptionsVitePluginOptions = {
 	mount: string;
 	allowInProd?: boolean;
-	/** Absolute filesystem root for write-back (default host). */
 	contentRoot: string;
 };
 
@@ -83,10 +72,6 @@ export type CmsVitePlugin = {
 	) => string | null | undefined | Promise<string | null | undefined>;
 };
 
-/**
- * Resolve a project-relative or absolute module path against the
- * Astro/Vite project root.
- */
 export function resolveProjectEntry(
 	entry: string,
 	projectRoot: string,
@@ -109,10 +94,6 @@ export function resolveConventionEntry(
 	return undefined;
 }
 
-/**
- * Expose `virtual:@cms/content-config` as a re-export of the user content.config.
- * Host / Astro SSR only — never import from the browser authoring shell.
- */
 export function cmsContentConfigVitePlugin(
 	options: CmsContentConfigVitePluginOptions,
 ): CmsVitePlugin {
@@ -138,10 +119,6 @@ export function cmsContentConfigVitePlugin(
 	};
 }
 
-/**
- * Expose `virtual:@cms/config` as the optional overlay module (or a stub).
- * Entry must be Svelte-free (string catalog keys only).
- */
 export function cmsConfigVitePlugin(
 	options: CmsConfigVitePluginOptions = {},
 ): CmsVitePlugin {
@@ -180,9 +157,6 @@ export function cmsConfigVitePlugin(
 	};
 }
 
-/**
- * Expose `virtual:@cms/components` as the live Svelte catalog (or `{}`).
- */
 export function cmsComponentsVitePlugin(
 	options: CmsComponentsVitePluginOptions = {},
 ): CmsVitePlugin {
@@ -207,10 +181,6 @@ export function cmsComponentsVitePlugin(
 	};
 }
 
-/**
- * Expose `virtual:@cms/host` as a re-export of `createHost`.
- * Loaded by the package-owned Astro middleware entrypoint at request time.
- */
 export function cmsHostVitePlugin(
 	options: CmsHostVitePluginOptions,
 ): CmsVitePlugin {
@@ -231,9 +201,6 @@ export function cmsHostVitePlugin(
 	};
 }
 
-/**
- * Expose serializable integration options to the middleware / default host.
- */
 export function cmsIntegrationOptionsVitePlugin(
 	options: CmsIntegrationOptionsVitePluginOptions,
 ): CmsVitePlugin {

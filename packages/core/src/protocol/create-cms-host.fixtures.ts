@@ -21,10 +21,8 @@ const descriptor: CollectionDescriptor = {
 	config: { base: "posts" },
 };
 
-// Config door — OK
 void createCmsHost({ root: "/tmp", config });
 
-// Collections door — OK (allowPaths optional)
 void createCmsHost({
 	root: "/tmp",
 	collections: [descriptor],
@@ -37,7 +35,6 @@ void createCmsHost({
 	allowPaths: ["posts"],
 });
 
-// Mixed doors — must fail
 // @ts-expect-error config and collections are mutually exclusive
 void createCmsHost({
 	root: "/tmp",

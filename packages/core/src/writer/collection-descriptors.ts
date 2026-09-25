@@ -7,7 +7,6 @@ import type { z } from "zod";
 import { idFromRelPath } from "./path-resolve";
 import type { Writer } from "./types";
 
-/** Collection chrome for write-mode path / label / visibility. */
 export type CollectionConfig = {
 	label?: string;
 	hidden?: boolean;
@@ -18,13 +17,11 @@ export type CollectionConfig = {
 	extension?: "json";
 };
 
-/** One collection’s write-back descriptor (name, base, authoritative schema). */
 export type CollectionDescriptor = {
 	name: string;
 	label?: string;
 	schema: z.ZodType;
 	config?: CollectionConfig;
-	/** Entry directory relative to write-mode `root`. */
 	base: string;
 	loaderHint?: string;
 	hidden?: boolean;
@@ -34,10 +31,6 @@ function normalizeFs(p: string): string {
 	return path.resolve(p).replace(/\\/g, "/");
 }
 
-/**
- * FS-scan JSON entry ids under `baseDir` (`id` = relpath without extension).
- * Prefers listing via `writer.list` (works for memory + node writers).
- */
 export async function scanEntryIds(
 	writer: Writer,
 	baseDir: string,

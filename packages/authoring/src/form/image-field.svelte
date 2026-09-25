@@ -1,6 +1,3 @@
-<!--
-  Stock image editor — FieldEditorProps; upload via cms.entry + cms.assets context.
--->
 <script lang="ts">
 	import { getContext } from "svelte";
 	import type { FieldEditorProps } from "../config/contracts";
@@ -12,7 +9,6 @@
 
 	/** Injected upload seam — no hard-coded transport URL (ADR-0005 / ADR-0008). */
 	export type CmsAssetsFieldContext = {
-		/** From protocol capabilities — false → disabled, no network calls. */
 		uploadEnabled: boolean;
 		maxUploadBytes?: number;
 		uploadImage?: (input: {

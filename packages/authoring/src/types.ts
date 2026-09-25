@@ -6,10 +6,6 @@
 import type { CmsFetchClient } from "@cms/core/fetch-client";
 import type { UiSchemaNode } from "./form/ui-schema";
 
-/**
- * Protocol client surface used by the authoring application.
- * Prefer injecting a fetch client (or any CmsProtocol-compatible impl).
- */
 export type AuthoringClient = Pick<
 	CmsFetchClient,
 	| "getCapabilities"
@@ -28,12 +24,10 @@ export type AuthoringClient = Pick<
  * defineCms sugar) — do not pass raw CollectionFormModel jsonSchema here.
  */
 export type EditorCollectionInput = {
-	/** Ajv-safe JSON Schema (post-lower). */
 	readonly schema: Record<string, unknown>;
 	readonly uiSchema?: UiSchemaNode;
 };
 
-/** Host-compiled editor schemas (form model → JSON Schema + uiSchema). */
 export type EditorCollections = Record<string, EditorCollectionInput>;
 
 /**
@@ -46,7 +40,6 @@ export type GetPreviewUrl = (
 	id: string,
 ) => string | null | undefined;
 
-/** Normalize collection input to CmsForm schema + optional uiSchema. */
 export function resolveEditorCollection(input: EditorCollectionInput): {
 	schema: Record<string, unknown>;
 	uiSchema?: UiSchemaNode;

@@ -44,7 +44,6 @@ type ErrLike = {
 };
 
 export type AdaptProtocolOptions = {
-	/** Override optional protocol capabilities (defaults: deletion + assets). */
 	capabilities?: CmsCapabilitiesInput;
 };
 
@@ -58,7 +57,6 @@ export type CreateCmsProtocolOptions =
 	| CreateCmsHostFromConfigOptions
 	| CreateCmsHostFromCollectionsOptions;
 
-/** Re-export host construction options (no pathMap / fakeCatalog). */
 export type {
 	CreateCmsHostConfig,
 	CreateCmsHostFromCollections,
@@ -66,10 +64,8 @@ export type {
 	CreateCmsHostOptions,
 } from "../writer/types";
 
-/** WriteMode throw codes that surface as protocol `conflict`. */
 const CONFLICT_IMPL_CODES = new Set(["REVISION_CONFLICT"]);
 
-/** WriteMode throw codes that surface as protocol `validation_failed` on upload. */
 const UPLOAD_VALIDATION_IMPL_CODES = new Set([
 	"VALIDATION_FAILED",
 	"UNSAFE_ASSET",
@@ -81,10 +77,6 @@ function allows<C extends string>(allowed: ReadonlySet<C>, code: C): boolean {
 	return allowed.has(code);
 }
 
-/**
- * Map WriteMode throws to protocol failure codes.
- * Allowed sets are subsets of the op tables in protocol.ts.
- */
 function mapWriteModeFailure<C extends string>(
 	err: unknown,
 	allowed: ReadonlySet<C>,
@@ -138,7 +130,6 @@ function mapWriteModeFailure<C extends string>(
 	return null;
 }
 
-/** Throws mapped for getEntry (not_found is returned when the entry is null). */
 const GET_THROW_CODES = new Set<GetEntryFailureCode>(["forbidden", "conflict"]);
 const SAVE_THROW_CODES = new Set<SaveEntryFailureCode>(
 	SAVE_ENTRY_FAILURE_CODES,
@@ -175,7 +166,6 @@ function uploadImageFailure(err: unknown): UploadImageResult | null {
 	);
 }
 
-/** Lift private WriteMode behind the protocol interface (also used by contract harness). */
 export function adaptWriteModeToProtocol(
 	wm: WriteMode,
 	options?: AdaptProtocolOptions,
@@ -297,7 +287,6 @@ export function adaptWriteModeToProtocol(
 	};
 }
 
-/** Host transport needs: protocol ops + allowlisted asset GET (not on CmsProtocol). */
 export type CmsHost = {
 	protocol: CmsProtocol;
 	readAsset: (relFromRoot: string) => Promise<ReadAssetResult>;

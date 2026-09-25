@@ -1,4 +1,4 @@
-<!-- Stub reference editor — FieldEditorProps; full picker is a later slice. -->
+<!-- Full reference picker is a later slice. -->
 <script lang="ts">
 	import type { FieldEditorProps } from "../../config/contracts";
 

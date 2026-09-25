@@ -49,10 +49,6 @@ function useFixture(backend: WriterBackend): {
 	};
 }
 
-// ---------------------------------------------------------------------------
-// #11 — internal WriteMode write-back
-// ---------------------------------------------------------------------------
-
 forEachBackend("write-back contract", (backend) => {
 	const fx = useFixture(backend);
 
@@ -231,10 +227,6 @@ forEachBackend("write-back contract", (backend) => {
 	});
 });
 
-// ---------------------------------------------------------------------------
-// #12 — read-side CmsProtocol
-// ---------------------------------------------------------------------------
-
 forEachBackend("read-side protocol contract", (backend) => {
 	const fx = useFixture(backend);
 
@@ -307,10 +299,6 @@ forEachBackend("read-side protocol contract", (backend) => {
 		expect(forbidden.code).toBe("forbidden");
 	});
 });
-
-// ---------------------------------------------------------------------------
-// #13 — write-side CmsProtocol
-// ---------------------------------------------------------------------------
 
 forEachBackend("write-side protocol contract", (backend) => {
 	const fx = useFixture(backend);
@@ -426,10 +414,6 @@ forEachBackend("write-side protocol contract", (backend) => {
 	});
 });
 
-// ---------------------------------------------------------------------------
-// #16 — deletion capability
-// ---------------------------------------------------------------------------
-
 forEachBackend("deletion capability contract", (backend) => {
 	const fx = useFixture(backend);
 
@@ -497,10 +481,6 @@ forEachBackend("deletion capability contract", (backend) => {
 		expect(stillThere.value.data.title).toBe("stay");
 	});
 });
-
-// ---------------------------------------------------------------------------
-// #17 — assets capability
-// ---------------------------------------------------------------------------
 
 forEachBackend("assets capability contract", (backend) => {
 	const fx = useFixture(backend);

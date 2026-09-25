@@ -15,10 +15,8 @@
 
 import type { OpaqueBinding, SemanticKind } from "../semantic/types";
 
-/** Kind hints on a field ref — image / reference vocabulary for chrome. */
 export type FormTreeKindHint = Extract<SemanticKind, "image" | "reference">;
 
-/** Presentation chrome on a field ref (fluent `.label` / `.editor` / `.kind`). */
 export type FormTreeFieldChrome = {
 	readonly label?: string;
 	readonly editor?: OpaqueBinding;
@@ -29,7 +27,6 @@ export type FormTreeFieldNode = {
 	readonly type: "field";
 	readonly key: string;
 	readonly chrome?: FormTreeFieldChrome;
-	/** Nested presentation when the ref points at an object Input. */
 	readonly content?: readonly FormTreeNode[];
 };
 
@@ -46,7 +43,6 @@ export type FormTreeTabsNode = {
 
 export type FormTreeColumnsNode = {
 	readonly type: "columns";
-	/** Each column is a plain array of children — no singular `column()` wrapper. */
 	readonly content: readonly (readonly FormTreeNode[])[];
 };
 
@@ -62,12 +58,10 @@ export type FormTreeNode =
 	| FormTreeColumnsNode
 	| FormTreeGroupNode;
 
-/** A form tree is an ordered list of layout / field-ref nodes (default outer stack). */
 export type FormTree = readonly FormTreeNode[];
 
 type PlainObject = Record<string, unknown>;
 
-/** Object Input shape for nested scopes (arrays / functions are not enterable). */
 export type ObjectInputOf<T> =
 	NonNullable<T> extends readonly unknown[]
 		? never
@@ -193,7 +187,6 @@ function fieldChromeFromState(
 	return Object.keys(chrome).length > 0 ? chrome : undefined;
 }
 
-/** Runtime field-ref node; public `field()` re-applies the `Data` / key generics. */
 function createFieldRefNode(
 	key: string,
 	state: FieldChromeState = {},
@@ -213,10 +206,6 @@ function createFieldRefNode(
 	return node;
 }
 
-/**
- * Scoped helpers for collection-level `form: (f) => …` callbacks:
- * callable as `f(key)` plus `field` / `tabs` / `columns` / `group`.
- */
 export function createScopedFormTreeHelpers<
 	Data,
 >(): ScopedFormTreeHelpers<Data> {
@@ -226,10 +215,6 @@ export function createScopedFormTreeHelpers<
 	return Object.assign(call, helpers);
 }
 
-/**
- * Factory for form-tree helpers typed against a collection Input shape `Data`.
- * Prefer this over repeating `field<Data>(…)` at every call site.
- */
 export function createFormTreeHelpers<Data>(): FormTreeHelpers<Data> {
 	return {
 		field<K extends keyof Data & string>(key: K): FieldRefBuilder<Data, K> {
