@@ -5,6 +5,7 @@
 
 import * as pathe from "pathe";
 import type { z } from "zod";
+import { normalizeFs } from "./path-normalize";
 import { idFromRelPath } from "./path-resolve";
 import type { Writer } from "./types";
 
@@ -27,10 +28,6 @@ export type CollectionDescriptor = {
 	loaderHint?: string;
 	hidden?: boolean;
 };
-
-function normalizeFs(p: string): string {
-	return pathe.resolve(p).replace(/\\/g, "/");
-}
 
 export async function scanEntryIds(
 	writer: Writer,

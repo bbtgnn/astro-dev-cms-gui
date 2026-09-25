@@ -9,6 +9,7 @@ import { opaqueRevision } from "../protocol/revision";
 import type { CollectionDescriptor } from "./collection-descriptors";
 import { scanEntryIds } from "./collection-descriptors";
 import { parseEntryFile, serializeEntryFile } from "./entry-file";
+import { normalizeFs } from "./path-normalize";
 import {
 	applyPathTemplate,
 	assertSafeEntryId,
@@ -25,10 +26,6 @@ import type {
 	WriteMode,
 	WrittenImageAssets,
 } from "./types";
-
-function normalizeFs(p: string): string {
-	return pathe.resolve(p).replace(/\\/g, "/");
-}
 
 function joinRoot(root: string, rel: string): string {
 	return normalizeFs(pathe.join(root, rel));

@@ -3,14 +3,11 @@
  * P1 still resolves via pathMap in write-mode; these helpers are the P2 seam.
  */
 import * as pathe from "pathe";
+import { normalizeFs } from "./path-normalize";
 
 export type EntryExtension = "json";
 
 export const DEFAULT_ENTRY_EXTENSION: EntryExtension = "json";
-
-function normalizeFs(p: string): string {
-	return pathe.resolve(p).replace(/\\/g, "/");
-}
 
 /** Refuse absolute ids, `..`, empty segments, and backslashes. */
 export function assertSafeEntryId(id: string): void {
