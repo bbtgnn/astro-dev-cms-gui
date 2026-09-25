@@ -1,8 +1,6 @@
 # Dev CMS — agents
 
 How agents behave in this repo: what to open, how to edit, where work goes.
-Product identity and anti-goals: [CONTEXT.md](CONTEXT.md) and the
-[architecture index](docs/spec.md).
 
 ## Reach
 
