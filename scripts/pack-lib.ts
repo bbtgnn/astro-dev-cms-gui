@@ -54,11 +54,6 @@ type PackConfig = {
 	build: string[];
 	/** Add a `svelte` condition pointing at the same JS as `import` (authoring). */
 	svelteCondition?: boolean;
-	/**
-	 * Publish-face `bin` map. When set, replaces workspace bin after rewrite
-	 * (e.g. workspace `./bin/cms.ts` → packed `./dist/cli.js`).
-	 */
-	publishBin?: string | Record<string, string>;
 };
 
 const PACKAGES: Record<string, PackConfig> = {
@@ -74,7 +69,6 @@ const PACKAGES: Record<string, PackConfig> = {
 	"@cms/astro": {
 		dir: "packages/astro",
 		build: ["bunx", "tsdown"],
-		publishBin: { cms: "./dist/cli.js" },
 	},
 };
 
@@ -212,18 +206,14 @@ function publishExportsFromSrc(
 	return out;
 }
 
-/**
- * Workspace `./bin/foo.ts` → publish `./dist/bin/foo.js`.
- * Workspace `./src/foo.ts` → publish `./dist/foo.js` (CLI under src/).
- */
+/** Workspace `./src/foo.ts` → publish `./dist/foo.js` (e.g. `cms` bin). */
 function rewriteBinPath(binPath: string): string {
-	if (binPath.startsWith("./bin/") && binPath.endsWith(".ts")) {
-		return `./dist/bin/${path.basename(binPath, ".ts")}.js`;
-	}
 	if (binPath.startsWith("./src/") && binPath.endsWith(".ts")) {
 		return `./dist/${binPath.slice("./src/".length, -".ts".length)}.js`;
 	}
-	return binPath;
+	throw new Error(
+		`publish bin must be ./src/*.ts (got ${binPath}); point package.json bin at src`,
+	);
 }
 
 function rewriteBin(bin: PackageJson["bin"]): PackageJson["bin"] | undefined {
@@ -272,7 +262,6 @@ function publishPackageJson(
 	workspacePkg: PackageJson,
 	exportMap: PackageJson["exports"],
 	catalog: Record<string, string>,
-	opts: { publishBin?: PackConfig["publishBin"] } = {},
 ): PackageJson {
 	const pkg: PackageJson = { ...workspacePkg };
 	pkg.private = false;
@@ -280,7 +269,7 @@ function publishPackageJson(
 	pkg.exports = exportMap;
 	pkg.dependencies = rewriteDeps(pkg.dependencies, catalog);
 	pkg.peerDependencies = rewriteDeps(pkg.peerDependencies, catalog);
-	const bin = opts.publishBin ?? rewriteBin(workspacePkg.bin);
+	const bin = rewriteBin(workspacePkg.bin);
 	if (bin != null) pkg.bin = bin;
 	delete pkg.devDependencies;
 	delete pkg.scripts;
@@ -315,9 +304,7 @@ cpSync(path.join(pkgDir, "dist"), path.join(stagingDir, "dist"), {
 	recursive: true,
 });
 
-const publishPkg = publishPackageJson(workspacePkg, publishExports, catalog, {
-	publishBin: cfg.publishBin,
-});
+const publishPkg = publishPackageJson(workspacePkg, publishExports, catalog);
 writeFileSync(
 	path.join(stagingDir, "package.json"),
 	`${JSON.stringify(publishPkg, null, "\t")}\n`,

@@ -5,7 +5,7 @@
 	"type": "module",
 	"description": "Astro host \u2014 cms() integration, /cms shell, /cms/api protocol transport",
 	"bin": {
-		"cms": "./bin/cms.ts"
+		"cms": "./src/cli.ts"
 	},
 	"exports": {
 		".": "./src/index.ts",

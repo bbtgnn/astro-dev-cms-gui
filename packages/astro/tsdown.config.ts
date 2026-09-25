@@ -13,8 +13,11 @@ const exportEntries = Object.values(pkg.exports).filter(
 	(p): p is string => typeof p === "string" && p.endsWith(".ts"),
 );
 
-/** Runtime-resolved via import.meta.url / proxyAssets — not in public exports. */
-const colocatedEntries = [
+/**
+ * Not in public exports / not reached by static imports from those entries —
+ * resolved at runtime via import.meta.url, Vite path inject, or package bin.
+ */
+const runtimeEntries = [
 	"./src/cli.ts",
 	"./src/host/default-host.ts",
 	"./src/stamped/shell-form-models.ts",
@@ -22,13 +25,13 @@ const colocatedEntries = [
 	"./src/content-proxy/shims/astro-content-sync.ts",
 ];
 
-const entry = [...new Set([...exportEntries, ...colocatedEntries])];
+const entry = [...new Set([...exportEntries, ...runtimeEntries])];
 if (
 	entry.length === 0 ||
 	entry.some((p) => typeof p !== "string" || !p.startsWith("./src/"))
 ) {
 	throw new Error(
-		"@cms/astro package.json exports / colocated entries must be ./src/* paths",
+		"@cms/astro package.json exports / runtime entries must be ./src/* paths",
 	);
 }
 
@@ -38,7 +41,7 @@ export default defineConfig({
 	dts: true,
 	format: ["esm"],
 	platform: "node",
-	// Match core publish face (`.js` / `.d.ts`), not node-default `.mjs`.
+	// Publish exports use `.js`; node platform would otherwise emit `.mjs`.
 	fixedExtension: false,
 	deps: {
 		neverBundle: [
@@ -54,7 +57,6 @@ export default defineConfig({
 		],
 	},
 	unbundle: true,
-	// Flatten into dist/host/ (default flatten treats a file `to` as a directory).
 	copy: [
 		{ from: "src/host/shell-page.astro", to: "dist/host" },
 		{ from: "src/host/cms-mount.svelte", to: "dist/host" },
